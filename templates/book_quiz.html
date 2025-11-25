@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz - {{ book.title }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .option-btn {
+            transition: all 0.2s ease;
+        }
+        .option-btn:hover:not(.selected):not(.correct):not(.wrong) {
+            transform: translateX(4px);
+            border-color: rgba(139, 92, 246, 0.5);
+        }
+        .option-btn.selected {
+            border-color: #6366f1;
+            background: rgba(99, 102, 241, 0.2);
+        }
+        .option-btn.correct {
+            border-color: #22c55e;
+            background: rgba(34, 197, 94, 0.2);
+        }
+        .option-btn.wrong {
+            border-color: #ef4444;
+            background: rgba(239, 68, 68, 0.2);
+        }
+        .progress-fill {
+            transition: width 0.3s ease;
+        }
+        .score-circle {
+            background: conic-gradient(
+                #22c55e var(--score-percent),
+                rgba(255,255,255,0.1) var(--score-percent)
+            );
+        }
+        .confetti {
+            position: fixed;
+            pointer-events: none;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <!-- Header -->
+    <header class="bg-black/30 backdrop-blur-lg border-b border-white/10 sticky top-0 z-50">
+        <div class="max-w-3xl mx-auto px-4 py-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <a href="/book/{{ book.id }}" class="text-gray-400 hover:text-white transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                    </a>
+                    <div>
+                        <h1 class="text-lg font-bold text-white flex items-center gap-2">
+                            <span>🎲</span> Quiz do Livro
+                        </h1>
+                        <p class="text-xs text-gray-400">{{ book.title }}</p>
+                    </div>
+                </div>
+                <div id="scoreDisplay" class="hidden text-right">
+                    <p class="text-2xl font-bold text-white"><span id="currentScore">0</span>/<span id="totalQuestions">0</span></p>
+                    <p class="text-xs text-gray-400">Pontuação</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-3xl mx-auto px-4 py-6">
+        <!-- Setup Screen -->
+        <div id="setupScreen" class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-8">
+            <div class="text-center mb-8">
+                <span class="text-6xl mb-4 block">🎯</span>
+                <h2 class="text-2xl font-bold text-white mb-2">Teste os seus conhecimentos!</h2>
+                <p class="text-gray-400">Responda a perguntas sobre "{{ book.title }}"</p>
+            </div>
+            
+            <!-- Difficulty Selection -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-300 mb-3">Dificuldade:</label>
+                <div class="grid grid-cols-3 gap-3">
+                    <button onclick="setDifficulty('easy')" class="difficulty-btn p-4 bg-green-600/20 hover:bg-green-600/30 border-2 border-green-500/30 hover:border-green-500 rounded-xl text-center transition-all" data-difficulty="easy">
+                        <span class="text-2xl block mb-1">😊</span>
+                        <span class="text-green-300 font-medium">Fácil</span>
+                    </button>
+                    <button onclick="setDifficulty('medium')" class="difficulty-btn p-4 bg-yellow-600/20 hover:bg-yellow-600/30 border-2 border-yellow-500 rounded-xl text-center transition-all selected" data-difficulty="medium">
+                        <span class="text-2xl block mb-1">🤔</span>
+                        <span class="text-yellow-300 font-medium">Médio</span>
+                    </button>
+                    <button onclick="setDifficulty('hard')" class="difficulty-btn p-4 bg-red-600/20 hover:bg-red-600/30 border-2 border-red-500/30 hover:border-red-500 rounded-xl text-center transition-all" data-difficulty="hard">
+                        <span class="text-2xl block mb-1">🔥</span>
+                        <span class="text-red-300 font-medium">Difícil</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Number of Questions -->
+            <div class="mb-8">
+                <label class="block text-sm font-medium text-gray-300 mb-3">Número de perguntas:</label>
+                <div class="flex items-center gap-4">
+                    <input type="range" id="numQuestions" min="5" max="15" value="10" 
+                           class="flex-1 h-2 bg-white/20 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                           oninput="document.getElementById('numQuestionsDisplay').textContent = this.value">
+                    <span id="numQuestionsDisplay" class="text-2xl font-bold text-white w-12 text-center">10</span>
+                </div>
+            </div>
+            
+            <button onclick="startQuiz()" id="startBtn" class="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold text-lg rounded-xl transition-all flex items-center justify-center gap-2">
+                <span>🚀</span> Começar Quiz
+            </button>
+        </div>
+
+        <!-- Loading Screen -->
+        <div id="loadingScreen" class="hidden bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-8">
+            <div class="text-center">
+                <div class="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <h2 class="text-xl font-bold text-white mb-2">A gerar quiz...</h2>
+                <p class="text-gray-400">A criar perguntas personalizadas sobre o livro</p>
+            </div>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quizScreen" class="hidden">
+            <!-- Progress Bar -->
+            <div class="mb-6">
+                <div class="flex justify-between text-sm text-gray-400 mb-2">
+                    <span>Pergunta <span id="currentQuestion">1</span> de <span id="totalQuestionsQuiz">10</span></span>
+                    <span id="progressPercent">0%</span>
+                </div>
+                <div class="h-2 bg-white/10 rounded-full overflow-hidden">
+                    <div id="progressBar" class="progress-fill h-full bg-gradient-to-r from-purple-600 to-pink-600 rounded-full" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Question Card -->
+            <div class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-6 mb-6">
+                <p id="questionText" class="text-xl text-white font-medium mb-6"></p>
+                
+                <div id="optionsContainer" class="space-y-3">
+                    <!-- Options will be added here -->
+                </div>
+            </div>
+
+            <!-- Explanation (hidden initially) -->
+            <div id="explanationBox" class="hidden bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-6 mb-6">
+                <h3 class="text-lg font-semibold text-white mb-2 flex items-center gap-2">
+                    <span>💡</span> Explicação
+                </h3>
+                <p id="explanationText" class="text-gray-300"></p>
+            </div>
+
+            <!-- Next Button -->
+            <button onclick="nextQuestion()" id="nextBtn" class="hidden w-full py-4 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl transition-colors">
+                Próxima Pergunta →
+            </button>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="resultsScreen" class="hidden bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-8">
+            <div class="text-center mb-8">
+                <div id="resultEmoji" class="text-7xl mb-4">🏆</div>
+                <h2 class="text-2xl font-bold text-white mb-2">Quiz Completo!</h2>
+                <p id="resultMessage" class="text-gray-400"></p>
+            </div>
+
+            <!-- Score Circle -->
+            <div class="flex justify-center mb-8">
+                <div class="score-circle w-40 h-40 rounded-full flex items-center justify-center" style="--score-percent: 0%">
+                    <div class="w-32 h-32 bg-slate-900 rounded-full flex flex-col items-center justify-center">
+                        <span id="finalScore" class="text-4xl font-bold text-white">0</span>
+                        <span class="text-gray-400">de <span id="finalTotal">10</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="grid grid-cols-3 gap-4 mb-8">
+                <div class="bg-green-600/20 rounded-xl p-4 text-center">
+                    <p id="correctCount" class="text-2xl font-bold text-green-400">0</p>
+                    <p class="text-xs text-gray-400">Corretas</p>
+                </div>
+                <div class="bg-red-600/20 rounded-xl p-4 text-center">
+                    <p id="wrongCount" class="text-2xl font-bold text-red-400">0</p>
+                    <p class="text-xs text-gray-400">Erradas</p>
+                </div>
+                <div class="bg-purple-600/20 rounded-xl p-4 text-center">
+                    <p id="percentScore" class="text-2xl font-bold text-purple-400">0%</p>
+                    <p class="text-xs text-gray-400">Pontuação</p>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-3">
+                <button onclick="restartQuiz()" class="flex-1 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-xl transition-colors">
+                    🔄 Jogar Novamente
+                </button>
+                <a href="/book/{{ book.id }}" class="flex-1 py-3 bg-white/10 hover:bg-white/20 text-white font-medium rounded-xl transition-colors text-center">
+                    📖 Voltar ao Livro
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const BOOK_ID = {{ book.id }};
+        let difficulty = 'medium';
+        let questions = [];
+        let currentIndex = 0;
+        let score = 0;
+        let answered = false;
+
+        function setDifficulty(diff) {
+            difficulty = diff;
+            document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                btn.classList.remove('selected');
+                btn.style.borderColor = '';
+            });
+            const selectedBtn = document.querySelector(`[data-difficulty="${diff}"]`);
+            selectedBtn.classList.add('selected');
+            
+            const colors = { easy: '#22c55e', medium: '#eab308', hard: '#ef4444' };
+            selectedBtn.style.borderColor = colors[diff];
+        }
+
+        async function startQuiz() {
+            const numQuestions = parseInt(document.getElementById('numQuestions').value);
+            
+            // Show loading
+            document.getElementById('setupScreen').classList.add('hidden');
+            document.getElementById('loadingScreen').classList.remove('hidden');
+            
+            try {
+                const response = await fetch(`/api/book/${BOOK_ID}/quiz`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ difficulty, num_questions: numQuestions })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.questions.length > 0) {
+                    questions = data.questions;
+                    currentIndex = 0;
+                    score = 0;
+                    
+                    document.getElementById('totalQuestions').textContent = questions.length;
+                    document.getElementById('totalQuestionsQuiz').textContent = questions.length;
+                    document.getElementById('scoreDisplay').classList.remove('hidden');
+                    
+                    document.getElementById('loadingScreen').classList.add('hidden');
+                    document.getElementById('quizScreen').classList.remove('hidden');
+                    
+                    showQuestion();
+                } else {
+                    alert(data.error || 'Erro ao gerar quiz');
+                    document.getElementById('loadingScreen').classList.add('hidden');
+                    document.getElementById('setupScreen').classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Quiz error:', error);
+                alert('Erro de conexão');
+                document.getElementById('loadingScreen').classList.add('hidden');
+                document.getElementById('setupScreen').classList.remove('hidden');
+            }
+        }
+
+        function showQuestion() {
+            answered = false;
+            const q = questions[currentIndex];
+            
+            // Update progress
+            document.getElementById('currentQuestion').textContent = currentIndex + 1;
+            const percent = ((currentIndex) / questions.length) * 100;
+            document.getElementById('progressBar').style.width = percent + '%';
+            document.getElementById('progressPercent').textContent = Math.round(percent) + '%';
+            
+            // Show question
+            document.getElementById('questionText').textContent = q.question;
+            
+            // Show options
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = q.options.map((option, i) => `
+                <button onclick="selectOption(${i})" class="option-btn w-full p-4 bg-white/5 hover:bg-white/10 border-2 border-white/10 rounded-xl text-left transition-all flex items-center gap-3" data-index="${i}">
+                    <span class="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center text-sm font-bold text-white">
+                        ${String.fromCharCode(65 + i)}
+                    </span>
+                    <span class="text-white">${option}</span>
+                </button>
+            `).join('');
+            
+            // Hide explanation and next button
+            document.getElementById('explanationBox').classList.add('hidden');
+            document.getElementById('nextBtn').classList.add('hidden');
+        }
+
+        function selectOption(index) {
+            if (answered) return;
+            answered = true;
+            
+            const q = questions[currentIndex];
+            const correct = q.correct;
+            const buttons = document.querySelectorAll('.option-btn');
+            
+            buttons.forEach((btn, i) => {
+                btn.classList.remove('selected');
+                if (i === correct) {
+                    btn.classList.add('correct');
+                } else if (i === index && index !== correct) {
+                    btn.classList.add('wrong');
+                }
+            });
+            
+            if (index === correct) {
+                score++;
+                document.getElementById('currentScore').textContent = score;
+            }
+            
+            // Show explanation
+            if (q.explanation) {
+                document.getElementById('explanationText').textContent = q.explanation;
+                document.getElementById('explanationBox').classList.remove('hidden');
+            }
+            
+            // Show next button
+            const nextBtn = document.getElementById('nextBtn');
+            if (currentIndex < questions.length - 1) {
+                nextBtn.textContent = 'Próxima Pergunta →';
+            } else {
+                nextBtn.textContent = 'Ver Resultados 🏆';
+            }
+            nextBtn.classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentIndex++;
+            
+            if (currentIndex >= questions.length) {
+                showResults();
+            } else {
+                showQuestion();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('quizScreen').classList.add('hidden');
+            document.getElementById('resultsScreen').classList.remove('hidden');
+            
+            const total = questions.length;
+            const percent = Math.round((score / total) * 100);
+            
+            // Update stats
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('finalTotal').textContent = total;
+            document.getElementById('correctCount').textContent = score;
+            document.getElementById('wrongCount').textContent = total - score;
+            document.getElementById('percentScore').textContent = percent + '%';
+            
+            // Update circle
+            document.querySelector('.score-circle').style.setProperty('--score-percent', percent + '%');
+            
+            // Set emoji and message based on score
+            let emoji, message;
+            if (percent >= 90) {
+                emoji = '🏆'; message = 'Excelente! És um verdadeiro especialista!';
+                createConfetti();
+            } else if (percent >= 70) {
+                emoji = '🎉'; message = 'Muito bem! Conheces bem o livro!';
+            } else if (percent >= 50) {
+                emoji = '👍'; message = 'Nada mau! Continua a praticar!';
+            } else {
+                emoji = '📚'; message = 'Talvez seja hora de reler o livro!';
+            }
+            
+            document.getElementById('resultEmoji').textContent = emoji;
+            document.getElementById('resultMessage').textContent = message;
+        }
+
+        function restartQuiz() {
+            document.getElementById('resultsScreen').classList.add('hidden');
+            document.getElementById('setupScreen').classList.remove('hidden');
+            document.getElementById('scoreDisplay').classList.add('hidden');
+            questions = [];
+            currentIndex = 0;
+            score = 0;
+            document.getElementById('currentScore').textContent = '0';
+        }
+
+        function createConfetti() {
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.top = '-10px';
+                confetti.style.fontSize = (Math.random() * 20 + 10) + 'px';
+                confetti.textContent = ['🎉', '🎊', '⭐', '✨', '🌟'][Math.floor(Math.random() * 5)];
+                confetti.style.animation = `fall ${Math.random() * 3 + 2}s linear forwards`;
+                document.body.appendChild(confetti);
+                
+                setTimeout(() => confetti.remove(), 5000);
+            }
+            
+            // Add fall animation
+            if (!document.getElementById('confettiStyle')) {
+                const style = document.createElement('style');
+                style.id = 'confettiStyle';
+                style.textContent = `
+                    @keyframes fall {
+                        to {
+                            transform: translateY(100vh) rotate(720deg);
+                            opacity: 0;
+                        }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        }
+    </script>
+</body>
+</html>

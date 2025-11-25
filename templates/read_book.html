@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ book.title }} - Modo Leitura</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg-color: #1a1a2e;
+            --text-color: #e8e8e8;
+            --accent-color: #8b5cf6;
+        }
+        
+        body.theme-light {
+            --bg-color: #fafafa;
+            --text-color: #1a1a1a;
+        }
+        
+        body.theme-sepia {
+            --bg-color: #f4ecd8;
+            --text-color: #5c4a32;
+        }
+        
+        body.theme-dark {
+            --bg-color: #1a1a2e;
+            --text-color: #e8e8e8;
+        }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+        
+        .reader-content {
+            font-family: Georgia, 'Times New Roman', serif;
+            line-height: 1.8;
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .reader-content.font-sans { font-family: 'Inter', system-ui, sans-serif; }
+        .reader-content.font-serif { font-family: Georgia, 'Times New Roman', serif; }
+        .reader-content.font-mono { font-family: 'JetBrains Mono', monospace; }
+        
+        .reader-content.size-small { font-size: 14px; }
+        .reader-content.size-medium { font-size: 18px; }
+        .reader-content.size-large { font-size: 22px; }
+        .reader-content.size-xlarge { font-size: 26px; }
+        
+        .chapter-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: 2em 0 1em;
+            padding-bottom: 0.5em;
+            border-bottom: 1px solid var(--accent-color);
+        }
+        
+        .controls-panel {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.9);
+            backdrop-filter: blur(10px);
+            transform: translateY(-100%);
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+        
+        .controls-panel.visible {
+            transform: translateY(0);
+        }
+        
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: var(--accent-color);
+            transition: width 0.1s;
+            z-index: 100;
+        }
+        
+        .toc-sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 300px;
+            background: rgba(0,0,0,0.95);
+            backdrop-filter: blur(10px);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            z-index: 150;
+            overflow-y: auto;
+        }
+        
+        .toc-sidebar.visible {
+            transform: translateX(0);
+        }
+        
+        .bookmark-indicator {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0.3;
+            transition: opacity 0.3s;
+        }
+        
+        .bookmark-indicator:hover {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="theme-dark">
+    <!-- Progress Bar -->
+    <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+    
+    <!-- Controls Panel -->
+    <div class="controls-panel" id="controlsPanel">
+        <div class="max-w-4xl mx-auto px-4 py-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <a href="/book/{{ book.id }}" class="text-white hover:text-purple-400 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                    </a>
+                    <button onclick="toggleTOC()" class="text-white hover:text-purple-400 transition-colors" title="Índice">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                    <h1 class="text-white font-medium truncate max-w-xs">{{ book.title }}</h1>
+                </div>
+                
+                <div class="flex items-center gap-3">
+                    <!-- Theme -->
+                    <div class="flex gap-1">
+                        <button onclick="setTheme('light')" class="w-6 h-6 rounded-full bg-white border-2 border-gray-300" title="Claro"></button>
+                        <button onclick="setTheme('sepia')" class="w-6 h-6 rounded-full bg-amber-100 border-2 border-amber-300" title="Sépia"></button>
+                        <button onclick="setTheme('dark')" class="w-6 h-6 rounded-full bg-gray-800 border-2 border-gray-600" title="Escuro"></button>
+                    </div>
+                    
+                    <!-- Font Size -->
+                    <div class="flex items-center gap-1 text-white">
+                        <button onclick="setFontSize('small')" class="px-2 py-1 text-xs hover:bg-white/20 rounded">A</button>
+                        <button onclick="setFontSize('medium')" class="px-2 py-1 text-sm hover:bg-white/20 rounded">A</button>
+                        <button onclick="setFontSize('large')" class="px-2 py-1 text-base hover:bg-white/20 rounded">A</button>
+                        <button onclick="setFontSize('xlarge')" class="px-2 py-1 text-lg hover:bg-white/20 rounded">A</button>
+                    </div>
+                    
+                    <!-- Font Family -->
+                    <select onchange="setFontFamily(this.value)" class="bg-white/10 text-white text-sm rounded px-2 py-1">
+                        <option value="serif" class="bg-gray-800">Serif</option>
+                        <option value="sans" class="bg-gray-800">Sans-serif</option>
+                        <option value="mono" class="bg-gray-800">Monospace</option>
+                    </select>
+                    
+                    <!-- Fullscreen -->
+                    <button onclick="toggleFullscreen()" class="text-white hover:text-purple-400" title="Ecrã inteiro">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- TOC Sidebar -->
+    <div class="toc-sidebar" id="tocSidebar">
+        <div class="p-4">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-white font-bold">Índice</h2>
+                <button onclick="toggleTOC()" class="text-gray-400 hover:text-white">✕</button>
+            </div>
+            <nav class="space-y-2">
+                {% for chapter in book.get_chapters() %}
+                <a href="#chapter-{{ loop.index }}" onclick="toggleTOC()" 
+                   class="block text-gray-300 hover:text-white hover:bg-white/10 px-3 py-2 rounded transition-colors text-sm">
+                    {{ chapter }}
+                </a>
+                {% endfor %}
+            </nav>
+        </div>
+    </div>
+    
+    <!-- Bookmark Indicator -->
+    <div class="bookmark-indicator">
+        <button onclick="saveBookmark()" id="bookmarkBtn" class="text-purple-400 hover:text-purple-300" title="Guardar posição">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+            </svg>
+        </button>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="reader-content font-serif size-medium" id="readerContent">
+        <h1 class="text-3xl font-bold text-center mb-8">{{ book.title }}</h1>
+        <p class="text-center text-sm opacity-60 mb-12">{{ book.style }} • {{ book.word_count or 0 }} palavras</p>
+        
+        <div id="bookText">{{ book.full_text | safe }}</div>
+    </div>
+    
+    <!-- Reading Stats -->
+    <div class="fixed bottom-4 right-4 bg-black/50 backdrop-blur-sm text-white text-xs px-3 py-2 rounded-full opacity-50 hover:opacity-100 transition-opacity">
+        <span id="readingProgress">0%</span> • 
+        <span id="timeRemaining">0 min</span>
+    </div>
+
+    <script>
+        const BOOK_ID = {{ book.id }};
+        const TOTAL_WORDS = {{ book.word_count or 0 }};
+        const READING_SPEED = 200; // words per minute
+        
+        let controlsVisible = false;
+        let tocVisible = false;
+        let lastScrollY = 0;
+        
+        // Show/hide controls on scroll
+        window.addEventListener('scroll', function() {
+            const currentScrollY = window.scrollY;
+            
+            // Update progress
+            const scrollPercent = (currentScrollY / (document.body.scrollHeight - window.innerHeight)) * 100;
+            document.getElementById('progressBar').style.width = Math.min(scrollPercent, 100) + '%';
+            document.getElementById('readingProgress').textContent = Math.round(scrollPercent) + '%';
+            
+            // Estimate time remaining
+            const wordsRead = (scrollPercent / 100) * TOTAL_WORDS;
+            const wordsRemaining = TOTAL_WORDS - wordsRead;
+            const minutesRemaining = Math.ceil(wordsRemaining / READING_SPEED);
+            document.getElementById('timeRemaining').textContent = minutesRemaining + ' min';
+            
+            // Show controls when scrolling up
+            if (currentScrollY < lastScrollY - 10 || currentScrollY < 50) {
+                showControls();
+            } else if (currentScrollY > lastScrollY + 10) {
+                hideControls();
+            }
+            
+            lastScrollY = currentScrollY;
+            
+            // Save position periodically
+            localStorage.setItem(`book_${BOOK_ID}_position`, currentScrollY);
+        });
+        
+        // Show controls on mouse move to top
+        document.addEventListener('mousemove', function(e) {
+            if (e.clientY < 60) {
+                showControls();
+            }
+        });
+        
+        function showControls() {
+            document.getElementById('controlsPanel').classList.add('visible');
+            controlsVisible = true;
+        }
+        
+        function hideControls() {
+            if (!tocVisible) {
+                document.getElementById('controlsPanel').classList.remove('visible');
+                controlsVisible = false;
+            }
+        }
+        
+        function toggleTOC() {
+            tocVisible = !tocVisible;
+            document.getElementById('tocSidebar').classList.toggle('visible');
+        }
+        
+        function setTheme(theme) {
+            document.body.className = 'theme-' + theme;
+            localStorage.setItem('reader_theme', theme);
+        }
+        
+        function setFontSize(size) {
+            const content = document.getElementById('readerContent');
+            content.classList.remove('size-small', 'size-medium', 'size-large', 'size-xlarge');
+            content.classList.add('size-' + size);
+            localStorage.setItem('reader_font_size', size);
+        }
+        
+        function setFontFamily(family) {
+            const content = document.getElementById('readerContent');
+            content.classList.remove('font-serif', 'font-sans', 'font-mono');
+            content.classList.add('font-' + family);
+            localStorage.setItem('reader_font_family', family);
+        }
+        
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+        
+        function saveBookmark() {
+            const position = window.scrollY;
+            const percent = Math.round((position / (document.body.scrollHeight - window.innerHeight)) * 100);
+            localStorage.setItem(`book_${BOOK_ID}_bookmark`, position);
+            
+            const btn = document.getElementById('bookmarkBtn');
+            btn.innerHTML = `<svg class="w-8 h-8" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+            </svg>`;
+            
+            // Show toast
+            showToast('Posição guardada: ' + percent + '%');
+        }
+        
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-16 right-4 bg-purple-600 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2000);
+        }
+        
+        // Load saved preferences
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('reader_theme');
+            const savedSize = localStorage.getItem('reader_font_size');
+            const savedFamily = localStorage.getItem('reader_font_family');
+            const savedPosition = localStorage.getItem(`book_${BOOK_ID}_position`);
+            const savedBookmark = localStorage.getItem(`book_${BOOK_ID}_bookmark`);
+            
+            if (savedTheme) setTheme(savedTheme);
+            if (savedSize) setFontSize(savedSize);
+            if (savedFamily) setFontFamily(savedFamily);
+            
+            // Restore position
+            if (savedPosition && parseInt(savedPosition) > 100) {
+                setTimeout(() => {
+                    if (confirm('Continuar de onde parou?')) {
+                        window.scrollTo(0, parseInt(savedPosition));
+                    }
+                }, 500);
+            }
+            
+            // Format text with chapter headings
+            formatBookText();
+        });
+        
+        function formatBookText() {
+            const textEl = document.getElementById('bookText');
+            let text = textEl.innerHTML;
+            
+            // Find and style chapter titles
+            const chapters = {{ book.get_chapters() | tojson }};
+            chapters.forEach((chapter, i) => {
+                const escapedChapter = chapter.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const regex = new RegExp(`(${escapedChapter})`, 'gi');
+                text = text.replace(regex, `<h2 class="chapter-title" id="chapter-${i+1}">$1</h2>`);
+            });
+            
+            // Convert newlines to paragraphs
+            text = text.split('\n\n').map(p => p.trim() ? `<p class="mb-4">${p}</p>` : '').join('');
+            
+            textEl.innerHTML = text;
+        }
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                if (tocVisible) toggleTOC();
+                if (document.fullscreenElement) document.exitFullscreen();
+            }
+            if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+            if (e.key === 'b' || e.key === 'B') saveBookmark();
+            if (e.key === 't' || e.key === 'T') toggleTOC();
+        });
+    </script>
+</body>
+</html>

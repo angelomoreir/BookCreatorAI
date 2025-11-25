@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat - {{ book.title }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .chat-container {
+            height: calc(100vh - 180px);
+        }
+        .messages-container {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(139, 92, 246, 0.5) transparent;
+        }
+        .messages-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        .messages-container::-webkit-scrollbar-thumb {
+            background-color: rgba(139, 92, 246, 0.5);
+            border-radius: 3px;
+        }
+        .typing-indicator span {
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-6px); }
+        }
+        .message-enter {
+            animation: messageSlide 0.3s ease-out;
+        }
+        @keyframes messageSlide {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <!-- Header -->
+    <header class="bg-black/30 backdrop-blur-lg border-b border-white/10 sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-4 py-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <a href="/book/{{ book.id }}" class="text-gray-400 hover:text-white transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                    </a>
+                    <div>
+                        <h1 class="text-lg font-bold text-white flex items-center gap-2">
+                            <span>💬</span> Chat com Livro
+                        </h1>
+                        <p class="text-xs text-gray-400 truncate max-w-xs">{{ book.title }}</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="clearChat()" class="px-3 py-1.5 text-xs bg-white/10 hover:bg-white/20 text-gray-300 rounded-lg transition-colors">
+                        🗑️ Limpar
+                    </button>
+                    <button onclick="showSuggestions()" class="px-3 py-1.5 text-xs bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 rounded-lg transition-colors">
+                        💡 Sugestões
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Chat Container -->
+    <main class="max-w-4xl mx-auto px-4 py-4">
+        <div class="chat-container flex flex-col bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 overflow-hidden">
+            <!-- Messages -->
+            <div id="messagesContainer" class="messages-container flex-1 overflow-y-auto p-4 space-y-4">
+                <!-- Welcome Message -->
+                <div class="flex gap-3 message-enter">
+                    <div class="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center flex-shrink-0">
+                        <span class="text-lg">🤖</span>
+                    </div>
+                    <div class="flex-1">
+                        <div class="bg-white/10 rounded-2xl rounded-tl-none p-4 max-w-[85%]">
+                            <p class="text-white">Olá! Sou o assistente do livro <strong>"{{ book.title }}"</strong>.</p>
+                            <p class="text-gray-300 mt-2">Posso responder a perguntas sobre:</p>
+                            <ul class="text-gray-400 text-sm mt-1 space-y-1">
+                                <li>📖 O enredo e a história</li>
+                                <li>👥 Os personagens</li>
+                                <li>🌍 O cenário e mundo</li>
+                                <li>💭 Temas e significados</li>
+                                <li>📝 Citações específicas</li>
+                            </ul>
+                            <p class="text-gray-400 text-sm mt-3">Faça a sua primeira pergunta!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Typing Indicator (hidden by default) -->
+            <div id="typingIndicator" class="hidden px-4 pb-2">
+                <div class="flex gap-3">
+                    <div class="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center">
+                        <span class="text-lg">🤖</span>
+                    </div>
+                    <div class="bg-white/10 rounded-2xl rounded-tl-none px-4 py-3">
+                        <div class="typing-indicator flex gap-1">
+                            <span class="w-2 h-2 bg-purple-400 rounded-full"></span>
+                            <span class="w-2 h-2 bg-purple-400 rounded-full"></span>
+                            <span class="w-2 h-2 bg-purple-400 rounded-full"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="p-4 border-t border-white/10 bg-black/20">
+                <form onsubmit="sendMessage(event)" class="flex gap-3">
+                    <input 
+                        type="text" 
+                        id="messageInput" 
+                        placeholder="Pergunte algo sobre o livro..." 
+                        class="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        autocomplete="off"
+                    >
+                    <button 
+                        type="submit" 
+                        id="sendButton"
+                        class="px-6 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors flex items-center gap-2"
+                    >
+                        <span>Enviar</span>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Suggestions Modal -->
+    <div id="suggestionsModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+        <div class="bg-gray-900 border border-white/20 rounded-2xl p-6 max-w-md mx-4 w-full">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-white">💡 Perguntas Sugeridas</h3>
+                <button onclick="hideSuggestions()" class="text-gray-400 hover:text-white">✕</button>
+            </div>
+            <div class="space-y-2">
+                <button onclick="askSuggestion('Qual é o tema principal do livro?')" class="w-full text-left px-4 py-3 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg transition-colors">
+                    📚 Qual é o tema principal do livro?
+                </button>
+                <button onclick="askSuggestion('Quem são os personagens principais?')" class="w-full text-left px-4 py-3 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg transition-colors">
+                    👥 Quem são os personagens principais?
+                </button>
+                <button onclick="askSuggestion('Onde e quando se passa a história?')" class="w-full text-left px-4 py-3 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg transition-colors">
+                    🌍 Onde e quando se passa a história?
+                </button>
+                <button onclick="askSuggestion('Faça um resumo do enredo')" class="w-full text-left px-4 py-3 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg transition-colors">
+                    📝 Faça um resumo do enredo
+                </button>
+                <button onclick="askSuggestion('Qual é o conflito central?')" class="w-full text-left px-4 py-3 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg transition-colors">
+                    ⚔️ Qual é o conflito central?
+                </button>
+                <button onclick="askSuggestion('Que lições ou mensagens o livro transmite?')" class="w-full text-left px-4 py-3 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg transition-colors">
+                    💭 Que lições ou mensagens transmite?
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BOOK_ID = {{ book.id }};
+        let chatHistory = [];
+        let isLoading = false;
+
+        // Focus input on load
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('messageInput').focus();
+        });
+
+        // Send message
+        async function sendMessage(event) {
+            event.preventDefault();
+            
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message || isLoading) return;
+            
+            // Add user message to UI
+            addMessage(message, 'user');
+            input.value = '';
+            
+            // Add to history
+            chatHistory.push({ role: 'user', content: message });
+            
+            // Show loading
+            setLoading(true);
+            
+            try {
+                const response = await fetch(`/api/book/${BOOK_ID}/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        question: message,
+                        history: chatHistory
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    addMessage(data.answer, 'assistant');
+                    chatHistory.push({ role: 'assistant', content: data.answer });
+                } else {
+                    addMessage('Desculpe, ocorreu um erro. Tente novamente.', 'error');
+                }
+            } catch (error) {
+                console.error('Chat error:', error);
+                addMessage('Erro de conexão. Verifique a sua internet.', 'error');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        // Add message to UI
+        function addMessage(content, role) {
+            const container = document.getElementById('messagesContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'flex gap-3 message-enter';
+            
+            if (role === 'user') {
+                messageDiv.innerHTML = `
+                    <div class="flex-1 flex justify-end">
+                        <div class="bg-purple-600 rounded-2xl rounded-tr-none p-4 max-w-[85%]">
+                            <p class="text-white">${escapeHtml(content)}</p>
+                        </div>
+                    </div>
+                    <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                        <span class="text-lg">👤</span>
+                    </div>
+                `;
+            } else if (role === 'assistant') {
+                messageDiv.innerHTML = `
+                    <div class="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center flex-shrink-0">
+                        <span class="text-lg">🤖</span>
+                    </div>
+                    <div class="flex-1">
+                        <div class="bg-white/10 rounded-2xl rounded-tl-none p-4 max-w-[85%]">
+                            <div class="text-gray-200 prose prose-invert prose-sm">${formatMessage(content)}</div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                messageDiv.innerHTML = `
+                    <div class="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center flex-shrink-0">
+                        <span class="text-lg">⚠️</span>
+                    </div>
+                    <div class="flex-1">
+                        <div class="bg-red-600/20 border border-red-500/30 rounded-2xl rounded-tl-none p-4 max-w-[85%]">
+                            <p class="text-red-300">${escapeHtml(content)}</p>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            container.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        // Format message with markdown-like styling
+        function formatMessage(text) {
+            // Escape HTML first
+            text = escapeHtml(text);
+            
+            // Bold
+            text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            
+            // Italic
+            text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            
+            // Quotes (lines starting with >)
+            text = text.replace(/^&gt; (.*)$/gm, '<blockquote class="border-l-2 border-purple-400 pl-3 italic text-gray-400">$1</blockquote>');
+            
+            // Line breaks
+            text = text.replace(/\n/g, '<br>');
+            
+            return text;
+        }
+
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Scroll to bottom
+        function scrollToBottom() {
+            const container = document.getElementById('messagesContainer');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Set loading state
+        function setLoading(loading) {
+            isLoading = loading;
+            document.getElementById('typingIndicator').classList.toggle('hidden', !loading);
+            document.getElementById('sendButton').disabled = loading;
+            document.getElementById('messageInput').disabled = loading;
+            
+            if (loading) {
+                scrollToBottom();
+            } else {
+                document.getElementById('messageInput').focus();
+            }
+        }
+
+        // Clear chat
+        function clearChat() {
+            if (!confirm('Limpar todo o histórico do chat?')) return;
+            
+            chatHistory = [];
+            const container = document.getElementById('messagesContainer');
+            
+            // Keep only welcome message
+            container.innerHTML = `
+                <div class="flex gap-3 message-enter">
+                    <div class="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center flex-shrink-0">
+                        <span class="text-lg">🤖</span>
+                    </div>
+                    <div class="flex-1">
+                        <div class="bg-white/10 rounded-2xl rounded-tl-none p-4 max-w-[85%]">
+                            <p class="text-white">Chat limpo! Faça uma nova pergunta.</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Show suggestions modal
+        function showSuggestions() {
+            document.getElementById('suggestionsModal').classList.remove('hidden');
+        }
+
+        // Hide suggestions modal
+        function hideSuggestions() {
+            document.getElementById('suggestionsModal').classList.add('hidden');
+        }
+
+        // Ask a suggested question
+        function askSuggestion(question) {
+            hideSuggestions();
+            document.getElementById('messageInput').value = question;
+            document.querySelector('form').dispatchEvent(new Event('submit'));
+        }
+
+        // Close modal on backdrop click
+        document.getElementById('suggestionsModal').addEventListener('click', (e) => {
+            if (e.target.id === 'suggestionsModal') {
+                hideSuggestions();
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                hideSuggestions();
+            }
+        });
+    </script>
+</body>
+</html>

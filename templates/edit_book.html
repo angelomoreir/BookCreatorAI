@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar: {{ book.title }} - BookCreatorAI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .chapter-tab { transition: all 0.2s; }
+        .chapter-tab.active { background: rgba(139, 92, 246, 0.3); border-color: rgb(139, 92, 246); }
+        .editor-textarea { min-height: 400px; resize: vertical; }
+        .cover-preview { max-height: 300px; object-fit: contain; }
+        .saving-indicator { animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <!-- Navigation -->
+    <nav class="bg-black/30 backdrop-blur-lg border-b border-white/10 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <a href="/books" class="text-gray-400 hover:text-white transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                    </a>
+                    <h1 class="text-xl font-bold text-white">✏️ Editor de Livro</h1>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <span id="saveStatus" class="text-sm text-gray-400"></span>
+                    <a href="/book/{{ book.id }}" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors">
+                        Ver Livro
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <div class="grid lg:grid-cols-3 gap-8">
+            <!-- Left Sidebar - Book Info & Cover -->
+            <div class="lg:col-span-1 space-y-6">
+                <!-- Book Info -->
+                <div class="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-6">
+                    <h2 class="text-lg font-bold text-white mb-4">📚 Informações</h2>
+                    
+                    <!-- Title -->
+                    <div class="mb-4">
+                        <label class="block text-sm text-gray-400 mb-1">Título</label>
+                        <input 
+                            type="text" 
+                            id="bookTitle" 
+                            value="{{ book.title }}"
+                            class="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            onchange="updateTitle()"
+                        >
+                    </div>
+                    
+                    <!-- Style Template -->
+                    <div class="mb-4">
+                        <label class="block text-sm text-gray-400 mb-1">Template de Estilo</label>
+                        <select 
+                            id="styleTemplate" 
+                            class="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            onchange="updateTemplate()"
+                        >
+                            {% for key, template in templates.items() %}
+                            <option value="{{ key }}" {% if book.style_template == key or (not book.style_template and key == 'standard') %}selected{% endif %} class="bg-gray-800">
+                                {{ template.name }} - {{ template.description }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Stats -->
+                    <div class="grid grid-cols-2 gap-3 text-center">
+                        <div class="bg-white/5 rounded-lg p-3">
+                            <p class="text-2xl font-bold text-white" id="wordCount">{{ book.word_count or 0 }}</p>
+                            <p class="text-xs text-gray-400">Palavras</p>
+                        </div>
+                        <div class="bg-white/5 rounded-lg p-3">
+                            <p class="text-2xl font-bold text-white" id="chapterCount">{{ book.get_chapters()|length }}</p>
+                            <p class="text-xs text-gray-400">Capítulos</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Cover Section -->
+                <div class="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-6">
+                    <h2 class="text-lg font-bold text-white mb-4">🎨 Capa</h2>
+                    
+                    <!-- Cover Preview -->
+                    <div class="mb-4 flex justify-center">
+                        {% if book.cover_image %}
+                        <img src="{{ book.cover_image }}" alt="Capa" id="coverPreview" class="cover-preview rounded-lg shadow-lg">
+                        {% else %}
+                        <div id="coverPreview" class="w-40 h-56 bg-white/5 rounded-lg flex items-center justify-center border-2 border-dashed border-white/20">
+                            <span class="text-gray-500 text-sm">Sem capa</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Cover Actions -->
+                    <div class="space-y-2">
+                        <button onclick="generateCover()" class="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors flex items-center justify-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                            Gerar Capa
+                        </button>
+                        
+                        <label class="w-full px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors flex items-center justify-center cursor-pointer">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                            </svg>
+                            Upload Imagem
+                            <input type="file" accept="image/*" onchange="uploadCover(event)" class="hidden">
+                        </label>
+                        
+                        {% if book.cover_image %}
+                        <button onclick="removeCover()" class="w-full px-4 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg transition-colors">
+                            Remover Capa
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main Content - Chapter Editor -->
+            <div class="lg:col-span-2">
+                <div class="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-bold text-white">📝 Editor de Capítulos</h2>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="saveCurrentChapter()" class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors">
+                                💾 Guardar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Chapter Tabs -->
+                    <div class="flex flex-wrap gap-2 mb-4 border-b border-white/10 pb-4" id="chapterTabs">
+                        <!-- Tabs will be generated by JavaScript -->
+                    </div>
+                    
+                    <!-- Chapter Editor -->
+                    <div id="chapterEditor">
+                        <!-- Chapter Title -->
+                        <div class="mb-3">
+                            <label class="block text-sm text-gray-400 mb-1">Título do Capítulo</label>
+                            <input 
+                                type="text" 
+                                id="chapterTitle"
+                                class="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                onchange="markUnsaved()"
+                            >
+                        </div>
+                        
+                        <!-- Chapter Content -->
+                        <div class="mb-4">
+                            <label class="block text-sm text-gray-400 mb-1">Conteúdo</label>
+                            <textarea 
+                                id="chapterContent"
+                                class="w-full px-3 py-3 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 editor-textarea font-mono text-sm leading-relaxed"
+                                oninput="markUnsaved()"
+                            ></textarea>
+                        </div>
+                        
+                        <!-- Chapter Actions -->
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="regenerateChapter()" class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors flex items-center">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                </svg>
+                                🔄 Regenerar com IA
+                            </button>
+                            <button onclick="showInstructions()" class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors">
+                                📋 Instruções Personalizadas
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Instructions Modal -->
+    <div id="instructionsModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50" onclick="if(event.target === this) closeInstructionsModal()">
+        <div class="bg-gray-900 border border-white/20 rounded-2xl p-6 max-w-lg mx-4 w-full">
+            <h3 class="text-xl font-bold text-white mb-4">📋 Instruções para Regeneração</h3>
+            <p class="text-gray-400 text-sm mb-4">Adicione instruções específicas para guiar a IA na regeneração deste capítulo.</p>
+            <textarea 
+                id="customInstructions"
+                placeholder="Ex: Torna mais dramático, adiciona mais diálogos, foca na descrição do cenário..."
+                class="w-full px-3 py-3 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 h-32"
+            ></textarea>
+            <div class="flex justify-end gap-3 mt-4">
+                <button onclick="closeInstructionsModal()" class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors">
+                    Cancelar
+                </button>
+                <button onclick="regenerateWithInstructions()" class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors">
+                    Regenerar
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+        <div class="bg-gray-900 border border-white/20 rounded-2xl p-8 text-center">
+            <div class="w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-4"></div>
+            <p class="text-white" id="loadingText">A processar...</p>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '';
+        const BOOK_ID = {{ book.id }};
+        let chapters = [];
+        let currentChapterIndex = 0;
+        let hasUnsavedChanges = false;
+        
+        // Load chapters on page load
+        document.addEventListener('DOMContentLoaded', loadChapters);
+        
+        async function loadChapters() {
+            try {
+                const response = await fetch(`${API_BASE}/api/book/${BOOK_ID}/chapters`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    chapters = data.chapters;
+                    renderChapterTabs();
+                    selectChapter(0);
+                }
+            } catch (error) {
+                console.error('Error loading chapters:', error);
+                showToast('Erro ao carregar capítulos', 'error');
+            }
+        }
+        
+        function renderChapterTabs() {
+            const tabsContainer = document.getElementById('chapterTabs');
+            tabsContainer.innerHTML = chapters.map((ch, i) => `
+                <button 
+                    onclick="selectChapter(${i})" 
+                    class="chapter-tab px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-sm text-white hover:bg-white/10 transition-colors ${i === currentChapterIndex ? 'active' : ''}"
+                    data-index="${i}"
+                >
+                    Cap. ${i + 1}
+                </button>
+            `).join('');
+        }
+        
+        function selectChapter(index) {
+            if (hasUnsavedChanges) {
+                if (!confirm('Tens alterações não guardadas. Descartar?')) {
+                    return;
+                }
+            }
+            
+            currentChapterIndex = index;
+            const chapter = chapters[index];
+            
+            document.getElementById('chapterTitle').value = chapter.title;
+            document.getElementById('chapterContent').value = chapter.content;
+            
+            // Update tab styling
+            document.querySelectorAll('.chapter-tab').forEach((tab, i) => {
+                tab.classList.toggle('active', i === index);
+            });
+            
+            hasUnsavedChanges = false;
+            updateSaveStatus('');
+        }
+        
+        function markUnsaved() {
+            hasUnsavedChanges = true;
+            updateSaveStatus('Alterações não guardadas');
+        }
+        
+        function updateSaveStatus(message) {
+            const status = document.getElementById('saveStatus');
+            status.textContent = message;
+            status.className = message.includes('não') ? 'text-sm text-yellow-400' : 'text-sm text-green-400';
+        }
+        
+        async function saveCurrentChapter() {
+            const title = document.getElementById('chapterTitle').value;
+            const content = document.getElementById('chapterContent').value;
+            
+            showLoading('A guardar...');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/book/${BOOK_ID}/chapter/${currentChapterIndex}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, content })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    chapters[currentChapterIndex] = { title, content };
+                    hasUnsavedChanges = false;
+                    updateSaveStatus('Guardado!');
+                    document.getElementById('wordCount').textContent = data.word_count;
+                    showToast('Capítulo guardado!');
+                    renderChapterTabs();
+                } else {
+                    showToast(data.error, 'error');
+                }
+            } catch (error) {
+                console.error('Error saving chapter:', error);
+                showToast('Erro ao guardar', 'error');
+            }
+            
+            hideLoading();
+        }
+        
+        async function regenerateChapter(instructions = '') {
+            showLoading('A regenerar capítulo com IA...');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/book/${BOOK_ID}/chapter/${currentChapterIndex}/regenerate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ instructions })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    chapters[currentChapterIndex] = data.chapter;
+                    document.getElementById('chapterTitle').value = data.chapter.title;
+                    document.getElementById('chapterContent').value = data.chapter.content;
+                    document.getElementById('wordCount').textContent = data.word_count;
+                    hasUnsavedChanges = false;
+                    showToast('Capítulo regenerado!');
+                } else {
+                    showToast(data.error, 'error');
+                }
+            } catch (error) {
+                console.error('Error regenerating chapter:', error);
+                showToast('Erro ao regenerar', 'error');
+            }
+            
+            hideLoading();
+        }
+        
+        function showInstructions() {
+            document.getElementById('instructionsModal').classList.remove('hidden');
+        }
+        
+        function closeInstructionsModal() {
+            document.getElementById('instructionsModal').classList.add('hidden');
+        }
+        
+        function regenerateWithInstructions() {
+            const instructions = document.getElementById('customInstructions').value;
+            closeInstructionsModal();
+            regenerateChapter(instructions);
+        }
+        
+        async function updateTitle() {
+            const title = document.getElementById('bookTitle').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/book/${BOOK_ID}/title`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showToast('Título atualizado!');
+                } else {
+                    showToast(data.error, 'error');
+                }
+            } catch (error) {
+                showToast('Erro ao atualizar título', 'error');
+            }
+        }
+        
+        async function updateTemplate() {
+            const template = document.getElementById('styleTemplate').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/book/${BOOK_ID}/template`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ template })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showToast('Template atualizado!');
+                } else {
+                    showToast(data.error, 'error');
+                }
+            } catch (error) {
+                showToast('Erro ao atualizar template', 'error');
+            }
+        }
+        
+        async function generateCover() {
+            showLoading('A gerar capa...');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/book/${BOOK_ID}/cover/generate`, {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateCoverPreview(data.cover_image);
+                    showToast('Capa gerada!');
+                } else {
+                    showToast(data.error, 'error');
+                }
+            } catch (error) {
+                showToast('Erro ao gerar capa', 'error');
+            }
+            
+            hideLoading();
+        }
+        
+        async function uploadCover(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            showLoading('A carregar capa...');
+            
+            const formData = new FormData();
+            formData.append('cover', file);
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/book/${BOOK_ID}/cover`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Read and display the image
+                    const reader = new FileReader();
+                    reader.onload = (e) => updateCoverPreview(e.target.result);
+                    reader.readAsDataURL(file);
+                    showToast('Capa carregada!');
+                } else {
+                    showToast(data.error, 'error');
+                }
+            } catch (error) {
+                showToast('Erro ao carregar capa', 'error');
+            }
+            
+            hideLoading();
+        }
+        
+        async function removeCover() {
+            if (!confirm('Remover a capa do livro?')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/book/${BOOK_ID}/cover`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateCoverPreview(null);
+                    showToast('Capa removida!');
+                } else {
+                    showToast(data.error, 'error');
+                }
+            } catch (error) {
+                showToast('Erro ao remover capa', 'error');
+            }
+        }
+        
+        function updateCoverPreview(src) {
+            const container = document.getElementById('coverPreview').parentElement;
+            if (src) {
+                container.innerHTML = `<img src="${src}" alt="Capa" id="coverPreview" class="cover-preview rounded-lg shadow-lg">`;
+            } else {
+                container.innerHTML = `
+                    <div id="coverPreview" class="w-40 h-56 bg-white/5 rounded-lg flex items-center justify-center border-2 border-dashed border-white/20">
+                        <span class="text-gray-500 text-sm">Sem capa</span>
+                    </div>
+                `;
+            }
+        }
+        
+        function showLoading(text = 'A processar...') {
+            document.getElementById('loadingText').textContent = text;
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+        }
+        
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.add('hidden');
+        }
+        
+        function showToast(message, type = 'success') {
+            const existingToast = document.querySelector('.toast-notification');
+            if (existingToast) existingToast.remove();
+            
+            const toast = document.createElement('div');
+            toast.className = `toast-notification fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${
+                type === 'error' ? 'bg-red-600 text-white' : 'bg-green-600 text-white'
+            }`;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+        
+        // Warn before leaving with unsaved changes
+        window.addEventListener('beforeunload', (e) => {
+            if (hasUnsavedChanges) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        });
+    </script>
+</body>
+</html>

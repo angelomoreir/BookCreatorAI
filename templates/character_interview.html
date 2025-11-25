@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entrevista - {{ book.title }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .character-avatar {
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+        }
+        .message-bubble {
+            animation: fadeIn 0.3s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .typing-dots span {
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-8px); }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <!-- Header -->
+    <header class="bg-black/30 backdrop-blur-lg border-b border-white/10 sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-4 py-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <a href="/book/{{ book.id }}" class="text-gray-400 hover:text-white transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                    </a>
+                    <div>
+                        <h1 class="text-lg font-bold text-white flex items-center gap-2">
+                            <span>🎭</span> Entrevista com Personagem
+                        </h1>
+                        <p class="text-xs text-gray-400">{{ book.title }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 py-6">
+        <!-- Character Selection -->
+        <div id="characterSelect" class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-6 mb-6">
+            <h2 class="text-lg font-semibold text-white mb-4">👥 Escolha um Personagem para Entrevistar</h2>
+            
+            <div id="charactersList" class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <div class="col-span-full text-center py-8">
+                    <div class="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                    <p class="text-gray-400">A carregar personagens...</p>
+                </div>
+            </div>
+            
+            <!-- Custom Character Input -->
+            <div class="mt-4 pt-4 border-t border-white/10">
+                <p class="text-sm text-gray-400 mb-2">Ou introduza um personagem manualmente:</p>
+                <div class="flex gap-2">
+                    <input type="text" id="customCharacter" placeholder="Nome do personagem..."
+                           class="flex-1 px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    <button onclick="selectCustomCharacter()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors">
+                        Selecionar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interview Chat (hidden initially) -->
+        <div id="interviewChat" class="hidden">
+            <!-- Selected Character Header -->
+            <div class="bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-2xl border border-purple-500/30 p-4 mb-6">
+                <div class="flex items-center gap-4">
+                    <div class="character-avatar w-16 h-16 rounded-full flex items-center justify-center text-3xl">
+                        🎭
+                    </div>
+                    <div class="flex-1">
+                        <h2 id="selectedCharacterName" class="text-xl font-bold text-white"></h2>
+                        <p id="selectedCharacterRole" class="text-sm text-purple-300"></p>
+                    </div>
+                    <button onclick="changeCharacter()" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-gray-300 text-sm rounded-lg transition-colors">
+                        Trocar Personagem
+                    </button>
+                </div>
+            </div>
+
+            <!-- Chat Messages -->
+            <div class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 overflow-hidden" style="height: calc(100vh - 380px); min-height: 400px;">
+                <div id="chatMessages" class="h-full overflow-y-auto p-4 space-y-4" style="max-height: calc(100% - 80px);">
+                    <!-- Welcome message will be added here -->
+                </div>
+                
+                <!-- Typing Indicator -->
+                <div id="typingIndicator" class="hidden px-4 pb-2">
+                    <div class="flex gap-3 items-end">
+                        <div class="character-avatar w-8 h-8 rounded-full flex items-center justify-center text-sm">🎭</div>
+                        <div class="bg-white/10 rounded-2xl rounded-bl-none px-4 py-3">
+                            <div class="typing-dots flex gap-1">
+                                <span class="w-2 h-2 bg-purple-400 rounded-full"></span>
+                                <span class="w-2 h-2 bg-purple-400 rounded-full"></span>
+                                <span class="w-2 h-2 bg-purple-400 rounded-full"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Input Area -->
+                <div class="p-4 border-t border-white/10 bg-black/20">
+                    <form onsubmit="sendQuestion(event)" class="flex gap-3">
+                        <input type="text" id="questionInput" placeholder="Faça uma pergunta ao personagem..."
+                               class="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <button type="submit" id="sendBtn" class="px-6 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 text-white font-medium rounded-xl transition-colors">
+                            Perguntar
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Suggested Questions -->
+            <div class="mt-4 p-4 bg-white/5 rounded-xl border border-white/10">
+                <p class="text-sm text-gray-400 mb-2">💡 Sugestões de perguntas:</p>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="askSuggested('Qual é a tua maior motivação na vida?')" class="px-3 py-1 bg-white/10 hover:bg-white/20 text-gray-300 text-xs rounded-full transition-colors">
+                        Motivação
+                    </button>
+                    <button onclick="askSuggested('O que mais te assusta?')" class="px-3 py-1 bg-white/10 hover:bg-white/20 text-gray-300 text-xs rounded-full transition-colors">
+                        Medos
+                    </button>
+                    <button onclick="askSuggested('Como é a tua relação com os outros personagens?')" class="px-3 py-1 bg-white/10 hover:bg-white/20 text-gray-300 text-xs rounded-full transition-colors">
+                        Relações
+                    </button>
+                    <button onclick="askSuggested('Do que te arrependes?')" class="px-3 py-1 bg-white/10 hover:bg-white/20 text-gray-300 text-xs rounded-full transition-colors">
+                        Arrependimentos
+                    </button>
+                    <button onclick="askSuggested('O que farias diferente se pudesses voltar atrás?')" class="px-3 py-1 bg-white/10 hover:bg-white/20 text-gray-300 text-xs rounded-full transition-colors">
+                        Voltar atrás
+                    </button>
+                    <button onclick="askSuggested('Conta-me um segredo que nunca contaste a ninguém.')" class="px-3 py-1 bg-white/10 hover:bg-white/20 text-gray-300 text-xs rounded-full transition-colors">
+                        Segredo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const BOOK_ID = {{ book.id }};
+        const BOOK_TITLE = "{{ book.title }}";
+        let selectedCharacter = null;
+        let chatHistory = [];
+
+        // Load characters on page load
+        document.addEventListener('DOMContentLoaded', loadCharacters);
+
+        async function loadCharacters() {
+            try {
+                const response = await fetch(`/api/book/${BOOK_ID}/characters-list`);
+                const data = await response.json();
+                
+                const container = document.getElementById('charactersList');
+                
+                if (data.success && data.characters.length > 0) {
+                    container.innerHTML = data.characters.map(char => `
+                        <button onclick="selectCharacter('${char.name}', '${char.role || ''}')" 
+                                class="p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/50 rounded-xl text-left transition-all">
+                            <div class="flex items-center gap-3">
+                                <div class="character-avatar w-10 h-10 rounded-full flex items-center justify-center text-lg">
+                                    ${getCharacterEmoji(char.role)}
+                                </div>
+                                <div>
+                                    <p class="text-white font-medium">${char.name}</p>
+                                    <p class="text-xs text-gray-400">${char.role || 'Personagem'}</p>
+                                </div>
+                            </div>
+                        </button>
+                    `).join('');
+                } else {
+                    container.innerHTML = `
+                        <div class="col-span-full text-center py-4">
+                            <p class="text-gray-400">Não foram encontrados personagens. Introduza um nome manualmente.</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading characters:', error);
+            }
+        }
+
+        function getCharacterEmoji(role) {
+            const roleLC = (role || '').toLowerCase();
+            if (roleLC.includes('protagon') || roleLC.includes('herói') || roleLC.includes('hero')) return '⭐';
+            if (roleLC.includes('antagon') || roleLC.includes('vilão') || roleLC.includes('villain')) return '😈';
+            if (roleLC.includes('mentor') || roleLC.includes('sábio') || roleLC.includes('wise')) return '🧙';
+            if (roleLC.includes('amor') || roleLC.includes('love') || roleLC.includes('romantic')) return '💕';
+            if (roleLC.includes('amigo') || roleLC.includes('friend') || roleLC.includes('companion')) return '🤝';
+            if (roleLC.includes('rei') || roleLC.includes('rainha') || roleLC.includes('king') || roleLC.includes('queen')) return '👑';
+            return '🎭';
+        }
+
+        function selectCharacter(name, role) {
+            selectedCharacter = { name, role };
+            chatHistory = [];
+            
+            document.getElementById('characterSelect').classList.add('hidden');
+            document.getElementById('interviewChat').classList.remove('hidden');
+            document.getElementById('selectedCharacterName').textContent = name;
+            document.getElementById('selectedCharacterRole').textContent = role || 'Personagem';
+            
+            // Add welcome message
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.innerHTML = `
+                <div class="flex gap-3 items-end message-bubble">
+                    <div class="character-avatar w-10 h-10 rounded-full flex items-center justify-center text-lg flex-shrink-0">
+                        ${getCharacterEmoji(role)}
+                    </div>
+                    <div class="bg-white/10 rounded-2xl rounded-bl-none p-4 max-w-[80%]">
+                        <p class="text-gray-200">Olá! Eu sou <strong>${name}</strong> do livro "${BOOK_TITLE}". Estou aqui para responder às tuas perguntas. O que gostarias de saber sobre mim?</p>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('questionInput').focus();
+        }
+
+        function selectCustomCharacter() {
+            const input = document.getElementById('customCharacter');
+            const name = input.value.trim();
+            if (name) {
+                selectCharacter(name, 'Personagem');
+            }
+        }
+
+        function changeCharacter() {
+            document.getElementById('characterSelect').classList.remove('hidden');
+            document.getElementById('interviewChat').classList.add('hidden');
+            selectedCharacter = null;
+            chatHistory = [];
+        }
+
+        async function sendQuestion(event) {
+            event.preventDefault();
+            
+            const input = document.getElementById('questionInput');
+            const question = input.value.trim();
+            
+            if (!question || !selectedCharacter) return;
+            
+            // Add user message
+            addMessage(question, 'user');
+            input.value = '';
+            
+            // Disable input
+            setLoading(true);
+            
+            try {
+                const response = await fetch(`/api/book/${BOOK_ID}/interview`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        character: selectedCharacter.name,
+                        message: question,
+                        history: chatHistory
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    addMessage(data.response, 'character');
+                    chatHistory.push({ role: 'user', content: question });
+                    chatHistory.push({ role: 'assistant', content: data.response });
+                } else {
+                    addMessage('Desculpa, não consegui responder. Tenta novamente.', 'error');
+                }
+            } catch (error) {
+                console.error('Interview error:', error);
+                addMessage('Erro de conexão.', 'error');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        function addMessage(content, type) {
+            const container = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = 'flex gap-3 items-end message-bubble ' + (type === 'user' ? 'flex-row-reverse' : '');
+            
+            if (type === 'user') {
+                div.innerHTML = `
+                    <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-lg flex-shrink-0">👤</div>
+                    <div class="bg-blue-600 rounded-2xl rounded-br-none p-4 max-w-[80%]">
+                        <p class="text-white">${escapeHtml(content)}</p>
+                    </div>
+                `;
+            } else if (type === 'character') {
+                div.innerHTML = `
+                    <div class="character-avatar w-10 h-10 rounded-full flex items-center justify-center text-lg flex-shrink-0">
+                        ${getCharacterEmoji(selectedCharacter?.role)}
+                    </div>
+                    <div class="bg-white/10 rounded-2xl rounded-bl-none p-4 max-w-[80%]">
+                        <p class="text-gray-200">${escapeHtml(content).replace(/\n/g, '<br>')}</p>
+                    </div>
+                `;
+            } else {
+                div.innerHTML = `
+                    <div class="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center text-lg flex-shrink-0">⚠️</div>
+                    <div class="bg-red-600/20 rounded-2xl rounded-bl-none p-4 max-w-[80%]">
+                        <p class="text-red-300">${escapeHtml(content)}</p>
+                    </div>
+                `;
+            }
+            
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function setLoading(loading) {
+            document.getElementById('typingIndicator').classList.toggle('hidden', !loading);
+            document.getElementById('sendBtn').disabled = loading;
+            document.getElementById('questionInput').disabled = loading;
+            
+            if (!loading) {
+                document.getElementById('questionInput').focus();
+            }
+            
+            // Scroll to show typing indicator
+            if (loading) {
+                const container = document.getElementById('chatMessages');
+                container.scrollTop = container.scrollHeight;
+            }
+        }
+
+        function askSuggested(question) {
+            document.getElementById('questionInput').value = question;
+            document.querySelector('form').dispatchEvent(new Event('submit'));
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

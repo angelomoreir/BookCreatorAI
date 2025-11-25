@@ -1,0 +1,153 @@
+/* BookCreatorAI - Custom Styles */
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(139, 92, 246, 0.5);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(139, 92, 246, 0.7);
+}
+
+/* Smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Book text formatting */
+.book-text {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 1.1rem;
+    line-height: 1.8;
+}
+
+.book-text p {
+    margin-bottom: 1.5rem;
+    text-indent: 2rem;
+}
+
+/* Animation for loading spinner */
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 40px rgba(139, 92, 246, 0.8);
+    }
+}
+
+.loading-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Card hover effects */
+.book-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.book-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Button animations */
+button, a {
+    transition: all 0.2s ease;
+}
+
+/* Focus styles for accessibility */
+input:focus, select:focus, button:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.5);
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease forwards;
+}
+
+/* Staggered animation for list items */
+.book-card:nth-child(1) { animation-delay: 0.1s; }
+.book-card:nth-child(2) { animation-delay: 0.2s; }
+.book-card:nth-child(3) { animation-delay: 0.3s; }
+.book-card:nth-child(4) { animation-delay: 0.4s; }
+.book-card:nth-child(5) { animation-delay: 0.5s; }
+.book-card:nth-child(6) { animation-delay: 0.6s; }
+
+/* Glass morphism effect enhancement */
+.glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Gradient text */
+.gradient-text {
+    background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Modal backdrop */
+.modal-backdrop {
+    backdrop-filter: blur(4px);
+}
+
+/* Print styles */
+@media print {
+    nav, footer, .no-print {
+        display: none !important;
+    }
+    
+    body {
+        background: white !important;
+        color: black !important;
+    }
+    
+    .book-text {
+        color: black !important;
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .book-text {
+        font-size: 1rem;
+        line-height: 1.7;
+    }
+}
+
+/* Selection color */
+::selection {
+    background: rgba(139, 92, 246, 0.4);
+    color: white;
+}
+
+/* Style select dropdown options for dark theme */
+select option {
+    background-color: #1f2937;
+    color: white;
+}

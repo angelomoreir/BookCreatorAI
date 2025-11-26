@@ -2,7 +2,11 @@ from flask import Flask, render_template, request, jsonify, Response
 import google.generativeai as genai
 import json
 import os
+from dotenv import load_dotenv
 from datetime import datetime
+
+# Load environment variables
+load_dotenv()
 
 from models.book import db, Book, Series
 import config

@@ -25,6 +25,10 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 
 # Configure Gemini API
+print(f"DEBUG: API KEY FOUND? {'Yes' if config.GEMINI_API_KEY else 'No'}")
+if not config.GEMINI_API_KEY:
+    print("ERROR: GEMINI_API_KEY is missing from environment variables!")
+
 genai.configure(api_key=config.GEMINI_API_KEY)
 
 def generate_book_with_gemini(theme, style, num_chapters, num_pages=50, language='pt-pt'):

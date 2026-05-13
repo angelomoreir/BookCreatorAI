@@ -721,6 +721,14 @@ def debug_notifications():
         'subs_detail': [{'id': s.id, 'user_id': s.user_id, 'is_active': s.is_active, 'endpoint_start': s.endpoint[:50]} for s in all_subs]
     })
 
+def _get_vapid_private_key_obj():
+    """Return VAPID private key as EC key object for pywebpush 1.14+"""
+    import base64
+    from cryptography.hazmat.primitives.asymmetric import ec
+    from cryptography.hazmat.backends import default_backend
+    raw = base64.urlsafe_b64decode(VAPID_PRIVATE_KEY + '==')
+    return ec.derive_private_key(int.from_bytes(raw, 'big'), ec.SECP256R1(), default_backend())
+
 @app.route('/api/notifications/test', methods=['POST'])
 @api_login_required
 def test_notification():
@@ -731,12 +739,13 @@ def test_notification():
         subs = PushSubscription.query.filter_by(user_id=current_user.id, is_active=True).all()
         errors = []
         sent = 0
+        priv_key = _get_vapid_private_key_obj()
         for sub in subs:
             try:
                 webpush(
                     subscription_info={'endpoint': sub.endpoint, 'keys': {'p256dh': sub.p256dh_key, 'auth': sub.auth_key}},
                     data=json.dumps({'title': '🔔 Teste', 'body': 'Notificações a funcionar!', 'data': {'url': '/'}}),
-                    vapid_private_key=VAPID_PRIVATE_KEY,
+                    vapid_private_key=priv_key,
                     vapid_claims=VAPID_CLAIMS
                 )
                 sent += 1

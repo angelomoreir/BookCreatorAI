@@ -58,10 +58,15 @@ def send_push_notification(subscription, title, body, url=None, notification_typ
             'requireInteraction': notification_type in ['usage_reset', 'new_feature']
         })
         
+        import base64
+        from cryptography.hazmat.primitives.asymmetric import ec
+        from cryptography.hazmat.backends import default_backend
+        raw = base64.urlsafe_b64decode(VAPID_PRIVATE_KEY + '==')
+        priv_key_obj = ec.derive_private_key(int.from_bytes(raw, 'big'), ec.SECP256R1(), default_backend())
         webpush(
             subscription_info=subscription_info,
             data=payload,
-            vapid_private_key=VAPID_PRIVATE_KEY,
+            vapid_private_key=priv_key_obj,
             vapid_claims=VAPID_CLAIMS
         )
         

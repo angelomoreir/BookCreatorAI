@@ -534,8 +534,10 @@ def download_manual():
 
 # ==================== PUSH NOTIFICATIONS API ====================
 
-# VAPID public key for Web Push
-VAPID_PUBLIC_KEY = os.environ.get('VAPID_PUBLIC_KEY', 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U')
+# VAPID keys for Web Push
+VAPID_PUBLIC_KEY = os.environ.get('VAPID_PUBLIC_KEY', 'BPnZhol_8FfeUUFKwIzyHElR2lx4xRBDONOF61-8Eowcb-5k0QVKbhSjMe16m9mzVuASmxwPQ6fr3RheUnR2CQY')
+VAPID_PRIVATE_KEY = os.environ.get('VAPID_PRIVATE_KEY', '-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgbZHWDUnubpXd3kCe\nYpfWyCLoioLi6MudCc/8J+ALZJahRANCAAT52YaJf/BX3lFBSsCM8hxJUdpceMUQ\nQzjThetfvBKMHG/uZNEFSm4UozHtepvZs1bgEpscD0On690YXlJ0dgkG\n-----END PRIVATE KEY-----')
+VAPID_CLAIMS = {'sub': 'mailto:admin@bookcreatorai.com'}
 
 @app.route('/api/notifications/vapid-key')
 def get_vapid_key():
@@ -7628,79 +7630,7 @@ def admin_daily_usage():
         'data': [{'date': str(d.date), 'count': d.count} for d in daily_analyses]
     })
 
-# ==================== PUSH NOTIFICATIONS API ====================
 
-VAPID_PUBLIC_KEY = os.environ.get('VAPID_PUBLIC_KEY', 'BPnZhol_8FfeUUFKwIzyHElR2lx4xRBDONOF61-8Eowcb-5k0QVKbhSjMe16m9mzVuASmxwPQ6fr3RheUnR2CQY')
-VAPID_PRIVATE_KEY = os.environ.get('VAPID_PRIVATE_KEY', '-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgbZHWDUnubpXd3kCe\nYpfWyCLoioLi6MudCc/8J+ALZJahRANCAAT52YaJf/BX3lFBSsCM8hxJUdpceMUQ\nQzjThetfvBKMHG/uZNEFSm4UozHtepvZs1bgEpscD0On690YXlJ0dgkG\n-----END PRIVATE KEY-----')
-VAPID_CLAIMS = {'sub': 'mailto:admin@bookcreatorai.com'}
-
-@app.route('/api/notifications/vapid-key')
-def notifications_vapid_key():
-    return jsonify({'success': True, 'publicKey': VAPID_PUBLIC_KEY})
-
-@app.route('/api/notifications/subscribe', methods=['POST'])
-@login_required
-def notifications_subscribe():
-    try:
-        data = request.get_json()
-        subscription = data.get('subscription', {})
-        endpoint = subscription.get('endpoint')
-        if not endpoint:
-            return jsonify({'success': False, 'error': 'No endpoint'})
-        p256dh = subscription.get('keys', {}).get('p256dh', '')
-        auth = subscription.get('keys', {}).get('auth', '')
-        existing = PushSubscription.query.filter_by(endpoint=endpoint).first()
-        if existing:
-            existing.user_id = current_user.id
-            existing.p256dh_key = p256dh
-            existing.auth_key = auth
-            existing.is_active = True
-        else:
-            sub = PushSubscription(
-                user_id=current_user.id,
-                endpoint=endpoint,
-                p256dh_key=p256dh,
-                auth_key=auth
-            )
-            db.session.add(sub)
-        db.session.commit()
-        return jsonify({'success': True})
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@app.route('/api/notifications/unsubscribe', methods=['POST'])
-@login_required
-def notifications_unsubscribe():
-    data = request.get_json()
-    endpoint = data.get('endpoint')
-    if endpoint:
-        PushSubscription.query.filter_by(user_id=current_user.id, endpoint=endpoint).delete()
-        db.session.commit()
-    return jsonify({'success': True})
-
-@app.route('/api/notifications/preferences', methods=['GET', 'POST'])
-@login_required
-def notifications_preferences():
-    if request.method == 'GET':
-        subs = PushSubscription.query.filter_by(user_id=current_user.id, is_active=True).first()
-        if subs:
-            return jsonify({'success': True, 'preferences': {
-                'usage_reset': subs.notify_usage_reset,
-                'new_features': subs.notify_new_features,
-                'tips': subs.notify_tips,
-                'promotions': subs.notify_promotions
-            }})
-        return jsonify({'success': True, 'preferences': None})
-    data = request.get_json()
-    subs = PushSubscription.query.filter_by(user_id=current_user.id, is_active=True).first()
-    if subs:
-        subs.notify_usage_reset = data.get('usage_reset', True)
-        subs.notify_new_features = data.get('new_features', True)
-        subs.notify_tips = data.get('tips', False)
-        subs.notify_promotions = data.get('promotions', False)
-        db.session.commit()
-    return jsonify({'success': True})
 
 @app.route('/api/notifications/test', methods=['POST'])
 @login_required

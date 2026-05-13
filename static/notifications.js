@@ -105,6 +105,7 @@ const NotificationSystem = {
         try {
             const response = await fetch('/api/notifications/subscribe', {
                 method: 'POST',
+                credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     subscription: subscription.toJSON()
@@ -131,6 +132,7 @@ const NotificationSystem = {
                 // Remove from server
                 await fetch('/api/notifications/unsubscribe', {
                     method: 'POST',
+                    credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         endpoint: subscription.endpoint
@@ -166,6 +168,7 @@ const NotificationSystem = {
         try {
             const response = await fetch('/api/notifications/preferences', {
                 method: 'POST',
+                credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(preferences)
             });

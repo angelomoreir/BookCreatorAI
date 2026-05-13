@@ -7630,8 +7630,8 @@ def admin_daily_usage():
 
 # ==================== PUSH NOTIFICATIONS API ====================
 
-VAPID_PUBLIC_KEY = os.environ.get('VAPID_PUBLIC_KEY', 'BPYVgcwG299uWv3SpiSs5DIiAyFZhX0N9vaDMYZDIqT6MdiMs7fzoOFI-MUD4xRp8vJjzmFhS3wK_31_J8E2scM')
-VAPID_PRIVATE_KEY = os.environ.get('VAPID_PRIVATE_KEY', 'MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQg/pRTL66oMme+8V9GPYNcIb3SnCUk2URRWG5n5g4pKNqhRANCAAT2FYHMBtvfblr90qYkrOQyIgMhWYV9Dfb2gzGGQyKk+jHYjLO386DhSPjFA+MUafLyY85hYUt8Cv99fyfBNrHD')
+VAPID_PUBLIC_KEY = os.environ.get('VAPID_PUBLIC_KEY', 'BPnZhol_8FfeUUFKwIzyHElR2lx4xRBDONOF61-8Eowcb-5k0QVKbhSjMe16m9mzVuASmxwPQ6fr3RheUnR2CQY')
+VAPID_PRIVATE_KEY = os.environ.get('VAPID_PRIVATE_KEY', '-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgbZHWDUnubpXd3kCe\nYpfWyCLoioLi6MudCc/8J+ALZJahRANCAAT52YaJf/BX3lFBSsCM8hxJUdpceMUQ\nQzjThetfvBKMHG/uZNEFSm4UozHtepvZs1bgEpscD0On690YXlJ0dgkG\n-----END PRIVATE KEY-----')
 VAPID_CLAIMS = {'sub': 'mailto:admin@bookcreatorai.com'}
 
 @app.route('/api/notifications/vapid-key')

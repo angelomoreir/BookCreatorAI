@@ -726,21 +726,30 @@ def debug_notifications():
 def test_notification():
     """Send a test notification to the current user"""
     try:
-        from utils.notifications import send_notification_to_user
-        
-        count = send_notification_to_user(
-            current_user,
-            title="🔔 Teste de Notificação",
-            body="As notificações estão a funcionar corretamente!",
-            url="/explorer",
-            notification_type="general",
-            save_to_db=False
-        )
-        
+        from pywebpush import webpush, WebPushException
+        from models.book import PushSubscription
+        subs = PushSubscription.query.filter_by(user_id=current_user.id, is_active=True).all()
+        errors = []
+        sent = 0
+        for sub in subs:
+            try:
+                webpush(
+                    subscription_info={'endpoint': sub.endpoint, 'keys': {'p256dh': sub.p256dh_key, 'auth': sub.auth_key}},
+                    data=json.dumps({'title': '🔔 Teste', 'body': 'Notificações a funcionar!', 'data': {'url': '/'}}),
+                    vapid_private_key=VAPID_PRIVATE_KEY,
+                    vapid_claims=VAPID_CLAIMS
+                )
+                sent += 1
+            except Exception as e:
+                errors.append(str(e))
+                sub.is_active = False
+                db.session.commit()
         return jsonify({
             'success': True,
-            'sent_count': count,
-            'message': f'Notificação enviada para {count} dispositivo(s)!'
+            'sent_count': sent,
+            'message': f'Notificação enviada para {sent} dispositivo(s)!',
+            'errors': errors,
+            'subs_found': len(subs)
         })
     except Exception as e:
         logger.warning(f"Test notification error: {e}")

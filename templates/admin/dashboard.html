@@ -987,8 +987,12 @@
                                 <td class="py-3 text-gray-400">${u.usage_count}</td>
                                 <td class="py-3 text-gray-400 text-sm">${u.created_at.split(' ')[0]}</td>
                                 <td class="py-3">
-                                    <button onclick="resetUserUsage(${u.id})" class="text-yellow-400 hover:text-yellow-300 mr-2"><i class="fas fa-redo"></i></button>
-                                    <button onclick="deleteUser(${u.id})" class="text-red-400 hover:text-red-300"><i class="fas fa-trash"></i></button>
+                                    <button onclick="resetUserUsage(${u.id})" class="px-2 py-1 bg-yellow-500/20 hover:bg-yellow-500/40 text-yellow-400 hover:text-yellow-300 rounded text-xs mr-1 border border-yellow-500/30" title="Reset uso">
+                                        <i class="fas fa-redo mr-1"></i>Reset
+                                    </button>
+                                    <button onclick="deleteUser(${u.id})" class="px-2 py-1 bg-red-500/20 hover:bg-red-500/40 text-red-400 hover:text-red-300 rounded text-xs border border-red-500/30" title="Apagar utilizador">
+                                        <i class="fas fa-trash mr-1"></i>Apagar
+                                    </button>
                                 </td>
                             </tr>
                         `).join('');

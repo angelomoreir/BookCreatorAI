@@ -709,6 +709,18 @@ def mark_notification_read(notification_id):
     
     return jsonify({'success': True})
 
+@app.route('/api/notifications/debug')
+@api_login_required
+def debug_notifications():
+    subs = PushSubscription.query.filter_by(user_id=current_user.id).all()
+    all_subs = PushSubscription.query.all()
+    return jsonify({
+        'user_id': current_user.id,
+        'user_subs': len(subs),
+        'all_subs': len(all_subs),
+        'subs_detail': [{'id': s.id, 'user_id': s.user_id, 'is_active': s.is_active, 'endpoint_start': s.endpoint[:50]} for s in all_subs]
+    })
+
 @app.route('/api/notifications/test', methods=['POST'])
 @api_login_required
 def test_notification():

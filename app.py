@@ -350,6 +350,14 @@ def landing():
     """Landing page"""
     return render_template('landing.html')
 
+@app.route('/sw.js')
+def service_worker():
+    from flask import send_from_directory
+    response = send_from_directory('static', 'sw.js')
+    response.headers['Service-Worker-Allowed'] = '/'
+    response.headers['Content-Type'] = 'application/javascript'
+    return response
+
 @app.route('/setup-admin-bookcreatorai-2026')
 def setup_admin():
     """One-time setup route to create supervisor account"""

@@ -18,7 +18,7 @@ const NotificationSystem = {
         
         try {
             // Register service worker
-            this.swRegistration = await navigator.serviceWorker.register('/static/sw.js');
+            this.swRegistration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
             console.log('[Notifications] Service Worker registered');
             
             // Get VAPID public key from server

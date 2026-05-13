@@ -9,8 +9,8 @@ from datetime import datetime
 # Generate these with: openssl ecparam -genkey -name prime256v1 -out private_key.pem
 # Then: openssl ec -in private_key.pem -pubout -outform DER | tail -c 65 | base64 | tr '/+' '_-' | tr -d '\n'
 
-VAPID_PRIVATE_KEY = os.environ.get('VAPID_PRIVATE_KEY', 'your-private-key-here')
-VAPID_PUBLIC_KEY = os.environ.get('VAPID_PUBLIC_KEY', 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U')
+VAPID_PRIVATE_KEY = os.environ.get('VAPID_PRIVATE_KEY', '-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgbZHWDUnubpXd3kCe\nYpfWyCLoioLi6MudCc/8J+ALZJahRANCAAT52YaJf/BX3lFBSsCM8hxJUdpceMUQ\nQzjThetfvBKMHG/uZNEFSm4UozHtepvZs1bgEpscD0On690YXlJ0dgkG\n-----END PRIVATE KEY-----')
+VAPID_PUBLIC_KEY = os.environ.get('VAPID_PUBLIC_KEY', 'BPnZhol_8FfeUUFKwIzyHElR2lx4xRBDONOF61-8Eowcb-5k0QVKbhSjMe16m9mzVuASmxwPQ6fr3RheUnR2CQY')
 VAPID_CLAIMS = {
     'sub': 'mailto:suporte@almadolivro.com'
 }

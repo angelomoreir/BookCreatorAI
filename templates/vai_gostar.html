@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vai Gostar - Alma do Livro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .match-ring {
+            background: conic-gradient(
+                #8b5cf6 calc(var(--match) * 1%),
+                rgba(255,255,255,0.1) calc(var(--match) * 1%)
+            );
+        }
+        .prediction-card {
+            transition: all 0.3s ease;
+        }
+        .prediction-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(139, 92, 246, 0.2);
+        }
+        .genre-tag {
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .pulse-glow {
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(139, 92, 246, 0.6); }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <!-- Navigation -->
+    <nav class="bg-black/30 backdrop-blur-lg border-b border-white/10 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <a href="/" class="flex items-center gap-3">
+                    <span class="text-3xl">🔍</span>
+                    <span class="text-xl font-bold text-white">Alma do Livro</span>
+                </a>
+                <div class="flex items-center gap-4">
+                    <a href="/explorer" class="text-gray-300 hover:text-white transition-colors">
+                        ← Explorador
+                    </a>
+                    <a href="{{ url_for('profile') }}" class="flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-white text-sm transition-all">
+                        <span class="w-6 h-6 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-xs font-bold">
+                            {{ current_user.name[0].upper() }}
+                        </span>
+                        <span class="hidden sm:inline">{{ current_user.name.split()[0] }}</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-white mb-4">
+                <span class="text-5xl">💜</span> Vai Gostar
+            </h1>
+            <p class="text-xl text-gray-400">Livros escolhidos especialmente para ti pela IA</p>
+        </div>
+
+        <!-- Taste Profile Section -->
+        <div class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-8 mb-8">
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-white mb-2 flex items-center gap-3">
+                        <span>🧠</span> O Teu Perfil de Leitor
+                    </h2>
+                    {% if profile and profile.taste_summary %}
+                        <p class="text-gray-300 max-w-2xl">{{ profile.taste_summary }}</p>
+                        <p class="text-sm text-gray-500 mt-2">
+                            Baseado em {{ profile.books_analyzed }} livros analisados • 
+                            Atualizado: {{ profile.last_updated.strftime('%d/%m/%Y') if profile.last_updated else 'Nunca' }}
+                        </p>
+                    {% else %}
+                        <p class="text-gray-400">
+                            {% if analysis_count < 3 %}
+                                Explora mais {{ 3 - analysis_count }} livro(s) para desbloquear o teu perfil de gostos!
+                            {% else %}
+                                Clica em "Analisar Gostos" para a IA descobrir o teu perfil de leitor.
+                            {% endif %}
+                        </p>
+                    {% endif %}
+                </div>
+                <div class="flex gap-3">
+                    {% if analysis_count >= 3 %}
+                        <button onclick="analyzeTaste()" id="analyzeBtn" class="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-xl transition-all flex items-center gap-2">
+                            <span>🔮</span>
+                            <span>{{ 'Atualizar Perfil' if profile else 'Analisar Gostos' }}</span>
+                        </button>
+                    {% endif %}
+                    {% if profile %}
+                        <button onclick="generatePredictions()" id="predictBtn" class="px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold rounded-xl transition-all flex items-center gap-2">
+                            <span>✨</span>
+                            <span>Novas Sugestões</span>
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if profile %}
+                <!-- Taste Tags -->
+                <div class="mt-8 grid md:grid-cols-3 gap-6">
+                    <!-- Genres -->
+                    <div>
+                        <h3 class="text-sm font-semibold text-gray-400 mb-3">📚 Géneros Favoritos</h3>
+                        <div class="flex flex-wrap gap-2" id="genreTags">
+                            {% for genre, score in profile.get_genres().items() %}
+                                <span class="genre-tag px-3 py-1 bg-purple-500/20 border border-purple-500/30 text-purple-300 rounded-full text-sm" style="opacity: {{ score }}">
+                                    {{ genre | replace('_', ' ') | title }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <!-- Themes -->
+                    <div>
+                        <h3 class="text-sm font-semibold text-gray-400 mb-3">💡 Temas Preferidos</h3>
+                        <div class="flex flex-wrap gap-2" id="themeTags">
+                            {% for theme, score in profile.get_themes().items() %}
+                                <span class="genre-tag px-3 py-1 bg-pink-500/20 border border-pink-500/30 text-pink-300 rounded-full text-sm">
+                                    {{ theme | replace('_', ' ') | title }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <!-- Stats -->
+                    <div>
+                        <h3 class="text-sm font-semibold text-gray-400 mb-3">📊 Estatísticas</h3>
+                        <div class="space-y-2 text-sm">
+                            <p class="text-gray-300">
+                                <span class="text-gray-500">Livros analisados:</span> {{ profile.books_analyzed }}
+                            </p>
+                            <p class="text-gray-300">
+                                <span class="text-gray-500">Livros avaliados:</span> {{ profile.get_liked_books() | length }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Progress Bar (shown when analyzing) -->
+        <div id="progressSection" class="hidden mb-8">
+            <div class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-6">
+                <div class="flex items-center gap-4">
+                    <div class="animate-spin w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full"></div>
+                    <div class="flex-1">
+                        <p class="text-white font-medium" id="progressText">A analisar os teus gostos...</p>
+                        <div class="w-full bg-white/10 rounded-full h-2 mt-2">
+                            <div id="progressBar" class="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Predictions Section -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                <span>💜</span> Livros Para Ti
+                <span class="text-sm font-normal text-gray-400">({{ predictions | length }} sugestões)</span>
+            </h2>
+
+            {% if predictions %}
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" id="predictionsGrid">
+                    {% for pred in predictions %}
+                        <div class="prediction-card bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-6 relative overflow-hidden" data-id="{{ pred.id }}">
+                            <!-- Match Score Ring -->
+                            <div class="absolute top-4 right-4">
+                                <div class="match-ring w-14 h-14 rounded-full flex items-center justify-center" style="--match: {{ pred.match_score }}">
+                                    <div class="w-11 h-11 bg-slate-900 rounded-full flex items-center justify-center">
+                                        <span class="text-white font-bold text-sm">{{ pred.match_score | int }}%</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Book Info -->
+                            <div class="pr-16">
+                                <h3 class="text-lg font-bold text-white mb-1 line-clamp-2">{{ pred.book_title }}</h3>
+                                <p class="text-gray-400 text-sm mb-4">{{ pred.book_author }}</p>
+                            </div>
+
+                            <!-- Reasons -->
+                            <div class="space-y-2 mb-4">
+                                {% for reason in pred.get_reasons()[:3] %}
+                                    <div class="flex items-start gap-2">
+                                        <span class="text-purple-400 mt-0.5">✓</span>
+                                        <span class="text-gray-300 text-sm">{{ reason }}</span>
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="flex items-center justify-between pt-4 border-t border-white/10">
+                                <div class="flex gap-2">
+                                    <button onclick="giveFeedback({{ pred.id }}, 'liked')" class="p-2 hover:bg-green-500/20 rounded-lg transition-colors {% if pred.user_feedback == 'liked' %}bg-green-500/20 text-green-400{% else %}text-gray-400{% endif %}" title="Gostei">
+                                        👍
+                                    </button>
+                                    <button onclick="giveFeedback({{ pred.id }}, 'disliked')" class="p-2 hover:bg-red-500/20 rounded-lg transition-colors {% if pred.user_feedback == 'disliked' %}bg-red-500/20 text-red-400{% else %}text-gray-400{% endif %}" title="Não gostei">
+                                        👎
+                                    </button>
+                                </div>
+                                <a href="/explorer?book={{ pred.book_title | urlencode }}" class="px-4 py-2 bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 rounded-lg text-sm transition-all flex items-center gap-2">
+                                    <span>🔍</span>
+                                    <span>Explorar</span>
+                                </a>
+                            </div>
+
+                            {% if pred.was_explored %}
+                                <div class="absolute top-0 left-0 bg-green-500 text-white text-xs px-2 py-1 rounded-br-lg">
+                                    ✓ Explorado
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-12 text-center">
+                    <div class="text-6xl mb-4">📚</div>
+                    <h3 class="text-xl font-bold text-white mb-2">Ainda sem sugestões</h3>
+                    <p class="text-gray-400 mb-6">
+                        {% if not profile %}
+                            Primeiro, analisa o teu perfil de gostos para receber sugestões personalizadas.
+                        {% else %}
+                            Clica em "Novas Sugestões" para a IA encontrar livros perfeitos para ti!
+                        {% endif %}
+                    </p>
+                    {% if profile %}
+                        <button onclick="generatePredictions()" class="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-xl transition-all">
+                            ✨ Gerar Sugestões
+                        </button>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- How It Works -->
+        <div class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-8">
+            <h2 class="text-xl font-bold text-white mb-6">🤔 Como Funciona?</h2>
+            <div class="grid md:grid-cols-4 gap-6">
+                <div class="text-center">
+                    <div class="w-12 h-12 bg-purple-600/30 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <span class="text-2xl">📖</span>
+                    </div>
+                    <h3 class="text-white font-medium mb-1">1. Explora Livros</h3>
+                    <p class="text-gray-400 text-sm">Quanto mais livros explorares, melhor a IA te conhece</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-12 h-12 bg-purple-600/30 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <span class="text-2xl">🧠</span>
+                    </div>
+                    <h3 class="text-white font-medium mb-1">2. Analisa Gostos</h3>
+                    <p class="text-gray-400 text-sm">A IA identifica os teus géneros, temas e estilos favoritos</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-12 h-12 bg-purple-600/30 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <span class="text-2xl">✨</span>
+                    </div>
+                    <h3 class="text-white font-medium mb-1">3. Recebe Sugestões</h3>
+                    <p class="text-gray-400 text-sm">Livros escolhidos especialmente para o teu perfil</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-12 h-12 bg-purple-600/30 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <span class="text-2xl">👍</span>
+                    </div>
+                    <h3 class="text-white font-medium mb-1">4. Dá Feedback</h3>
+                    <p class="text-gray-400 text-sm">O teu feedback melhora as próximas sugestões</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Analyze taste profile
+        async function analyzeTaste() {
+            const btn = document.getElementById('analyzeBtn');
+            const progressSection = document.getElementById('progressSection');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<span class="animate-spin">⏳</span> A analisar...';
+            progressSection.classList.remove('hidden');
+            
+            // Simulate progress
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 90) progress = 90;
+                progressBar.style.width = progress + '%';
+            }, 500);
+            
+            try {
+                const response = await fetch('/api/taste/analyze', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const data = await response.json();
+                
+                clearInterval(progressInterval);
+                progressBar.style.width = '100%';
+                progressText.textContent = 'Análise completa!';
+                
+                if (data.success) {
+                    setTimeout(() => {
+                        showToast('Perfil de gostos atualizado! 🎉', 'success');
+                        location.reload();
+                    }, 500);
+                } else {
+                    showToast(data.error || 'Erro ao analisar gostos', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '<span>🔮</span><span>Analisar Gostos</span>';
+                    progressSection.classList.add('hidden');
+                }
+            } catch (error) {
+                clearInterval(progressInterval);
+                showToast('Erro de conexão', 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<span>🔮</span><span>Analisar Gostos</span>';
+                progressSection.classList.add('hidden');
+            }
+        }
+        
+        // Generate new predictions
+        async function generatePredictions() {
+            const btn = document.getElementById('predictBtn');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="animate-spin">⏳</span> A procurar...';
+            }
+            
+            try {
+                const response = await fetch('/api/taste/predict', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } else if (data.need_analysis) {
+                    showToast('Primeiro analisa o teu perfil de gostos!', 'warning');
+                } else if (data.limit_reached) {
+                    showToast(data.error, 'error');
+                } else {
+                    showToast(data.error || 'Erro ao gerar sugestões', 'error');
+                }
+            } catch (error) {
+                showToast('Erro de conexão', 'error');
+            }
+            
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<span>✨</span><span>Novas Sugestões</span>';
+            }
+        }
+        
+        // Give feedback on prediction
+        async function giveFeedback(predictionId, feedback) {
+            try {
+                const response = await fetch('/api/taste/feedback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prediction_id: predictionId,
+                        feedback: feedback
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    // Update UI
+                    const card = document.querySelector(`[data-id="${predictionId}"]`);
+                    if (card) {
+                        const buttons = card.querySelectorAll('.flex.gap-2 button');
+                        buttons.forEach(btn => {
+                            btn.classList.remove('bg-green-500/20', 'text-green-400', 'bg-red-500/20', 'text-red-400');
+                            btn.classList.add('text-gray-400');
+                        });
+                        
+                        if (feedback === 'liked') {
+                            buttons[0].classList.add('bg-green-500/20', 'text-green-400');
+                        } else if (feedback === 'disliked') {
+                            buttons[1].classList.add('bg-red-500/20', 'text-red-400');
+                        }
+                    }
+                } else {
+                    showToast(data.error || 'Erro ao registar feedback', 'error');
+                }
+            } catch (error) {
+                showToast('Erro de conexão', 'error');
+            }
+        }
+        
+        // Toast notification
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg text-white z-50 transition-all transform ${
+                type === 'success' ? 'bg-green-600' : 
+                type === 'error' ? 'bg-red-600' : 
+                type === 'warning' ? 'bg-yellow-600' :
+                'bg-purple-600'
+            }`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+    
+    <script src="{{ url_for('static', filename='theme.js') }}"></script>
+</body>
+</html>

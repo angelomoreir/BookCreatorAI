@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post 10 - Call to Action</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #1a1a2e;
+            padding: 20px;
+        }
+        .post {
+            width: 540px;
+            height: 540px;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 40%, #581c87 100%);
+            position: relative;
+            overflow: hidden;
+            border-radius: 16px;
+        }
+        .glow {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.6;
+        }
+        .glow-1 { width: 350px; height: 350px; background: #8b5cf6; top: -120px; right: -100px; }
+        .glow-2 { width: 300px; height: 300px; background: #ec4899; bottom: -120px; left: -100px; }
+        .glow-3 { width: 200px; height: 200px; background: #fbbf24; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .content {
+            position: relative;
+            z-index: 10;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            text-align: center;
+        }
+        .icon {
+            width: 110px;
+            height: 110px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+            box-shadow: 0 25px 50px rgba(99, 102, 241, 0.5);
+            font-size: 55px;
+        }
+        .headline {
+            font-size: 50px;
+            font-weight: 900;
+            margin-bottom: 15px;
+            line-height: 1.1;
+            background: linear-gradient(90deg, #fbbf24, #f59e0b, #fb923c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .subheadline {
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+            line-height: 1.5;
+            max-width: 400px;
+            margin-bottom: 35px;
+        }
+        .cta-button {
+            background: linear-gradient(90deg, #8b5cf6, #a855f7, #d946ef);
+            color: white;
+            font-size: 20px;
+            font-weight: 700;
+            padding: 18px 45px;
+            border-radius: 50px;
+            border: none;
+            box-shadow: 0 15px 35px rgba(139, 92, 246, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+        }
+        .features-row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .feature-pill {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 10px 18px;
+            border-radius: 25px;
+            color: white;
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .day-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(90deg, #10b981, #059669);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .badge {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.15);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .caption {
+            margin-top: 20px;
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 12px;
+            max-width: 540px;
+            color: #ccc;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .caption strong { color: #a855f7; }
+    </style>
+</head>
+<body>
+    <div class="post">
+        <div class="glow glow-1"></div>
+        <div class="glow glow-2"></div>
+        <div class="glow glow-3"></div>
+        <div class="day-badge">DIA 10</div>
+        <div class="badge">✨ Alma do Livro</div>
+        <div class="content">
+            <div class="icon">🔍</div>
+            <h1 class="headline">Alma do Livro</h1>
+            <p class="subheadline">Explore qualquer livro de uma forma totalmente nova com Inteligência Artificial</p>
+            <div class="cta-button">Experimentar Agora</div>
+            <div class="features-row">
+                <div class="feature-pill">🎭 Entrevistar</div>
+                <div class="feature-pill">🎲 Quiz</div>
+                <div class="feature-pill">🔀 Finais</div>
+                <div class="feature-pill">🎵 Playlist</div>
+            </div>
+        </div>
+    </div>
+    <div class="caption">
+        <strong>🚀 Está pronto para explorar os seus livros favoritos?</strong><br><br>
+        Durante estes 10 dias, mostrámos tudo o que a Alma do Livro pode fazer:<br><br>
+        🎭 Entrevistar personagens<br>
+        🎲 Quizzes personalizados<br>
+        🔀 Finais alternativos<br>
+        🎵 Playlists do livro<br>
+        📖 Continuar histórias<br>
+        🎬 Trailers cinematográficos<br>
+        🔬 Análises profundas<br><br>
+        Tudo isto com qualquer livro que escolher! Experimente agora no BookCreatorAI! 🔗<br><br>
+        #AlmaDoLivro #BookCreatorAI #IA #Livros #Leitura #Inovacao
+    </div>
+</body>
+</html>

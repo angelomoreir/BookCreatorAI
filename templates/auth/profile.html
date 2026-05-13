@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil - Alma do Livro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <!-- Header -->
+    <header class="bg-black/30 backdrop-blur-lg border-b border-white/10 sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <a href="/" class="flex items-center gap-2 sm:gap-3">
+                    <span class="text-2xl sm:text-3xl">📚</span>
+                    <div>
+                        <h1 class="text-lg sm:text-xl font-bold text-white">Alma do Livro</h1>
+                    </div>
+                </a>
+                <div class="flex items-center gap-3">
+                    <select id="uiLangSelect" class="bg-white/10 border border-white/20 text-white text-sm rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-purple-500 mr-3">
+                        <option value="pt-pt" class="bg-gray-800">🇵🇹 PT</option>
+                        <option value="pt-br" class="bg-gray-800">🇧🇷 BR</option>
+                        <option value="en" class="bg-gray-800">🇬🇧 EN</option>
+                        <option value="es" class="bg-gray-800">🇪🇸 ES</option>
+                        <option value="fr" class="bg-gray-800">🇫🇷 FR</option>
+                        <option value="de" class="bg-gray-800">🇩🇪 DE</option>
+                        <option value="it" class="bg-gray-800">🇮🇹 IT</option>
+                    </select>
+                    <a href="/" class="text-gray-400 hover:text-white text-sm" data-i18n="btn_back">← Voltar</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 py-8">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="mb-6 p-4 rounded-lg {% if category == 'error' %}bg-red-500/20 border border-red-500/50 text-red-300{% elif category == 'success' %}bg-green-500/20 border border-green-500/50 text-green-300{% else %}bg-blue-500/20 border border-blue-500/50 text-blue-300{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Profile Header -->
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-8 mb-6">
+            <div class="flex items-center gap-6">
+                <div class="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-3xl text-white font-bold">
+                    {{ current_user.name[0].upper() }}
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-white">{{ current_user.name }}</h2>
+                    <p class="text-gray-400">{{ current_user.email }}</p>
+                    <p class="text-sm text-purple-400 mt-1">
+                        <span data-i18n="profile_member_since">Membro desde</span> {{ current_user.created_at.strftime('%d/%m/%Y') }}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Plan & Usage -->
+        <div class="grid md:grid-cols-2 gap-6 mb-6">
+            <!-- Current Plan -->
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-6">
+                <h3 class="text-lg font-semibold text-white mb-4">📋 <span data-i18n="profile_current_plan">Plano Atual</span></h3>
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="px-3 py-1 bg-purple-500/30 text-purple-300 rounded-full text-sm font-medium capitalize">
+                        {{ current_user.plan }}
+                    </span>
+                </div>
+                <div class="space-y-2 text-sm text-gray-400">
+                    {% if current_user.plan == 'free' %}
+                        <p data-i18n="profile_free_1">✓ 10 análises por mês</p>
+                        <p data-i18n="profile_free_2">✓ Funcionalidades básicas</p>
+                        <p class="text-gray-500" data-i18n="profile_free_3">✗ Histórico limitado</p>
+                    {% elif current_user.plan == 'pro' %}
+                        <p data-i18n="profile_pro_1">✓ 100 análises por mês</p>
+                        <p data-i18n="profile_pro_2">✓ Todas as funcionalidades</p>
+                        <p data-i18n="profile_pro_3">✓ Histórico completo</p>
+                    {% else %}
+                        <p data-i18n="profile_premium_1">✓ 1000 análises por mês</p>
+                        <p data-i18n="profile_premium_2">✓ Todas as funcionalidades</p>
+                        <p data-i18n="profile_premium_3">✓ Suporte prioritário</p>
+                    {% endif %}
+                </div>
+                <div class="mt-4 flex gap-2">
+                    {% if current_user.plan == 'free' %}
+                        <a href="{{ url_for('subscription.pricing') }}" class="flex-1 py-2 px-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium rounded-lg text-sm text-center transition-all">
+                            <span data-i18n="profile_upgrade">Fazer Upgrade</span>
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('subscription.manage') }}" class="flex-1 py-2 px-4 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg text-sm text-center transition-all">
+                            <span data-i18n="profile_manage_sub">Gerir Subscrição</span>
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Usage Stats -->
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-white" data-i18n="profile_usage">📊 Utilização</h3>
+                    <a href="{{ url_for('user_dashboard') }}" class="text-sm text-purple-400 hover:text-purple-300 transition-colors">
+                        <span data-i18n="profile_view_dashboard">Ver Dashboard →</span>
+                    </a>
+                </div>
+                <div class="mb-4">
+                    <div class="flex justify-between text-sm mb-2">
+                        <span class="text-gray-400" data-i18n="profile_analyses_month">Análises este mês</span>
+                        <span class="text-white">{{ current_user.usage_count }} / {{ current_user.get_usage_limit() }}</span>
+                    </div>
+                    <div class="w-full bg-white/10 rounded-full h-3">
+                        {% set usage_percent = (current_user.usage_count / current_user.get_usage_limit() * 100) | int %}
+                        <div class="bg-gradient-to-r from-purple-500 to-pink-500 h-3 rounded-full transition-all" style="width: {{ usage_percent }}%"></div>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-400">
+                    {% if current_user.can_use_feature() %}
+                        <span data-i18n="profile_analyses_left">Ainda tem</span> {{ current_user.get_usage_limit() - current_user.usage_count }} <span data-i18n="profile_analyses_available">análises disponíveis.</span>
+                    {% else %}
+                        <span class="text-red-400" data-i18n="profile_limit_reached">Limite atingido. Faça upgrade para continuar.</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <!-- Notifications Settings -->
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-6 mb-6">
+            <h3 class="text-lg font-semibold text-white mb-4">🔔 <span data-i18n="profile_notifications">Notificações Push</span></h3>
+            <div class="space-y-4">
+                <!-- Main Toggle -->
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-white font-medium" data-i18n="profile_enable_notif">Ativar Notificações</p>
+                        <p class="text-sm text-gray-400" data-i18n="profile_notif_desc">Recebe alertas sobre o teu uso e novidades</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span id="notificationStatus" class="text-gray-400 text-sm" data-i18n="profile_checking">A verificar...</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="notificationToggle" class="sr-only peer" onchange="toggleNotifications()">
+                            <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Notification Preferences (shown when enabled) -->
+                <div id="notificationSettings" class="hidden border-t border-white/10 pt-4 mt-4 space-y-3">
+                    <p class="text-sm text-gray-400 mb-3" data-i18n="profile_choose_notif">Escolhe que notificações queres receber:</p>
+                    
+                    <label class="flex items-center justify-between cursor-pointer">
+                        <span class="text-gray-300 text-sm" data-i18n="profile_notif_reset">📊 Reinício do limite mensal</span>
+                        <input type="checkbox" id="prefUsageReset" checked class="w-4 h-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500" onchange="updateNotificationPrefs()">
+                    </label>
+                    
+                    <label class="flex items-center justify-between cursor-pointer">
+                        <span class="text-gray-300 text-sm" data-i18n="profile_notif_features">✨ Novas funcionalidades</span>
+                        <input type="checkbox" id="prefNewFeatures" checked class="w-4 h-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500" onchange="updateNotificationPrefs()">
+                    </label>
+                    
+                    <label class="flex items-center justify-between cursor-pointer">
+                        <span class="text-gray-300 text-sm" data-i18n="profile_notif_tips">💡 Dicas de utilização</span>
+                        <input type="checkbox" id="prefTips" class="w-4 h-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500" onchange="updateNotificationPrefs()">
+                    </label>
+                    
+                    <label class="flex items-center justify-between cursor-pointer">
+                        <span class="text-gray-300 text-sm" data-i18n="profile_notif_promos">🎁 Promoções e ofertas</span>
+                        <input type="checkbox" id="prefPromos" class="w-4 h-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500" onchange="updateNotificationPrefs()">
+                    </label>
+                    
+                    <!-- Test Notification Button -->
+                    <div class="pt-3 border-t border-white/10">
+                        <button onclick="sendTestNotification()" class="px-4 py-2 bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 rounded-lg text-sm transition-all">
+                            <span data-i18n="profile_test_notif">🔔 Enviar Notificação de Teste</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Account Actions -->
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-6">
+            <h3 class="text-lg font-semibold text-white mb-4">⚙️ <span data-i18n="profile_account">Conta</span></h3>
+            <div class="flex flex-wrap gap-3">
+                <a href="{{ url_for('logout') }}" class="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-300 rounded-lg text-sm transition-all">
+                    <span data-i18n="profile_logout">Terminar Sessão</span>
+                </a>
+            </div>
+        </div>
+    </main>
+    
+    <script src="{{ url_for('static', filename='i18n.js') }}"></script>
+    <script src="{{ url_for('static', filename='notifications.js') }}"></script>
+    <script>
+        // Update notification preferences
+        async function updateNotificationPrefs() {
+            const prefs = {
+                usage_reset: document.getElementById('prefUsageReset').checked,
+                new_features: document.getElementById('prefNewFeatures').checked,
+                tips: document.getElementById('prefTips').checked,
+                promotions: document.getElementById('prefPromos').checked
+            };
+            
+            await NotificationSystem.updatePreferences(prefs);
+        }
+        
+        // Send test notification
+        async function sendTestNotification() {
+            try {
+                const response = await fetch('/api/notifications/test', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    NotificationSystem.showToast(data.message, 'success');
+                } else {
+                    NotificationSystem.showToast(data.error || 'Erro ao enviar notificação', 'error');
+                }
+            } catch (error) {
+                NotificationSystem.showToast('Erro de conexão', 'error');
+            }
+        }
+        
+        // Load preferences on page load
+        async function loadNotificationPrefs() {
+            try {
+                const response = await fetch('/api/notifications/preferences');
+                const data = await response.json();
+                
+                if (data.success && data.preferences) {
+                    document.getElementById('prefUsageReset').checked = data.preferences.usage_reset;
+                    document.getElementById('prefNewFeatures').checked = data.preferences.new_features;
+                    document.getElementById('prefTips').checked = data.preferences.tips;
+                    document.getElementById('prefPromos').checked = data.preferences.promotions;
+                }
+            } catch (error) {
+                console.error('Error loading preferences:', error);
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            await NotificationSystem.init();
+            await loadNotificationPrefs();
+        });
+    </script>
+</body>
+</html>

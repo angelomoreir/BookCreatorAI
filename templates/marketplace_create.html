@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar Template - Marketplace</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <!-- Header -->
+    <header class="bg-black/30 backdrop-blur-lg border-b border-white/10 sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <a href="/marketplace" class="flex items-center gap-3">
+                    <span class="text-2xl">←</span>
+                    <span class="text-white">Voltar ao Marketplace</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 py-8">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-white mb-2">✨ Criar Novo Template</h1>
+            <p class="text-gray-400">Partilha o teu template de análise com a comunidade</p>
+        </div>
+
+        <form id="createForm" onsubmit="submitTemplate(event)" class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-8">
+            <div class="space-y-6">
+                <!-- Title -->
+                <div>
+                    <label class="text-white font-medium block mb-2">Título do Template *</label>
+                    <input type="text" name="title" required maxlength="200"
+                           class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                           placeholder="Ex: Análise Profunda de Personagens">
+                </div>
+
+                <!-- Category -->
+                <div>
+                    <label class="text-white font-medium block mb-2">Categoria *</label>
+                    <select name="category" required
+                            class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <option value="">Selecionar categoria...</option>
+                        <option value="analysis">📊 Análise</option>
+                        <option value="creative">✨ Criativo</option>
+                        <option value="educational">🎓 Educacional</option>
+                        <option value="comparison">⚖️ Comparação</option>
+                        <option value="summary">📝 Resumo</option>
+                        <option value="quiz">🎲 Quiz</option>
+                    </select>
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <label class="text-white font-medium block mb-2">Descrição</label>
+                    <textarea name="description" rows="3"
+                              class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                              placeholder="Descreve o que este template faz e para que tipo de livros é mais adequado..."></textarea>
+                </div>
+
+                <!-- Prompt Template -->
+                <div>
+                    <label class="text-white font-medium block mb-2">Template do Prompt *</label>
+                    <p class="text-gray-400 text-sm mb-2">Usa {title} e {author} como placeholders para o título e autor do livro</p>
+                    <textarea name="prompt_template" rows="8" required
+                              class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 font-mono text-sm"
+                              placeholder="Analisa o livro '{title}' de {author} focando em:
+
+1. Desenvolvimento dos personagens principais
+2. Arcos narrativos e transformações
+3. Relações entre personagens
+4. Simbolismo associado a cada personagem
+
+Fornece uma análise detalhada com exemplos do texto."></textarea>
+                </div>
+
+                <!-- Example Output -->
+                <div>
+                    <label class="text-white font-medium block mb-2">Exemplo de Output (opcional)</label>
+                    <p class="text-gray-400 text-sm mb-2">Mostra um exemplo do resultado que este template produz</p>
+                    <textarea name="example_output" rows="5"
+                              class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                              placeholder="Exemplo de análise gerada com este template..."></textarea>
+                </div>
+
+                <!-- Pricing -->
+                <div class="bg-black/30 rounded-xl p-6">
+                    <label class="text-white font-medium block mb-4">💰 Preço</label>
+                    <div class="flex gap-4">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="pricing" value="free" checked onchange="togglePriceInput()"
+                                   class="w-4 h-4 text-purple-600">
+                            <span class="text-white">Gratuito</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="pricing" value="paid" onchange="togglePriceInput()"
+                                   class="w-4 h-4 text-purple-600">
+                            <span class="text-white">Pago</span>
+                        </label>
+                    </div>
+                    <div id="priceInput" class="mt-4 hidden">
+                        <div class="flex items-center gap-2">
+                            <span class="text-white">€</span>
+                            <input type="number" name="price" step="0.01" min="0.50" max="50"
+                                   class="w-32 px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                   placeholder="2.99">
+                        </div>
+                        <p class="text-gray-400 text-sm mt-2">Recebes 70% de cada venda. Mínimo €0.50, máximo €50.</p>
+                    </div>
+                </div>
+
+                <!-- Submit -->
+                <div class="flex gap-4">
+                    <button type="submit" id="submitBtn"
+                            class="flex-1 py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-xl transition-all">
+                        Publicar Template
+                    </button>
+                    <a href="/marketplace" class="px-8 py-4 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all text-center">
+                        Cancelar
+                    </a>
+                </div>
+            </div>
+        </form>
+
+        <!-- Tips -->
+        <div class="mt-8 bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-6">
+            <h3 class="text-white font-semibold mb-4">💡 Dicas para um bom template</h3>
+            <ul class="space-y-2 text-gray-400 text-sm">
+                <li>• Sê específico sobre o tipo de análise que queres</li>
+                <li>• Usa instruções claras e estruturadas</li>
+                <li>• Inclui exemplos do formato de output esperado</li>
+                <li>• Testa o template com vários livros antes de publicar</li>
+                <li>• Templates gratuitos ganham mais visibilidade inicial</li>
+            </ul>
+        </div>
+    </main>
+
+    <script>
+        function togglePriceInput() {
+            const isPaid = document.querySelector('input[name="pricing"]:checked').value === 'paid';
+            document.getElementById('priceInput').classList.toggle('hidden', !isPaid);
+        }
+        
+        async function submitTemplate(e) {
+            e.preventDefault();
+            
+            const form = e.target;
+            const formData = new FormData(form);
+            
+            const data = {
+                title: formData.get('title'),
+                category: formData.get('category'),
+                description: formData.get('description'),
+                prompt_template: formData.get('prompt_template'),
+                example_output: formData.get('example_output'),
+                price: formData.get('pricing') === 'paid' ? parseFloat(formData.get('price')) || 0 : 0
+            };
+            
+            if (!data.title || !data.category || !data.prompt_template) {
+                alert('Preenche todos os campos obrigatórios');
+                return;
+            }
+            
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.textContent = 'A publicar...';
+            
+            try {
+                const response = await fetch('/api/marketplace/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Template publicado com sucesso!');
+                    window.location.href = '/marketplace';
+                } else {
+                    alert(result.error || 'Erro ao publicar');
+                    btn.disabled = false;
+                    btn.textContent = 'Publicar Template';
+                }
+            } catch (error) {
+                alert('Erro de conexão');
+                btn.disabled = false;
+                btn.textContent = 'Publicar Template';
+            }
+        }
+    </script>
+    <script src="{{ url_for('static', filename='theme.js') }}"></script>
+</body>
+</html>

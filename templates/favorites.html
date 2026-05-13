@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="pt" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meus Favoritos - Alma do Livro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <!-- Header -->
+    <header class="bg-black/30 backdrop-blur-lg border-b border-white/10 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <a href="/explorer" class="flex items-center gap-3">
+                    <span class="text-3xl">🔍</span>
+                    <div>
+                        <h1 class="text-xl font-bold text-white">Alma do Livro</h1>
+                        <p class="text-xs text-gray-400 hidden sm:block">Meus Favoritos</p>
+                    </div>
+                </a>
+                <div class="flex items-center gap-3">
+                    <a href="/explorer" class="px-3 py-1.5 text-gray-300 hover:text-white text-sm transition-colors">
+                        Explorador
+                    </a>
+                    <a href="{{ url_for('user_dashboard') }}" class="px-3 py-1.5 text-gray-300 hover:text-white text-sm transition-colors">
+                        Dashboard
+                    </a>
+                    <a href="{{ url_for('profile') }}" class="flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-white text-sm transition-all">
+                        <span class="w-6 h-6 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-xs font-bold">
+                            {{ current_user.name[0].upper() }}
+                        </span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-white mb-2">⭐ Meus Favoritos</h1>
+                <p class="text-gray-400">{{ favorites|length }} itens guardados</p>
+            </div>
+            {% if favorites|length > 0 %}
+            <div class="flex items-center gap-2">
+                <button onclick="filterFavorites('all')" class="filter-btn active px-4 py-2 bg-purple-600/30 border border-purple-500/50 rounded-lg text-white text-sm transition-all" data-filter="all">
+                    Todos
+                </button>
+                <button onclick="filterFavorites('book')" class="filter-btn px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm transition-all hover:bg-white/10" data-filter="book">
+                    📚 Livros
+                </button>
+                <button onclick="filterFavorites('analysis')" class="filter-btn px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm transition-all hover:bg-white/10" data-filter="analysis">
+                    📝 Análises
+                </button>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if favorites|length > 0 %}
+        <!-- Favorites Grid -->
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4" id="favoritesGrid">
+            {% for fav in favorites %}
+            <div class="favorite-card bg-white/5 backdrop-blur-lg rounded-xl border border-white/10 p-5 hover:bg-white/10 transition-all group" 
+                 data-type="{{ fav.favorite_type }}" data-id="{{ fav.id }}">
+                <div class="flex items-start justify-between mb-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-lg flex items-center justify-center text-2xl
+                            {% if fav.favorite_type == 'book' %}bg-purple-600/30{% else %}bg-pink-600/30{% endif %}">
+                            {% if fav.favorite_type == 'book' %}📚{% else %}
+                                {% if fav.aspect == 'quiz' %}🎲
+                                {% elif fav.aspect == 'interview' %}🎭
+                                {% elif fav.aspect == 'continue' %}📖
+                                {% elif fav.aspect == 'alternate' %}🔀
+                                {% elif fav.aspect == 'summary' %}📝
+                                {% elif fav.aspect == 'characters' %}👥
+                                {% elif fav.aspect == 'chat' %}💬
+                                {% else %}📄{% endif %}
+                            {% endif %}
+                        </div>
+                        <div>
+                            <span class="px-2 py-0.5 text-xs rounded-full 
+                                {% if fav.favorite_type == 'book' %}bg-purple-600/30 text-purple-300{% else %}bg-pink-600/30 text-pink-300{% endif %}">
+                                {% if fav.favorite_type == 'book' %}Livro{% else %}{{ fav.aspect_label or 'Análise' }}{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    <button onclick="removeFavorite({{ fav.id }})" 
+                            class="opacity-0 group-hover:opacity-100 p-2 hover:bg-red-600/30 rounded-lg transition-all" title="Remover">
+                        <span class="text-red-400">✕</span>
+                    </button>
+                </div>
+                
+                <h3 class="text-lg font-semibold text-white mb-1 line-clamp-2">{{ fav.book_title }}</h3>
+                {% if fav.book_author %}
+                <p class="text-sm text-gray-400 mb-3">por {{ fav.book_author }}</p>
+                {% endif %}
+                
+                {% if fav.content_preview %}
+                <p class="text-sm text-gray-300 line-clamp-3 mb-3">{{ fav.content_preview }}</p>
+                {% endif %}
+                
+                {% if fav.notes %}
+                <div class="p-2 bg-yellow-600/10 border border-yellow-600/20 rounded-lg mb-3">
+                    <p class="text-xs text-yellow-300">📝 {{ fav.notes }}</p>
+                </div>
+                {% endif %}
+                
+                <div class="flex items-center justify-between pt-3 border-t border-white/10">
+                    <span class="text-xs text-gray-500">{{ fav.created_at_formatted }}</span>
+                    <div class="flex items-center gap-2">
+                        <button onclick="editNotes({{ fav.id }}, '{{ fav.notes|e if fav.notes else '' }}')" 
+                                class="p-1.5 hover:bg-white/10 rounded transition-all" title="Editar notas">
+                            <span class="text-gray-400 text-sm">📝</span>
+                        </button>
+                        <a href="/explorer?title={{ fav.book_title|urlencode }}{% if fav.book_author %}&author={{ fav.book_author|urlencode }}{% endif %}" 
+                           class="px-3 py-1 bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 text-xs rounded-lg transition-all">
+                            Explorar →
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <!-- Empty State -->
+        <div class="text-center py-20">
+            <span class="text-8xl block mb-6">⭐</span>
+            <h2 class="text-2xl font-bold text-white mb-3">Ainda não tens favoritos</h2>
+            <p class="text-gray-400 mb-6 max-w-md mx-auto">
+                Explora livros e guarda os teus favoritos para acesso rápido. 
+                Clica no ícone ⭐ enquanto exploras um livro para o adicionar aqui.
+            </p>
+            <a href="/explorer" class="inline-block px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-xl transition-all">
+                Explorar Livros →
+            </a>
+        </div>
+        {% endif %}
+    </main>
+
+    <!-- Notes Modal -->
+    <div id="notesModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden items-center justify-center">
+        <div class="bg-slate-800 rounded-2xl border border-white/20 p-6 w-full max-w-md mx-4">
+            <h3 class="text-xl font-bold text-white mb-4">📝 Editar Notas</h3>
+            <textarea id="notesInput" rows="4" 
+                      class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      placeholder="Adiciona notas sobre este favorito..."></textarea>
+            <div class="flex justify-end gap-3 mt-4">
+                <button onclick="closeNotesModal()" class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all">
+                    Cancelar
+                </button>
+                <button onclick="saveNotes()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all">
+                    Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentEditId = null;
+        
+        function filterFavorites(type) {
+            // Update buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('bg-purple-600/30', 'border-purple-500/50', 'active');
+                btn.classList.add('bg-white/5', 'border-white/10');
+            });
+            document.querySelector(`[data-filter="${type}"]`).classList.remove('bg-white/5', 'border-white/10');
+            document.querySelector(`[data-filter="${type}"]`).classList.add('bg-purple-600/30', 'border-purple-500/50', 'active');
+            
+            // Filter cards
+            document.querySelectorAll('.favorite-card').forEach(card => {
+                if (type === 'all' || card.dataset.type === type) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+        
+        async function removeFavorite(id) {
+            if (!confirm('Remover dos favoritos?')) return;
+            
+            try {
+                const response = await fetch('/api/favorites/remove', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: id })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    // Remove card with animation
+                    const card = document.querySelector(`[data-id="${id}"]`);
+                    card.style.opacity = '0';
+                    card.style.transform = 'scale(0.9)';
+                    setTimeout(() => card.remove(), 200);
+                } else {
+                    alert(data.error || 'Erro ao remover');
+                }
+            } catch (error) {
+                alert('Erro de conexão');
+            }
+        }
+        
+        function editNotes(id, currentNotes) {
+            currentEditId = id;
+            document.getElementById('notesInput').value = currentNotes || '';
+            document.getElementById('notesModal').classList.remove('hidden');
+            document.getElementById('notesModal').classList.add('flex');
+        }
+        
+        function closeNotesModal() {
+            document.getElementById('notesModal').classList.add('hidden');
+            document.getElementById('notesModal').classList.remove('flex');
+            currentEditId = null;
+        }
+        
+        async function saveNotes() {
+            if (!currentEditId) return;
+            
+            const notes = document.getElementById('notesInput').value;
+            
+            try {
+                const response = await fetch(`/api/favorites/${currentEditId}/notes`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ notes: notes })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    closeNotesModal();
+                    location.reload(); // Refresh to show updated notes
+                } else {
+                    alert(data.error || 'Erro ao guardar');
+                }
+            } catch (error) {
+                alert('Erro de conexão');
+            }
+        }
+        
+        // Close modal on outside click
+        document.getElementById('notesModal').addEventListener('click', function(e) {
+            if (e.target === this) closeNotesModal();
+        });
+    </script>
+    <script src="{{ url_for('static', filename='theme.js') }}"></script>
+</body>
+</html>

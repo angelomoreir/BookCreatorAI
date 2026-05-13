@@ -1,5 +1,166 @@
 /* BookCreatorAI - Custom Styles */
 
+/* ==================== THEME SYSTEM ==================== */
+:root {
+    /* Dark theme (default) */
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-tertiary: #334155;
+    --bg-card: rgba(255, 255, 255, 0.05);
+    --bg-card-hover: rgba(255, 255, 255, 0.1);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --border-color-hover: rgba(255, 255, 255, 0.2);
+    --text-primary: #ffffff;
+    --text-secondary: #e2e8f0;
+    --text-muted: #94a3b8;
+    --text-accent: #a855f7;
+    --gradient-start: #581c87;
+    --gradient-end: #831843;
+    --purple-glow: rgba(139, 92, 246, 0.5);
+    --scrollbar-track: rgba(255, 255, 255, 0.1);
+    --scrollbar-thumb: rgba(139, 92, 246, 0.5);
+}
+
+[data-theme="light"] {
+    --bg-primary: #f8fafc;
+    --bg-secondary: #f1f5f9;
+    --bg-tertiary: #e2e8f0;
+    --bg-card: rgba(255, 255, 255, 0.8);
+    --bg-card-hover: rgba(255, 255, 255, 0.95);
+    --border-color: rgba(0, 0, 0, 0.1);
+    --border-color-hover: rgba(0, 0, 0, 0.2);
+    --text-primary: #1e293b;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-accent: #7c3aed;
+    --gradient-start: #c4b5fd;
+    --gradient-end: #f9a8d4;
+    --purple-glow: rgba(124, 58, 237, 0.3);
+    --scrollbar-track: rgba(0, 0, 0, 0.1);
+    --scrollbar-thumb: rgba(124, 58, 237, 0.5);
+}
+
+/* Light theme body override */
+[data-theme="light"] body {
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-tertiary) 100%) !important;
+}
+
+[data-theme="light"] .bg-gradient-to-br {
+    background: linear-gradient(to bottom right, var(--bg-primary), #ede9fe, var(--bg-secondary)) !important;
+}
+
+/* Light theme text colors */
+[data-theme="light"] .text-white {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="light"] .text-gray-300,
+[data-theme="light"] .text-gray-400 {
+    color: var(--text-muted) !important;
+}
+
+[data-theme="light"] .text-gray-500 {
+    color: #94a3b8 !important;
+}
+
+/* Light theme backgrounds */
+[data-theme="light"] .bg-black\/30,
+[data-theme="light"] .bg-black\/50,
+[data-theme="light"] .bg-black\/80 {
+    background-color: rgba(255, 255, 255, 0.9) !important;
+    backdrop-filter: blur(10px);
+}
+
+[data-theme="light"] .bg-white\/5,
+[data-theme="light"] .bg-white\/10 {
+    background-color: var(--bg-card) !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .hover\:bg-white\/10:hover,
+[data-theme="light"] .hover\:bg-white\/20:hover {
+    background-color: var(--bg-card-hover) !important;
+}
+
+/* Light theme borders */
+[data-theme="light"] .border-white\/10,
+[data-theme="light"] .border-white\/20 {
+    border-color: var(--border-color) !important;
+}
+
+/* Light theme inputs */
+[data-theme="light"] input,
+[data-theme="light"] select,
+[data-theme="light"] textarea {
+    background-color: white !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-theme="light"] input::placeholder,
+[data-theme="light"] textarea::placeholder {
+    color: var(--text-muted) !important;
+}
+
+/* Light theme purple accents */
+[data-theme="light"] .text-purple-300,
+[data-theme="light"] .text-purple-400 {
+    color: #7c3aed !important;
+}
+
+[data-theme="light"] .text-pink-300 {
+    color: #db2777 !important;
+}
+
+/* Light theme gradients */
+[data-theme="light"] .from-purple-600\/20,
+[data-theme="light"] .from-purple-600\/30 {
+    background: linear-gradient(to right, rgba(124, 58, 237, 0.15), rgba(219, 39, 119, 0.15)) !important;
+}
+
+/* Light theme header */
+[data-theme="light"] header {
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    border-bottom-color: var(--border-color) !important;
+}
+
+/* Theme toggle button styles */
+.theme-toggle {
+    position: relative;
+    width: 56px;
+    height: 28px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="light"] .theme-toggle {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+.theme-toggle-circle {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #fbbf24;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+}
+
+[data-theme="light"] .theme-toggle-circle {
+    left: 30px;
+    background: #f59e0b;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
     width: 8px;

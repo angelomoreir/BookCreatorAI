@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post 6 - Continuar História</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #1a1a2e;
+            padding: 20px;
+        }
+        .post {
+            width: 540px;
+            height: 540px;
+            background: linear-gradient(135deg, #0f172a 0%, #1e40af 50%, #3b82f6 100%);
+            position: relative;
+            overflow: hidden;
+            border-radius: 16px;
+        }
+        .glow {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.5;
+        }
+        .glow-1 { width: 300px; height: 300px; background: #60a5fa; top: -100px; left: -80px; }
+        .glow-2 { width: 250px; height: 250px; background: #818cf8; bottom: -100px; right: -80px; }
+        .content {
+            position: relative;
+            z-index: 10;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            text-align: center;
+        }
+        .icon {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+            box-shadow: 0 20px 40px rgba(59, 130, 246, 0.4);
+            font-size: 50px;
+        }
+        .headline {
+            font-size: 44px;
+            font-weight: 900;
+            color: white;
+            margin-bottom: 15px;
+            line-height: 1.1;
+        }
+        .highlight {
+            background: linear-gradient(90deg, #fbbf24, #fb923c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .subheadline {
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+            line-height: 1.5;
+            max-width: 400px;
+            margin-bottom: 30px;
+        }
+        .book-stack {
+            display: flex;
+            align-items: flex-end;
+            gap: 15px;
+        }
+        .book {
+            background: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.1) 100%);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            padding: 15px 12px;
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            text-align: center;
+            width: 80px;
+        }
+        .book.original { height: 100px; }
+        .book.sequel { height: 90px; background: linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%); color: #1e1b4b; }
+        .book-label { font-size: 9px; opacity: 0.7; margin-top: 5px; }
+        .arrow {
+            font-size: 30px;
+            color: white;
+            margin-bottom: 30px;
+        }
+        .day-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #1e1b4b;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .feature-tag {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .caption {
+            margin-top: 20px;
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 12px;
+            max-width: 540px;
+            color: #ccc;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .caption strong { color: #3b82f6; }
+    </style>
+</head>
+<body>
+    <div class="post">
+        <div class="glow glow-1"></div>
+        <div class="glow glow-2"></div>
+        <div class="day-badge">DIA 6</div>
+        <div class="feature-tag">📖 Funcionalidade</div>
+        <div class="content">
+            <div class="icon">📖</div>
+            <h1 class="headline">Continue a<br><span class="highlight">História</span></h1>
+            <p class="subheadline">Crie sequelas e continuações para os seus livros favoritos</p>
+            <div class="book-stack">
+                <div class="book original">
+                    📚<br>Livro<br>Original
+                    <div class="book-label">Vol. 1</div>
+                </div>
+                <span class="arrow">→</span>
+                <div class="book sequel">
+                    ✨<br>Sua<br>Sequela
+                    <div class="book-label">Vol. 2</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="caption">
+        <strong>📖 O livro acabou mas a história não precisa acabar!</strong><br><br>
+        Com a Alma do Livro, pode criar continuações para qualquer história:<br><br>
+        ✍️ Sequelas que mantêm o estilo do autor<br>
+        ✍️ Novas aventuras para os personagens<br>
+        ✍️ Explorar o que aconteceu depois do "fim"<br><br>
+        A IA escreve capítulos adicionais fiéis ao universo do livro! 📚<br><br>
+        #AlmaDoLivro #BookCreatorAI #Sequela #Escrita #Livros #Criatividade
+    </div>
+</body>
+</html>

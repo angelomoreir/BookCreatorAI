@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Política de Privacidade - Alma do Livro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <!-- Navigation -->
+    <nav class="bg-black/30 backdrop-blur-lg border-b border-white/10 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <a href="/" class="flex items-center gap-3">
+                    <span class="text-3xl">🔍</span>
+                    <span class="text-xl font-bold text-white">Alma do Livro</span>
+                </a>
+                <div class="flex items-center gap-3">
+                    <a href="/faq" class="px-4 py-2 text-gray-300 hover:text-white transition-colors">FAQ</a>
+                    <a href="/explorer" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all">
+                        Ir para App
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto px-4 py-12">
+        <div class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-8 md:p-12">
+            <h1 class="text-3xl font-bold text-white mb-2">🔒 Política de Privacidade</h1>
+            <p class="text-gray-400 mb-8">Última atualização: Dezembro 2024</p>
+            
+            <div class="prose prose-invert max-w-none space-y-8 text-gray-300">
+                <section>
+                    <h2 class="text-xl font-semibold text-white mb-4">1. Introdução</h2>
+                    <p>
+                        O Alma do Livro ("nós", "nosso" ou "Serviço") está comprometido em proteger a sua privacidade. 
+                        Esta Política de Privacidade explica como recolhemos, usamos, divulgamos e protegemos as suas informações 
+                        quando utiliza o nosso serviço.
+                    </p>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-semibold text-white mb-4">2. Informações que Recolhemos</h2>
+                    
+                    <h3 class="text-lg font-medium text-purple-400 mt-4 mb-2">2.1 Informações fornecidas por si</h3>
+                    <ul class="list-disc pl-6 space-y-1">
+                        <li><strong class="text-white">Dados de registo:</strong> nome, email, palavra-passe (encriptada)</li>
+                        <li><strong class="text-white">Dados de pagamento:</strong> processados de forma segura pelo Stripe (não armazenamos dados de cartão)</li>
+                        <li><strong class="text-white">Comunicações:</strong> mensagens de suporte e feedback</li>
+                    </ul>
+                    
+                    <h3 class="text-lg font-medium text-purple-400 mt-4 mb-2">2.2 Informações recolhidas automaticamente</h3>
+                    <ul class="list-disc pl-6 space-y-1">
+                        <li><strong class="text-white">Dados de uso:</strong> livros analisados, funcionalidades utilizadas, frequência de uso</li>
+                        <li><strong class="text-white">Dados técnicos:</strong> endereço IP, tipo de browser, sistema operativo</li>
+                        <li><strong class="text-white">Cookies:</strong> para manter a sessão e preferências</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-semibold text-white mb-4">3. Como Utilizamos as Suas Informações</h2>
+                    <p>Utilizamos as informações recolhidas para:</p>
+                    <ul class="list-disc pl-6 mt-2 space-y-1">
+                        <li>Fornecer, manter e melhorar o Serviço</li>
+                        <li>Processar transações e enviar notificações relacionadas</li>
+                        <li>Responder a pedidos de suporte</li>
+                        <li>Enviar atualizações sobre o Serviço (com o seu consentimento)</li>
+                        <li>Analisar padrões de uso para melhorar a experiência</li>
+                        <li>Detetar e prevenir fraudes ou abusos</li>
+                        <li>Cumprir obrigações legais</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-semibold text-white mb-4">4. Partilha de Informações</h2>
+                    <p>Não vendemos as suas informações pessoais. Podemos partilhar dados com:</p>
+                    <ul class="list-disc pl-6 mt-2 space-y-1">
+                        <li><strong class="text-white">Prestadores de serviços:</strong> Stripe (pagamentos), serviços de email, analytics</li>
+                        <li><strong class="text-white">Requisitos legais:</strong> quando exigido por lei ou para proteger direitos</li>
+                        <li><strong class="text-white">Transferência de negócio:</strong> em caso de fusão ou aquisição</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-semibold text-white mb-4">5. Segurança dos Dados</h2>
+                    <p>Implementamos medidas de segurança para proteger as suas informações:</p>
+                    <ul class="list-disc pl-6 mt-2 space-y-1">
+                        <li>Encriptação de dados em trânsito (HTTPS/TLS)</li>
+                        <li>Palavras-passe armazenadas com hash seguro (bcrypt)</li>
+                        <li>Acesso restrito a dados pessoais</li>
+                        <li>Monitorização regular de segurança</li>
+                    </ul>
+                    <p class="mt-2">
+                        No entanto, nenhum método de transmissão pela Internet é 100% seguro. Não podemos garantir segurança absoluta.
+                    </p>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-semibold text-white mb-4">6. Cookies e Tecnologias Similares</h2>
+                    <p>Utilizamos cookies para:</p>
+                    <ul class="list-disc pl-6 mt-2 space-y-1">
+                        <li><strong class="text-white">Cookies essenciais:</strong> manter a sessão de login</li>
+                        <li><strong class="text-white">Cookies de preferências:</strong> guardar idioma e configurações</li>
+                        <li><strong class="text-white">Cookies de analytics:</strong> entender como o Serviço é utilizado</li>
+                    </ul>
+                    <p class="mt-2">
+                        Pode configurar o seu browser para recusar cookies, mas algumas funcionalidades podem não funcionar corretamente.
+                    </p>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-semibold text-white mb-4">7. Os Seus Direitos (RGPD)</h2>
+                    <p>Ao abrigo do Regulamento Geral de Proteção de Dados, tem direito a:</p>
+                    <ul class="list-disc pl-6 mt-2 space-y-1">
+                        <li><strong class="text-white">Acesso:</strong> solicitar cópia dos seus dados pessoais</li>
+                        <li><strong class="text-white">Retificação:</strong> corrigir dados incorretos ou incompletos</li>
+                        <li><strong class="text-white">Eliminação:</strong> solicitar a eliminação dos seus dados</li>
+                        <li><strong class="text-white">Portabilidade:</strong> receber os seus dados em formato estruturado</li>
+                        <li><strong class="text-white">Oposição:</strong> opor-se ao processamento dos seus dados</li>
+                        <li><strong class="text-white">Retirar consentimento:</strong> a qualquer momento</li>
+                    </ul>
+                    <p class="mt-2">
+                        Para exercer estes direitos, contacte-nos através de <a href="mailto:privacidade@almadolivro.com" class="text-purple-400 hover:text-purple-300">privacidade@almadolivro.com</a>
+                    </p>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-semibold text-white mb-4">8. Retenção de Dados</h2>
+                    <p>
+                        Mantemos os seus dados pessoais enquanto a sua conta estiver ativa ou conforme necessário para fornecer o Serviço.
+                        Após eliminação da conta, os dados são removidos dentro de 30 dias, exceto quando a retenção for necessária 
+                        para cumprir obrigações legais.
+                    </p>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-semibold text-white mb-4">9. Transferências Internacionais</h2>
+                    <p>
+                        Os seus dados podem ser processados em servidores localizados fora do Espaço Económico Europeu. 
+                        Quando isso acontecer, garantimos que existem salvaguardas adequadas, como cláusulas contratuais padrão da UE.
+                    </p>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-semibold text-white mb-4">10. Menores de Idade</h2>
+                    <p>
+                        O Serviço não se destina a menores de 16 anos. Não recolhemos intencionalmente dados de menores. 
+                        Se tomarmos conhecimento de que recolhemos dados de um menor, eliminaremos essa informação.
+                    </p>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-semibold text-white mb-4">11. Alterações a Esta Política</h2>
+                    <p>
+                        Podemos atualizar esta Política periodicamente. Notificaremos sobre alterações significativas através do email 
+                        associado à sua conta ou através de um aviso no Serviço. Recomendamos que reveja esta Política regularmente.
+                    </p>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-semibold text-white mb-4">12. Contacto</h2>
+                    <p>Para questões sobre esta Política de Privacidade ou sobre os seus dados pessoais:</p>
+                    <div class="mt-4 p-4 bg-white/5 rounded-lg">
+                        <p><strong class="text-white">Email:</strong> <a href="mailto:privacidade@almadolivro.com" class="text-purple-400 hover:text-purple-300">privacidade@almadolivro.com</a></p>
+                        <p class="mt-2"><strong class="text-white">Responsável pelo Tratamento:</strong> Alma do Livro, Lda.</p>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-8 border-t border-white/10">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p class="text-gray-400 text-sm">© 2026 Alma do Livro. Todos os direitos reservados.</p>
+            <div class="flex items-center gap-6 text-sm">
+                <a href="/terms" class="text-gray-400 hover:text-white transition-colors">Termos</a>
+                <a href="/privacy" class="text-white">Privacidade</a>
+                <a href="/faq" class="text-gray-400 hover:text-white transition-colors">FAQ</a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

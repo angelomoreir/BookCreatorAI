@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post 7 - Trailer do Livro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #1a1a2e;
+            padding: 20px;
+        }
+        .post {
+            width: 540px;
+            height: 540px;
+            background: linear-gradient(135deg, #0f172a 0%, #7f1d1d 50%, #dc2626 100%);
+            position: relative;
+            overflow: hidden;
+            border-radius: 16px;
+        }
+        .glow {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.5;
+        }
+        .glow-1 { width: 300px; height: 300px; background: #f87171; top: -100px; right: -80px; }
+        .glow-2 { width: 250px; height: 250px; background: #fbbf24; bottom: -100px; left: -80px; }
+        .content {
+            position: relative;
+            z-index: 10;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            text-align: center;
+        }
+        .icon {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+            box-shadow: 0 20px 40px rgba(220, 38, 38, 0.4);
+            font-size: 50px;
+        }
+        .headline {
+            font-size: 46px;
+            font-weight: 900;
+            color: white;
+            margin-bottom: 15px;
+            line-height: 1.1;
+        }
+        .highlight {
+            background: linear-gradient(90deg, #fbbf24, #fb923c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .subheadline {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+            line-height: 1.5;
+            max-width: 400px;
+            margin-bottom: 25px;
+        }
+        .trailer-box {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            padding: 25px;
+            border-radius: 16px;
+            color: white;
+            max-width: 420px;
+            position: relative;
+        }
+        .trailer-box::before {
+            content: "🎬";
+            position: absolute;
+            top: -15px;
+            left: 20px;
+            background: #dc2626;
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .trailer-text {
+            font-size: 15px;
+            font-style: italic;
+            line-height: 1.6;
+            color: rgba(255,255,255,0.9);
+        }
+        .day-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #1e1b4b;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .feature-tag {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .caption {
+            margin-top: 20px;
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 12px;
+            max-width: 540px;
+            color: #ccc;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .caption strong { color: #dc2626; }
+    </style>
+</head>
+<body>
+    <div class="post">
+        <div class="glow glow-1"></div>
+        <div class="glow glow-2"></div>
+        <div class="day-badge">DIA 7</div>
+        <div class="feature-tag">🎬 Funcionalidade</div>
+        <div class="content">
+            <div class="icon">🎬</div>
+            <h1 class="headline">Trailer<br><span class="highlight">Cinematográfico</span></h1>
+            <p class="subheadline">Textos épicos como se fossem trailers de filmes</p>
+            <div class="trailer-box">
+                <p class="trailer-text">"Num mundo onde a magia foi esquecida... um rapaz descobre que é o escolhido. Este verão... a aventura começa."</p>
+            </div>
+        </div>
+    </div>
+    <div class="caption">
+        <strong>🎬 Transforme livros em trailers épicos!</strong><br><br>
+        A Alma do Livro cria textos cinematográficos que capturam a essência de qualquer história:<br><br>
+        🎥 Narração dramática estilo Hollywood<br>
+        🎥 Frases de impacto<br>
+        🎥 Resumos que criam suspense<br><br>
+        Perfeito para partilhar nas redes sociais ou criar apresentações! 🌟<br><br>
+        #AlmaDoLivro #BookCreatorAI #Trailer #Cinema #Livros #Hollywood
+    </div>
+</body>
+</html>

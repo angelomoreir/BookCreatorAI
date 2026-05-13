@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post 5 - Playlist do Livro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #1a1a2e;
+            padding: 20px;
+        }
+        .post {
+            width: 540px;
+            height: 540px;
+            background: linear-gradient(135deg, #0f172a 0%, #065f46 50%, #10b981 100%);
+            position: relative;
+            overflow: hidden;
+            border-radius: 16px;
+        }
+        .glow {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.5;
+        }
+        .glow-1 { width: 300px; height: 300px; background: #34d399; top: -100px; right: -80px; }
+        .glow-2 { width: 250px; height: 250px; background: #6ee7b7; bottom: -100px; left: -80px; }
+        .content {
+            position: relative;
+            z-index: 10;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 35px;
+            text-align: center;
+        }
+        .icon {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+            box-shadow: 0 20px 40px rgba(16, 185, 129, 0.4);
+            font-size: 50px;
+        }
+        .headline {
+            font-size: 46px;
+            font-weight: 900;
+            color: white;
+            margin-bottom: 15px;
+            line-height: 1.1;
+        }
+        .highlight {
+            background: linear-gradient(90deg, #fbbf24, #fb923c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .subheadline {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+            line-height: 1.4;
+            max-width: 380px;
+            margin-bottom: 25px;
+        }
+        .playlist-tracks {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+            max-width: 380px;
+        }
+        .track {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 12px 16px;
+            border-radius: 12px;
+            color: white;
+            font-size: 13px;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .track-icon { font-size: 20px; }
+        .track-info { flex: 1; }
+        .track-title { font-weight: 600; }
+        .track-artist { font-size: 11px; color: rgba(255,255,255,0.6); }
+        .track-duration { font-size: 11px; color: rgba(255,255,255,0.5); }
+        .day-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #1e1b4b;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .feature-tag {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .caption {
+            margin-top: 20px;
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 12px;
+            max-width: 540px;
+            color: #ccc;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .caption strong { color: #10b981; }
+    </style>
+</head>
+<body>
+    <div class="post">
+        <div class="glow glow-1"></div>
+        <div class="glow glow-2"></div>
+        <div class="day-badge">DIA 5</div>
+        <div class="feature-tag">🎵 Funcionalidade</div>
+        <div class="content">
+            <div class="icon">🎵</div>
+            <h1 class="headline">Playlist<br><span class="highlight">do Livro</span></h1>
+            <p class="subheadline">Músicas que combinam com a atmosfera da história</p>
+            <div class="playlist-tracks">
+                <div class="track">
+                    <span class="track-icon">🎧</span>
+                    <div class="track-info">
+                        <div class="track-title">Hedwig's Theme</div>
+                        <div class="track-artist">John Williams</div>
+                    </div>
+                    <span class="track-duration">5:12</span>
+                </div>
+                <div class="track">
+                    <span class="track-icon">🎧</span>
+                    <div class="track-info">
+                        <div class="track-title">A Window to the Past</div>
+                        <div class="track-artist">John Williams</div>
+                    </div>
+                    <span class="track-duration">4:28</span>
+                </div>
+                <div class="track">
+                    <span class="track-icon">🎧</span>
+                    <div class="track-info">
+                        <div class="track-title">Leaving Hogwarts</div>
+                        <div class="track-artist">John Williams</div>
+                    </div>
+                    <span class="track-duration">3:45</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="caption">
+        <strong>🎵 A banda sonora perfeita para cada livro!</strong><br><br>
+        A Alma do Livro cria playlists personalizadas que capturam a essência de qualquer história.<br><br>
+        🎧 Músicas que combinam com o tom do livro<br>
+        🎧 Sugestões para diferentes momentos da leitura<br>
+        🎧 Artistas e géneros que refletem a atmosfera<br><br>
+        Leia com a trilha sonora perfeita! 🎶<br><br>
+        #AlmaDoLivro #BookCreatorAI #Playlist #Musica #Livros #Leitura
+    </div>
+</body>
+</html>

@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Dashboard - Alma do Livro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <!-- Header -->
+    <header class="bg-black/30 backdrop-blur-lg border-b border-white/10 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <a href="/explorer" class="flex items-center gap-3">
+                    <span class="text-3xl">🔍</span>
+                    <div>
+                        <h1 class="text-xl font-bold text-white">Alma do Livro</h1>
+                        <p class="text-xs text-gray-400 hidden sm:block">Dashboard do Utilizador</p>
+                    </div>
+                </a>
+                <div class="flex items-center gap-3">
+                    <a href="/explorer" class="px-3 py-1.5 text-gray-300 hover:text-white text-sm transition-colors">
+                        Explorador
+                    </a>
+                    <a href="{{ url_for('profile') }}" class="flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-white text-sm transition-all">
+                        <span class="w-6 h-6 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-xs font-bold">
+                            {{ current_user.name[0].upper() }}
+                        </span>
+                        <span class="hidden sm:inline">{{ current_user.name.split()[0] }}</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Welcome Section -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-white mb-2">Olá, {{ current_user.name.split()[0] }}! 👋</h1>
+            <p class="text-gray-400">Aqui está um resumo da sua atividade e uso da plataforma.</p>
+        </div>
+
+        <!-- Plan & Usage Overview -->
+        <div class="grid lg:grid-cols-3 gap-6 mb-8">
+            <!-- Current Plan Card -->
+            <div class="bg-gradient-to-br from-purple-600/30 to-pink-600/30 backdrop-blur-lg rounded-2xl border border-purple-500/30 p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-white">Plano Atual</h3>
+                    {% if current_user.plan == 'premium' %}
+                        <span class="px-3 py-1 bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs font-bold rounded-full">PREMIUM</span>
+                    {% elif current_user.plan == 'pro' %}
+                        <span class="px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold rounded-full">PRO</span>
+                    {% else %}
+                        <span class="px-3 py-1 bg-gray-600 text-white text-xs font-bold rounded-full">GRATUITO</span>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-4">
+                    <div class="flex justify-between text-sm mb-1">
+                        <span class="text-gray-300">Uso mensal</span>
+                        <span class="text-white font-medium">{{ current_user.usage_count }}/{{ current_user.get_usage_limit() }}</span>
+                    </div>
+                    {% set usage_pct = (current_user.usage_count / current_user.get_usage_limit() * 100) | int %}
+                    {% set capped_pct = usage_pct if usage_pct <= 100 else 100 %}
+                    <div class="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                        <div class="h-full rounded-full transition-all {% if usage_pct >= 90 %}bg-red-500{% elif usage_pct >= 70 %}bg-yellow-500{% else %}bg-green-500{% endif %}" style="width: {{ capped_pct }}%"></div>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-1">Renova em {{ days_until_reset }} dias</p>
+                </div>
+                
+                {% if current_user.plan == 'free' %}
+                <a href="/subscription/pricing" class="block w-full py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-center text-sm font-medium rounded-lg transition-all">
+                    🚀 Fazer Upgrade
+                </a>
+                {% else %}
+                <a href="/subscription/manage" class="block w-full py-2 bg-white/10 hover:bg-white/20 text-white text-center text-sm rounded-lg transition-all">
+                    Gerir Subscrição
+                </a>
+                {% endif %}
+            </div>
+
+            <!-- Usage Stats Card -->
+            <div class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-6">
+                <h3 class="text-lg font-semibold text-white mb-4">📊 Estatísticas de Uso</h3>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-400">Total de análises</span>
+                        <span class="text-2xl font-bold text-white">{{ stats.total_analyses }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-400">Livros explorados</span>
+                        <span class="text-2xl font-bold text-white">{{ stats.unique_books }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-400">Este mês</span>
+                        <span class="text-2xl font-bold text-purple-400">{{ current_user.usage_count }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions Card -->
+            <div class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-6">
+                <h3 class="text-lg font-semibold text-white mb-4">⚡ Ações Rápidas</h3>
+                <div class="space-y-3">
+                    <a href="/explorer" class="flex items-center gap-3 p-3 bg-white/5 hover:bg-white/10 rounded-lg transition-all">
+                        <span class="text-2xl">🔍</span>
+                        <span class="text-white">Explorar Livro</span>
+                    </a>
+                    <a href="/subscription/pricing" class="flex items-center gap-3 p-3 bg-white/5 hover:bg-white/10 rounded-lg transition-all">
+                        <span class="text-2xl">💎</span>
+                        <span class="text-white">Ver Planos</span>
+                    </a>
+                    <a href="{{ url_for('profile') }}" class="flex items-center gap-3 p-3 bg-white/5 hover:bg-white/10 rounded-lg transition-all">
+                        <span class="text-2xl">👤</span>
+                        <span class="text-white">Editar Perfil</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Access -->
+        <div class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-6 mb-8">
+            <h3 class="text-lg font-semibold text-white mb-4">🎯 Funcionalidades do Seu Plano</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                {% set features = current_user.get_available_features() %}
+                <div class="p-3 rounded-lg text-center {{ 'bg-green-600/20 border border-green-500/30' if features.basic_analysis else 'bg-red-600/20 border border-red-500/30 opacity-50' }}">
+                    <span class="text-2xl block mb-1">📖</span>
+                    <span class="text-xs text-white">Análise Básica</span>
+                </div>
+                <div class="p-3 rounded-lg text-center {{ 'bg-green-600/20 border border-green-500/30' if features.summary else 'bg-red-600/20 border border-red-500/30 opacity-50' }}">
+                    <span class="text-2xl block mb-1">📝</span>
+                    <span class="text-xs text-white">Resumos</span>
+                </div>
+                <div class="p-3 rounded-lg text-center {{ 'bg-green-600/20 border border-green-500/30' if features.characters else 'bg-red-600/20 border border-red-500/30 opacity-50' }}">
+                    <span class="text-2xl block mb-1">👥</span>
+                    <span class="text-xs text-white">Personagens</span>
+                </div>
+                <div class="p-3 rounded-lg text-center {{ 'bg-green-600/20 border border-green-500/30' if features.quiz else 'bg-red-600/20 border border-red-500/30 opacity-50' }}">
+                    <span class="text-2xl block mb-1">🎲</span>
+                    <span class="text-xs text-white">Quiz</span>
+                </div>
+                <div class="p-3 rounded-lg text-center {{ 'bg-green-600/20 border border-green-500/30' if features.interview else 'bg-red-600/20 border border-red-500/30 opacity-50' }}">
+                    <span class="text-2xl block mb-1">🎭</span>
+                    <span class="text-xs text-white">Entrevistas</span>
+                </div>
+                <div class="p-3 rounded-lg text-center {{ 'bg-green-600/20 border border-green-500/30' if features.continue_story else 'bg-red-600/20 border border-red-500/30 opacity-50' }}">
+                    <span class="text-2xl block mb-1">📖</span>
+                    <span class="text-xs text-white">Continuações</span>
+                </div>
+                <div class="p-3 rounded-lg text-center {{ 'bg-green-600/20 border border-green-500/30' if features.alternate_ending else 'bg-red-600/20 border border-red-500/30 opacity-50' }}">
+                    <span class="text-2xl block mb-1">🔀</span>
+                    <span class="text-xs text-white">Finais Alt.</span>
+                </div>
+                <div class="p-3 rounded-lg text-center {{ 'bg-green-600/20 border border-green-500/30' if features.history else 'bg-red-600/20 border border-red-500/30 opacity-50' }}">
+                    <span class="text-2xl block mb-1">📚</span>
+                    <span class="text-xs text-white">Histórico</span>
+                </div>
+                <div class="p-3 rounded-lg text-center {{ 'bg-green-600/20 border border-green-500/30' if features.export_pdf else 'bg-red-600/20 border border-red-500/30 opacity-50' }}">
+                    <span class="text-2xl block mb-1">📄</span>
+                    <span class="text-xs text-white">Exportar PDF</span>
+                </div>
+                <div class="p-3 rounded-lg text-center {{ 'bg-green-600/20 border border-green-500/30' if features.priority_support else 'bg-red-600/20 border border-red-500/30 opacity-50' }}">
+                    <span class="text-2xl block mb-1">⭐</span>
+                    <span class="text-xs text-white">Suporte VIP</span>
+                </div>
+            </div>
+            {% if current_user.plan == 'free' %}
+            <div class="mt-4 p-4 bg-purple-600/20 border border-purple-500/30 rounded-lg">
+                <p class="text-purple-200 text-sm">
+                    💡 <strong>Dica:</strong> Faça upgrade para o plano Pro ou Premium para desbloquear todas as funcionalidades!
+                </p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Analysis History & Charts -->
+        <div class="grid lg:grid-cols-3 gap-6 mb-8">
+            <!-- Analysis History -->
+            <div class="lg:col-span-2 bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-white">📜 Histórico de Análises</h3>
+                    {% if analyses|length > 0 %}
+                    <span class="text-xs text-gray-400">Últimas {{ analyses|length }} análises</span>
+                    {% endif %}
+                </div>
+                
+                {% if analyses|length > 0 %}
+                <div class="space-y-3 max-h-96 overflow-y-auto pr-2">
+                    {% for analysis in analyses %}
+                    <div class="flex items-start gap-3 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-all">
+                        <div class="w-10 h-10 rounded-lg bg-purple-600/30 flex items-center justify-center flex-shrink-0">
+                            {% if analysis.aspect == 'quiz' %}🎲
+                            {% elif analysis.aspect == 'interview' %}🎭
+                            {% elif analysis.aspect == 'continue' %}📖
+                            {% elif analysis.aspect == 'alternate' %}🔀
+                            {% elif analysis.aspect == 'summary' %}📝
+                            {% elif analysis.aspect == 'characters' %}👥
+                            {% elif analysis.aspect == 'chat' %}💬
+                            {% else %}🔍{% endif %}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-white font-medium truncate">{{ analysis.book_title }}</span>
+                                <span class="px-2 py-0.5 bg-purple-600/30 text-purple-300 text-xs rounded-full flex-shrink-0">{{ analysis.aspect_label }}</span>
+                            </div>
+                            {% if analysis.book_author %}
+                            <p class="text-xs text-gray-400">por {{ analysis.book_author }}</p>
+                            {% endif %}
+                            <p class="text-xs text-gray-500 mt-1">{{ analysis.created_at_formatted }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-12">
+                    <span class="text-6xl block mb-4">📚</span>
+                    <p class="text-gray-400 mb-4">Ainda não fez nenhuma análise.</p>
+                    <a href="/explorer" class="inline-block px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all">
+                        Explorar Primeiro Livro
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Usage Chart -->
+            <div class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-6">
+                <h3 class="text-lg font-semibold text-white mb-4">📈 Uso por Tipo</h3>
+                <div class="h-64">
+                    <canvas id="usageByTypeChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Account Management -->
+        <div class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-6 mb-8">
+            <h3 class="text-lg font-semibold text-white mb-4">⚙️ Gestão de Conta</h3>
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <a href="{{ url_for('profile') }}" class="p-4 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 transition-all group">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-blue-600/30 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <span class="text-xl">👤</span>
+                        </div>
+                        <div>
+                            <p class="text-white font-medium">Perfil</p>
+                            <p class="text-xs text-gray-400">Editar dados pessoais</p>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="/subscription/pricing" class="p-4 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 transition-all group">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-purple-600/30 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <span class="text-xl">💎</span>
+                        </div>
+                        <div>
+                            <p class="text-white font-medium">Planos</p>
+                            <p class="text-xs text-gray-400">Ver opções de upgrade</p>
+                        </div>
+                    </div>
+                </a>
+                
+                {% if current_user.plan != 'free' %}
+                <a href="/subscription/manage" class="p-4 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 transition-all group">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-green-600/30 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <span class="text-xl">💳</span>
+                        </div>
+                        <div>
+                            <p class="text-white font-medium">Subscrição</p>
+                            <p class="text-xs text-gray-400">Gerir pagamentos</p>
+                        </div>
+                    </div>
+                </a>
+                {% endif %}
+                
+                <a href="{{ url_for('logout') }}" class="p-4 bg-white/5 hover:bg-red-600/20 rounded-xl border border-white/10 hover:border-red-500/30 transition-all group">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-red-600/30 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <span class="text-xl">🚪</span>
+                        </div>
+                        <div>
+                            <p class="text-white font-medium">Sair</p>
+                            <p class="text-xs text-gray-400">Terminar sessão</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Account Info -->
+        <div class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-6">
+            <h3 class="text-lg font-semibold text-white mb-4">ℹ️ Informações da Conta</h3>
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div>
+                    <p class="text-gray-400 text-sm">Email</p>
+                    <p class="text-white">{{ current_user.email }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-400 text-sm">Membro desde</p>
+                    <p class="text-white">{{ current_user.created_at.strftime('%d/%m/%Y') }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-400 text-sm">Estado da conta</p>
+                    <p class="text-green-400">{{ 'Ativa' if current_user.is_active else 'Inativa' }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-400 text-sm">Último login</p>
+                    <p class="text-white">{{ current_user.last_login.strftime('%d/%m/%Y %H:%M') if current_user.last_login else 'N/A' }}</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Usage by type chart
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('usageByTypeChart');
+            if (ctx) {
+                const usageData = {{ usage_by_type | tojson | safe }};
+                const labels = Object.keys(usageData);
+                const data = Object.values(usageData);
+                
+                if (labels.length > 0) {
+                    new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                data: data,
+                                backgroundColor: [
+                                    '#8B5CF6', '#EC4899', '#3B82F6', '#10B981', 
+                                    '#F59E0B', '#EF4444', '#6366F1', '#14B8A6',
+                                    '#F97316', '#84CC16', '#06B6D4', '#A855F7'
+                                ]
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: { 
+                                        color: '#fff', 
+                                        font: { size: 10 },
+                                        boxWidth: 12
+                                    }
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    ctx.parentElement.innerHTML = '<div class="flex items-center justify-center h-full text-gray-400">Sem dados ainda</div>';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

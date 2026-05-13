@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerir Subscrição - Alma do Livro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <!-- Header -->
+    <header class="bg-black/30 backdrop-blur-lg border-b border-white/10 sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <a href="/" class="flex items-center gap-2 sm:gap-3">
+                    <span class="text-2xl sm:text-3xl">📚</span>
+                    <div>
+                        <h1 class="text-lg sm:text-xl font-bold text-white">Alma do Livro</h1>
+                    </div>
+                </a>
+                <a href="{{ url_for('profile') }}" class="text-gray-400 hover:text-white text-sm">← Voltar ao Perfil</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 py-8">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="mb-6 p-4 rounded-lg {% if category == 'error' %}bg-red-500/20 border border-red-500/50 text-red-300{% elif category == 'success' %}bg-green-500/20 border border-green-500/50 text-green-300{% else %}bg-blue-500/20 border border-blue-500/50 text-blue-300{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <h1 class="text-2xl font-bold text-white mb-8">Gerir Subscrição</h1>
+
+        <!-- Current Plan -->
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-6 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-white">Plano Atual</h2>
+                <span class="px-3 py-1 rounded-full text-sm font-medium
+                    {% if current_user.plan == 'premium' %}bg-pink-500/30 text-pink-300
+                    {% elif current_user.plan == 'pro' %}bg-purple-500/30 text-purple-300
+                    {% else %}bg-gray-500/30 text-gray-300{% endif %}">
+                    {{ plans[current_user.plan]['name'] }}
+                </span>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Plan Details -->
+                <div>
+                    <h3 class="text-sm text-gray-400 mb-3">Detalhes do Plano</h3>
+                    <ul class="space-y-2 text-sm">
+                        <li class="flex justify-between text-gray-300">
+                            <span>Análises por mês</span>
+                            <span class="text-white">{{ plans[current_user.plan]['limits']['analyses_per_month'] }}</span>
+                        </li>
+                        <li class="flex justify-between text-gray-300">
+                            <span>Análises guardadas</span>
+                            <span class="text-white">
+                                {% if plans[current_user.plan]['limits']['saved_analyses'] == -1 %}
+                                    Ilimitado
+                                {% else %}
+                                    {{ plans[current_user.plan]['limits']['saved_analyses'] }}
+                                {% endif %}
+                            </span>
+                        </li>
+                        <li class="flex justify-between text-gray-300">
+                            <span>Mensagens chat/livro</span>
+                            <span class="text-white">
+                                {% if plans[current_user.plan]['limits']['chat_messages_per_book'] == -1 %}
+                                    Ilimitado
+                                {% else %}
+                                    {{ plans[current_user.plan]['limits']['chat_messages_per_book'] }}
+                                {% endif %}
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- Usage -->
+                <div>
+                    <h3 class="text-sm text-gray-400 mb-3">Utilização Este Mês</h3>
+                    <div class="mb-4">
+                        <div class="flex justify-between text-sm mb-2">
+                            <span class="text-gray-400">Análises usadas</span>
+                            <span class="text-white">{{ current_user.usage_count }} / {{ current_user.get_usage_limit() }}</span>
+                        </div>
+                        <div class="w-full bg-white/10 rounded-full h-3">
+                            {% set usage_percent = (current_user.usage_count / current_user.get_usage_limit() * 100) | int %}
+                            {% set bar_color = 'from-green-500 to-green-400' if usage_percent < 70 else 'from-yellow-500 to-orange-400' if usage_percent < 90 else 'from-red-500 to-red-400' %}
+                            <div class="bg-gradient-to-r {{ bar_color }} h-3 rounded-full transition-all" style="width: {{ min(usage_percent, 100) }}%"></div>
+                        </div>
+                    </div>
+                    {% if current_user.usage_reset_date %}
+                        <p class="text-xs text-gray-500">Reinicia em {{ current_user.usage_reset_date.strftime('%d/%m/%Y') }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Subscription Status -->
+            {% if current_user.plan != 'free' %}
+                <div class="mt-6 pt-6 border-t border-white/10">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-400">Estado da Subscrição</p>
+                            <p class="text-white font-medium">
+                                {% if current_user.subscription_status == 'active' %}
+                                    <span class="text-green-400">● Ativa</span>
+                                {% elif current_user.subscription_status == 'canceled' %}
+                                    <span class="text-yellow-400">● Cancelada (acesso até fim do período)</span>
+                                {% elif current_user.subscription_status == 'past_due' %}
+                                    <span class="text-red-400">● Pagamento pendente</span>
+                                {% else %}
+                                    <span class="text-gray-400">● {{ current_user.subscription_status }}</span>
+                                {% endif %}
+                            </p>
+                            {% if current_user.subscription_end_date %}
+                                <p class="text-xs text-gray-500 mt-1">
+                                    {% if current_user.subscription_status == 'canceled' %}
+                                        Acesso até {{ current_user.subscription_end_date.strftime('%d/%m/%Y') }}
+                                    {% else %}
+                                        Próxima renovação: {{ current_user.subscription_end_date.strftime('%d/%m/%Y') }}
+                                    {% endif %}
+                                </p>
+                            {% endif %}
+                        </div>
+                        <div class="flex gap-2">
+                            {% if current_user.subscription_status == 'active' %}
+                                <a href="{{ url_for('subscription.customer_portal') }}" class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-sm rounded-lg transition-all">
+                                    Gerir no Stripe
+                                </a>
+                                <button onclick="cancelSubscription()" class="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 text-sm rounded-lg transition-all">
+                                    Cancelar
+                                </button>
+                            {% elif current_user.subscription_status == 'canceled' %}
+                                <button onclick="reactivateSubscription()" class="px-4 py-2 bg-green-500/20 hover:bg-green-500/30 text-green-300 text-sm rounded-lg transition-all">
+                                    Reativar
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Upgrade/Change Plan -->
+        {% if current_user.plan != 'premium' %}
+            <div class="bg-gradient-to-r from-purple-900/50 to-pink-900/50 backdrop-blur-lg rounded-2xl border border-purple-500/30 p-6 mb-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-lg font-semibold text-white mb-1">
+                            {% if current_user.plan == 'free' %}
+                                Desbloqueie mais funcionalidades
+                            {% else %}
+                                Faça upgrade para Premium
+                            {% endif %}
+                        </h2>
+                        <p class="text-gray-400 text-sm">
+                            {% if current_user.plan == 'free' %}
+                                Aceda a quiz, entrevistas, histórico e muito mais.
+                            {% else %}
+                                Análises ilimitadas, suporte prioritário e todas as funcionalidades.
+                            {% endif %}
+                        </p>
+                    </div>
+                    <a href="{{ url_for('subscription.pricing') }}" class="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium rounded-xl transition-all">
+                        Ver Planos
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Billing History -->
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-6">
+            <h2 class="text-lg font-semibold text-white mb-4">Histórico de Faturação</h2>
+            
+            {% if history %}
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-white/10">
+                                <th class="text-left py-3 px-2 text-gray-400 text-sm font-medium">Data</th>
+                                <th class="text-left py-3 px-2 text-gray-400 text-sm font-medium">Ação</th>
+                                <th class="text-left py-3 px-2 text-gray-400 text-sm font-medium">Plano</th>
+                                <th class="text-right py-3 px-2 text-gray-400 text-sm font-medium">Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in history %}
+                                <tr class="border-b border-white/5">
+                                    <td class="py-3 px-2 text-gray-300 text-sm">{{ item.created_at.strftime('%d/%m/%Y') }}</td>
+                                    <td class="py-3 px-2 text-sm">
+                                        {% if item.action == 'created' %}
+                                            <span class="text-green-400">Subscrição criada</span>
+                                        {% elif item.action == 'renewed' %}
+                                            <span class="text-blue-400">Renovação</span>
+                                        {% elif item.action == 'upgraded' %}
+                                            <span class="text-purple-400">Upgrade</span>
+                                        {% elif item.action == 'downgraded' %}
+                                            <span class="text-yellow-400">Downgrade</span>
+                                        {% elif item.action == 'canceled' %}
+                                            <span class="text-red-400">Cancelamento</span>
+                                        {% else %}
+                                            <span class="text-gray-400">{{ item.action }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-3 px-2 text-gray-300 text-sm capitalize">{{ item.plan }}</td>
+                                    <td class="py-3 px-2 text-white text-sm text-right">
+                                        {% if item.amount > 0 %}
+                                            €{{ '%.2f' | format(item.amount) }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-gray-400 text-sm text-center py-8">Sem histórico de faturação.</p>
+            {% endif %}
+        </div>
+    </main>
+
+    <script>
+        async function cancelSubscription() {
+            if (!confirm('Tem a certeza que deseja cancelar a sua subscrição? Continuará a ter acesso até ao fim do período pago.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/subscription/cancel', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Erro: ' + data.error);
+                }
+            } catch (error) {
+                alert('Erro ao cancelar subscrição. Tente novamente.');
+            }
+        }
+        
+        async function reactivateSubscription() {
+            try {
+                const response = await fetch('/subscription/reactivate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Erro: ' + data.error);
+                }
+            } catch (error) {
+                alert('Erro ao reativar subscrição. Tente novamente.');
+            }
+        }
+    </script>
+</body>
+</html>

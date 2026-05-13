@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post 2 - Entrevistar Personagens</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #1a1a2e;
+            padding: 20px;
+        }
+        .post {
+            width: 540px;
+            height: 540px;
+            background: linear-gradient(135deg, #1e1b4b 0%, #4c1d95 50%, #7c3aed 100%);
+            position: relative;
+            overflow: hidden;
+            border-radius: 16px;
+        }
+        .glow {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.6;
+        }
+        .glow-1 { width: 300px; height: 300px; background: #a855f7; top: -80px; left: -80px; }
+        .glow-2 { width: 200px; height: 200px; background: #ec4899; bottom: -50px; right: -50px; }
+        .content {
+            position: relative;
+            z-index: 10;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            text-align: center;
+        }
+        .icon {
+            width: 110px;
+            height: 110px;
+            background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+            box-shadow: 0 20px 40px rgba(139, 92, 246, 0.5);
+            font-size: 55px;
+        }
+        .headline {
+            font-size: 44px;
+            font-weight: 900;
+            color: white;
+            margin-bottom: 15px;
+            line-height: 1.1;
+        }
+        .highlight {
+            background: linear-gradient(90deg, #fbbf24, #fb923c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .subheadline {
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.85);
+            font-weight: 500;
+            line-height: 1.5;
+            max-width: 400px;
+            margin-bottom: 30px;
+        }
+        .chat-bubble {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 16px 24px;
+            border-radius: 20px;
+            border-bottom-left-radius: 6px;
+            color: white;
+            font-size: 16px;
+            font-style: italic;
+            max-width: 380px;
+        }
+        .day-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .feature-tag {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.15);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .caption {
+            margin-top: 20px;
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 12px;
+            max-width: 540px;
+            color: #ccc;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .caption strong { color: #a855f7; }
+    </style>
+</head>
+<body>
+    <div class="post">
+        <div class="glow glow-1"></div>
+        <div class="glow glow-2"></div>
+        <div class="day-badge">DIA 2</div>
+        <div class="feature-tag">🎭 Funcionalidade</div>
+        <div class="content">
+            <div class="icon">🎭</div>
+            <h1 class="headline">Entreviste<br><span class="highlight">Personagens</span></h1>
+            <p class="subheadline">Converse diretamente com os personagens dos seus livros favoritos</p>
+            <div class="chat-bubble">"Olá Harry, como te sentiste quando descobriste que eras um feiticeiro?"</div>
+        </div>
+    </div>
+    <div class="caption">
+        <strong>🎭 Entreviste os seus personagens favoritos!</strong><br><br>
+        Sempre quis fazer uma pergunta ao Harry Potter? Ou ter uma conversa com Elizabeth Bennet?<br><br>
+        Com a Alma do Livro, pode entrevistar qualquer personagem de qualquer livro. A IA assume o papel do personagem e responde como ele responderia!<br><br>
+        É como ter os personagens a ganhar vida. ✨<br><br>
+        #AlmaDoLivro #BookCreatorAI #Personagens #HarryPotter #Livros #IA
+    </div>
+</body>
+</html>

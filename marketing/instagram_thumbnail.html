@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BookCreatorAI Explorador - Instagram Ad Thumbnail</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #1a1a2e;
+            padding: 20px;
+        }
+
+        .thumbnail-container {
+            width: 540px;
+            height: 540px;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 40%, #581c87 100%);
+            position: relative;
+            overflow: hidden;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transform-origin: top left;
+        }
+        
+        .thumbnail-container.full-size {
+            width: 1080px;
+            height: 1080px;
+        }
+
+        /* Decorative elements */
+        .glow-circle {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.5;
+        }
+
+        .glow-1 {
+            width: 300px;
+            height: 300px;
+            background: #6366f1;
+            top: -200px;
+            right: -150px;
+        }
+
+        .glow-2 {
+            width: 250px;
+            height: 250px;
+            background: #8b5cf6;
+            bottom: -150px;
+            left: -150px;
+        }
+
+        .glow-3 {
+            width: 150px;
+            height: 150px;
+            background: #a855f7;
+            top: 40%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        /* Content */
+        .content {
+            position: relative;
+            z-index: 10;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 25px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 15px 30px rgba(139, 92, 246, 0.4);
+        }
+
+        .logo-icon svg {
+            width: 24px;
+            height: 24px;
+            color: white;
+        }
+
+        .logo-text {
+            font-size: 18px;
+            font-weight: 800;
+            color: white;
+            letter-spacing: -1px;
+        }
+
+        .logo-text span {
+            background: linear-gradient(90deg, #c084fc, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* AI Badge */
+        .ai-badge {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 8px 14px;
+            border-radius: 50px;
+            font-size: 11px;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Main section */
+        .main-section {
+            text-align: center;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Search icon */
+        .search-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            box-shadow: 0 15px 30px rgba(99, 102, 241, 0.5);
+            font-size: 35px;
+        }
+
+        /* Main headline */
+        .headline {
+            font-size: 48px;
+            font-weight: 900;
+            color: white;
+            line-height: 1.05;
+            margin-bottom: 12px;
+            text-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .headline .highlight {
+            background: linear-gradient(90deg, #fbbf24, #f59e0b, #fb923c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Subheadline */
+        .subheadline {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 500;
+            margin-bottom: 20px;
+            max-width: 850px;
+            line-height: 1.4;
+        }
+
+        /* Features Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            width: 100%;
+            max-width: 480px;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            padding: 12px 8px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-4px);
+        }
+
+        .feature-emoji {
+            font-size: 24px;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .feature-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 4px;
+        }
+
+        .feature-desc {
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Bottom section */
+        .bottom-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Book examples */
+        .book-examples {
+            display: flex;
+            gap: 12px;
+        }
+
+        .book-chip {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 6px 12px;
+            border-radius: 20px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        /* CTA Button */
+        .cta-button {
+            background: linear-gradient(90deg, #8b5cf6, #a855f7, #d946ef);
+            color: white;
+            font-size: 14px;
+            font-weight: 700;
+            padding: 12px 28px;
+            border-radius: 60px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 20px 40px rgba(139, 92, 246, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Floating elements */
+        .floating-element {
+            position: absolute;
+            opacity: 0.1;
+            font-size: 30px;
+        }
+
+        .float-1 { top: 15%; left: 5%; }
+        .float-2 { top: 20%; right: 8%; }
+        .float-3 { bottom: 25%; left: 3%; }
+        .float-4 { bottom: 20%; right: 5%; }
+
+        /* Instructions */
+        .instructions {
+            margin-top: 40px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: white;
+            max-width: 600px;
+        }
+
+        .instructions h3 {
+            margin-bottom: 10px;
+            color: #a855f7;
+        }
+
+        .instructions p {
+            font-size: 14px;
+            line-height: 1.6;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <div class="thumbnail-container">
+            <!-- Glow effects -->
+            <div class="glow-circle glow-1"></div>
+            <div class="glow-circle glow-2"></div>
+            <div class="glow-circle glow-3"></div>
+
+            <!-- Floating elements -->
+            <span class="floating-element float-1">📚</span>
+            <span class="floating-element float-2">🎭</span>
+            <span class="floating-element float-3">🎬</span>
+            <span class="floating-element float-4">🎵</span>
+
+            <!-- Content -->
+            <div class="content">
+                <!-- Header -->
+                <div class="header">
+                    <div class="logo-container">
+                        <div class="logo-icon">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                            </svg>
+                        </div>
+                        <div class="logo-text">Book<span>CreatorAI</span></div>
+                    </div>
+                    <div class="ai-badge">
+                        <span>✨</span>
+                        <span>Powered by Gemini AI</span>
+                    </div>
+                </div>
+
+                <!-- Main Section -->
+                <div class="main-section">
+                    <div class="search-icon">🔍</div>
+                    
+                    <h1 class="headline">
+                        <span class="highlight">Alma do Livro</span>
+                    </h1>
+
+                    <p class="subheadline">
+                        Analise, converse com personagens, crie finais alternativos e muito mais!
+                    </p>
+
+                    <!-- Features Grid -->
+                    <div class="features-grid">
+                        <div class="feature-card">
+                            <span class="feature-emoji">🎭</span>
+                            <div class="feature-title">Entrevistar</div>
+                            <div class="feature-desc">Personagens</div>
+                        </div>
+                        <div class="feature-card">
+                            <span class="feature-emoji">�</span>
+                            <div class="feature-title">Quiz</div>
+                            <div class="feature-desc">Conhecimentos</div>
+                        </div>
+                        <div class="feature-card">
+                            <span class="feature-emoji">🔀</span>
+                            <div class="feature-title">Final</div>
+                            <div class="feature-desc">Alternativo</div>
+                        </div>
+                        <div class="feature-card">
+                            <span class="feature-emoji">�</span>
+                            <div class="feature-title">Playlist</div>
+                            <div class="feature-desc">Do Livro</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Section -->
+                <div class="bottom-section">
+                    <div class="book-examples">
+                        <span class="book-chip">1984</span>
+                        <span class="book-chip">Harry Potter</span>
+                        <span class="book-chip">O Senhor dos Anéis</span>
+                    </div>
+                    <button class="cta-button">Explorar Agora</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Instructions for saving -->
+        <div class="instructions">
+            <h3>📸 Como guardar a thumbnail:</h3>
+            <p>
+                1. Abra este ficheiro no browser<br>
+                2. Use uma extensão de screenshot (ex: GoFullPage) ou<br>
+                3. Faça Print Screen da área da thumbnail<br>
+                4. Guarde como PNG 1080x1080px para Instagram
+            </p>
+        </div>
+    </div>
+</body>
+</html>

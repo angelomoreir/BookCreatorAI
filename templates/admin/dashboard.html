@@ -1,0 +1,1434 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin - Alma do Livro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
+            min-height: 100vh;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .stat-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px rgba(139, 92, 246, 0.2);
+        }
+        .tab-btn.active {
+            background: rgba(139, 92, 246, 0.3);
+            border-color: rgba(139, 92, 246, 0.5);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.active {
+            display: flex;
+        }
+        /* Mobile Menu */
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 200;
+            flex-direction: column;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .mobile-menu.active {
+            display: flex;
+        }
+        .hamburger {
+            display: none;
+        }
+        @media (max-width: 768px) {
+            .hamburger {
+                display: flex;
+            }
+            .desktop-header-actions {
+                display: none;
+            }
+            .desktop-tabs {
+                display: none;
+            }
+            .tab-btn {
+                width: 100%;
+                justify-content: flex-start;
+                padding: 12px 16px;
+            }
+        }
+    </style>
+</head>
+<body class="text-white">
+    <!-- Header -->
+    <header class="glass-card border-b border-white/10 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <a href="{{ url_for('book_explorer_page') }}" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <h1 class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                    <i class="fas fa-chart-line mr-2"></i>Dashboard Admin
+                </h1>
+            </div>
+            <div class="desktop-header-actions flex items-center gap-4">
+                <!-- Export Button -->
+                <a href="/api/admin/export-csv" class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm transition-colors">
+                    <i class="fas fa-download mr-2"></i>Exportar CSV
+                </a>
+                <!-- Notification Button -->
+                <button onclick="openNotificationModal()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm transition-colors">
+                    <i class="fas fa-bell mr-2"></i>Enviar Notificação
+                </button>
+                <span class="text-gray-400">
+                    <i class="fas fa-user-shield mr-2"></i>{{ current_user.name }}
+                </span>
+                <a href="{{ url_for('logout') }}" class="text-red-400 hover:text-red-300">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
+            </div>
+            <!-- Hamburger Menu Button -->
+            <button onclick="toggleMobileMenu()" class="hamburger items-center justify-center w-10 h-10 rounded-lg bg-purple-600 hover:bg-purple-700">
+                <i class="fas fa-bars text-lg"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Mobile Menu -->
+    <div id="mobileMenu" class="mobile-menu">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-bold text-purple-400">Menu</h2>
+            <button onclick="toggleMobileMenu()" class="w-10 h-10 rounded-lg bg-red-600 hover:bg-red-700 flex items-center justify-center">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="space-y-2 mb-6">
+            <button onclick="showTabMobile('overview')" class="mobile-tab-btn w-full text-left px-4 py-3 glass-card rounded-lg"><i class="fas fa-chart-pie mr-3"></i>Visão Geral</button>
+            <button onclick="showTabMobile('users')" class="mobile-tab-btn w-full text-left px-4 py-3 glass-card rounded-lg"><i class="fas fa-users mr-3"></i>Utilizadores</button>
+            <button onclick="showTabMobile('revenue')" class="mobile-tab-btn w-full text-left px-4 py-3 glass-card rounded-lg"><i class="fas fa-euro-sign mr-3"></i>Receita</button>
+            <button onclick="showTabMobile('usage')" class="mobile-tab-btn w-full text-left px-4 py-3 glass-card rounded-lg"><i class="fas fa-chart-bar mr-3"></i>Uso</button>
+            <button onclick="showTabMobile('promo')" class="mobile-tab-btn w-full text-left px-4 py-3 glass-card rounded-lg"><i class="fas fa-ticket-alt mr-3"></i>Promoções</button>
+            <button onclick="showTabMobile('errors')" class="mobile-tab-btn w-full text-left px-4 py-3 glass-card rounded-lg"><i class="fas fa-bug mr-3"></i>Erros</button>
+            <button onclick="showTabMobile('analytics')" class="mobile-tab-btn w-full text-left px-4 py-3 glass-card rounded-lg"><i class="fas fa-chart-area mr-3"></i>Analytics</button>
+            <button onclick="showTabMobile('comms')" class="mobile-tab-btn w-full text-left px-4 py-3 glass-card rounded-lg"><i class="fas fa-envelope mr-3"></i>Comunicação</button>
+            <button onclick="showTabMobile('security')" class="mobile-tab-btn w-full text-left px-4 py-3 glass-card rounded-lg"><i class="fas fa-shield-alt mr-3"></i>Segurança</button>
+            <button onclick="showTabMobile('goals')" class="mobile-tab-btn w-full text-left px-4 py-3 glass-card rounded-lg"><i class="fas fa-bullseye mr-3"></i>Metas</button>
+        </div>
+        <div class="border-t border-white/10 pt-4 space-y-2">
+            <a href="/api/admin/export-csv" class="block w-full text-left px-4 py-3 bg-green-600/20 rounded-lg"><i class="fas fa-download mr-3"></i>Exportar CSV</a>
+            <button onclick="openNotificationModal(); toggleMobileMenu();" class="w-full text-left px-4 py-3 bg-purple-600/20 rounded-lg"><i class="fas fa-bell mr-3"></i>Enviar Notificação</button>
+        </div>
+        <div class="mt-auto pt-6 border-t border-white/10">
+            <div class="flex items-center justify-between">
+                <span class="text-gray-400"><i class="fas fa-user-shield mr-2"></i>{{ current_user.name }}</span>
+                <a href="{{ url_for('logout') }}" class="px-4 py-2 bg-red-600/20 rounded-lg text-red-400"><i class="fas fa-sign-out-alt mr-2"></i>Sair</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="max-w-7xl mx-auto px-4 py-4 desktop-tabs">
+        <div class="flex gap-2 flex-wrap">
+            <button onclick="showTab('overview')" class="tab-btn active px-4 py-2 glass-card rounded-lg text-sm transition-all" data-tab="overview">
+                <i class="fas fa-chart-pie mr-2"></i>Visão Geral
+            </button>
+            <button onclick="showTab('users')" class="tab-btn px-4 py-2 glass-card rounded-lg text-sm transition-all" data-tab="users">
+                <i class="fas fa-users mr-2"></i>Utilizadores
+            </button>
+            <button onclick="showTab('revenue')" class="tab-btn px-4 py-2 glass-card rounded-lg text-sm transition-all" data-tab="revenue">
+                <i class="fas fa-euro-sign mr-2"></i>Receita
+            </button>
+            <button onclick="showTab('usage')" class="tab-btn px-4 py-2 glass-card rounded-lg text-sm transition-all" data-tab="usage">
+                <i class="fas fa-chart-bar mr-2"></i>Uso
+            </button>
+            <button onclick="showTab('promo')" class="tab-btn px-4 py-2 glass-card rounded-lg text-sm transition-all" data-tab="promo">
+                <i class="fas fa-ticket-alt mr-2"></i>Promoções
+            </button>
+            <button onclick="showTab('errors')" class="tab-btn px-4 py-2 glass-card rounded-lg text-sm transition-all" data-tab="errors">
+                <i class="fas fa-bug mr-2"></i>Erros
+            </button>
+            <button onclick="showTab('analytics')" class="tab-btn px-4 py-2 glass-card rounded-lg text-sm transition-all" data-tab="analytics">
+                <i class="fas fa-chart-area mr-2"></i>Analytics
+            </button>
+            <button onclick="showTab('comms')" class="tab-btn px-4 py-2 glass-card rounded-lg text-sm transition-all" data-tab="comms">
+                <i class="fas fa-envelope mr-2"></i>Comunicação
+            </button>
+            <button onclick="showTab('security')" class="tab-btn px-4 py-2 glass-card rounded-lg text-sm transition-all" data-tab="security">
+                <i class="fas fa-shield-alt mr-2"></i>Segurança
+            </button>
+            <button onclick="showTab('goals')" class="tab-btn px-4 py-2 glass-card rounded-lg text-sm transition-all" data-tab="goals">
+                <i class="fas fa-bullseye mr-2"></i>Metas
+            </button>
+        </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto px-4 py-4">
+        <!-- Overview Tab -->
+        <div id="tab-overview" class="tab-content">
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="glass-card stat-card rounded-2xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-users text-purple-400 text-xl"></i>
+                        </div>
+                        <span class="text-green-400 text-sm">+{{ users_week }} esta semana</span>
+                    </div>
+                    <h3 class="text-3xl font-bold">{{ total_users }}</h3>
+                    <p class="text-gray-400">Total de Utilizadores</p>
+                </div>
+                <div class="glass-card stat-card rounded-2xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-user-check text-green-400 text-xl"></i>
+                        </div>
+                        <span class="text-gray-400 text-sm">últimos 7 dias</span>
+                    </div>
+                    <h3 class="text-3xl font-bold">{{ active_users }}</h3>
+                    <p class="text-gray-400">Utilizadores Ativos</p>
+                </div>
+                <div class="glass-card stat-card rounded-2xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-book text-blue-400 text-xl"></i>
+                        </div>
+                    </div>
+                    <h3 class="text-3xl font-bold">{{ total_analyses }}</h3>
+                    <p class="text-gray-400">Total de Análises</p>
+                </div>
+                <div class="glass-card stat-card rounded-2xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-pink-500/20 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-percentage text-pink-400 text-xl"></i>
+                        </div>
+                    </div>
+                    <h3 class="text-3xl font-bold">{{ conversion_rate }}%</h3>
+                    <p class="text-gray-400">Taxa de Conversão</p>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div class="glass-card rounded-2xl p-6">
+                    <h3 class="text-lg font-semibold mb-4">
+                        <i class="fas fa-chart-pie text-purple-400 mr-2"></i>Utilizadores por Plano
+                    </h3>
+                    <div class="flex items-center justify-center" style="height: 200px;">
+                        <canvas id="planChart"></canvas>
+                    </div>
+                    <div class="flex justify-center gap-6 mt-4">
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 bg-gray-500 rounded-full"></div>
+                            <span class="text-sm text-gray-400">Free: {{ users_free }}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 bg-purple-500 rounded-full"></div>
+                            <span class="text-sm text-gray-400">Pro: {{ users_pro }}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 bg-pink-500 rounded-full"></div>
+                            <span class="text-sm text-gray-400">Premium: {{ users_premium }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-card rounded-2xl p-6">
+                    <h3 class="text-lg font-semibold mb-4">
+                        <i class="fas fa-chart-line text-green-400 mr-2"></i>Registos (últimos 30 dias)
+                    </h3>
+                    <div style="height: 200px;">
+                        <canvas id="registrationsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tables Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div class="glass-card rounded-2xl p-6">
+                    <h3 class="text-lg font-semibold mb-4">
+                        <i class="fas fa-trophy text-yellow-400 mr-2"></i>Livros Mais Analisados
+                    </h3>
+                    <div class="overflow-x-auto max-h-64">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="text-left text-gray-400 text-sm border-b border-white/10">
+                                    <th class="pb-3">#</th>
+                                    <th class="pb-3">Livro</th>
+                                    <th class="pb-3">Autor</th>
+                                    <th class="pb-3 text-right">Análises</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for book in top_books %}
+                                <tr class="border-b border-white/5">
+                                    <td class="py-2 text-gray-500">{{ loop.index }}</td>
+                                    <td class="py-2 text-sm">{{ book.title[:25] }}{% if book.title|length > 25 %}...{% endif %}</td>
+                                    <td class="py-2 text-gray-400 text-sm">{{ book.theme[:15] if book.theme else '-' }}{% if book.theme and book.theme|length > 15 %}...{% endif %}</td>
+                                    <td class="py-2 text-right">
+                                        <span class="bg-purple-500/20 text-purple-400 px-2 py-1 rounded text-xs">{{ book.analysis_count }}</span>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr><td colspan="4" class="py-4 text-center text-gray-500">Sem dados</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="glass-card rounded-2xl p-6">
+                    <h3 class="text-lg font-semibold mb-4">
+                        <i class="fas fa-star text-cyan-400 mr-2"></i>Funcionalidades Mais Usadas
+                    </h3>
+                    <div class="space-y-3 max-h-64 overflow-y-auto">
+                        {% for feature in feature_counts %}
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-300 text-sm">{{ feature.analysis_type }}</span>
+                            <div class="flex items-center gap-3">
+                                <div class="w-24 bg-white/10 rounded-full h-2">
+                                    <div class="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full" 
+                                         style="width: {{ (feature.count / (feature_counts[0].count if feature_counts else 1)) * 100 }}%"></div>
+                                </div>
+                                <span class="text-gray-400 text-xs w-8 text-right">{{ feature.count }}</span>
+                            </div>
+                        </div>
+                        {% else %}
+                        <p class="text-gray-500 text-center py-4">Sem dados</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Tab -->
+        <div id="tab-users" class="tab-content hidden">
+            <div class="glass-card rounded-2xl p-6 mb-6">
+                <div class="flex flex-wrap gap-4 items-center justify-between mb-6">
+                    <h3 class="text-lg font-semibold">
+                        <i class="fas fa-users text-purple-400 mr-2"></i>Gestão de Utilizadores
+                    </h3>
+                    <div class="flex gap-2">
+                        <input type="text" id="userSearch" placeholder="Pesquisar email ou nome..." 
+                               class="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                               onkeyup="if(event.key==='Enter') searchUsers()">
+                        <select id="planFilter" class="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-sm" onchange="searchUsers()">
+                            <option value="">Todos os planos</option>
+                            <option value="free">Free</option>
+                            <option value="pro">Pro</option>
+                            <option value="premium">Premium</option>
+                        </select>
+                        <button onclick="searchUsers()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="text-left text-gray-400 text-sm border-b border-white/10">
+                                <th class="pb-3">ID</th>
+                                <th class="pb-3">Nome</th>
+                                <th class="pb-3">Email</th>
+                                <th class="pb-3">Plano</th>
+                                <th class="pb-3">Uso</th>
+                                <th class="pb-3">Registado</th>
+                                <th class="pb-3">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            {% for user in recent_users %}
+                            <tr class="border-b border-white/5 hover:bg-white/5" data-user-id="{{ user.id }}">
+                                <td class="py-3 text-gray-500">{{ user.id }}</td>
+                                <td class="py-3">{{ user.name }}</td>
+                                <td class="py-3 text-gray-400">{{ user.email }}</td>
+                                <td class="py-3">
+                                    <select class="bg-transparent border border-white/20 rounded px-2 py-1 text-xs" onchange="updateUserPlan({{ user.id }}, this.value)">
+                                        <option value="free" {% if user.plan == 'free' %}selected{% endif %}>Free</option>
+                                        <option value="pro" {% if user.plan == 'pro' %}selected{% endif %}>Pro</option>
+                                        <option value="premium" {% if user.plan == 'premium' %}selected{% endif %}>Premium</option>
+                                    </select>
+                                </td>
+                                <td class="py-3 text-gray-400">{{ user.usage_count }}</td>
+                                <td class="py-3 text-gray-400 text-sm">{{ user.created_at.strftime('%d/%m/%Y') }}</td>
+                                <td class="py-3">
+                                    <button onclick="resetUserUsage({{ user.id }})" class="text-yellow-400 hover:text-yellow-300 mr-2" title="Reset uso">
+                                        <i class="fas fa-redo"></i>
+                                    </button>
+                                    <button onclick="deleteUser({{ user.id }})" class="text-red-400 hover:text-red-300" title="Eliminar">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div id="usersPagination" class="flex justify-center gap-2 mt-4"></div>
+            </div>
+        </div>
+
+        <!-- Revenue Tab -->
+        <div id="tab-revenue" class="tab-content hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="glass-card stat-card rounded-2xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-euro-sign text-green-400 text-xl"></i>
+                        </div>
+                    </div>
+                    <h3 class="text-3xl font-bold" id="mrrValue">€0.00</h3>
+                    <p class="text-gray-400">MRR (Receita Mensal)</p>
+                </div>
+                <div class="glass-card stat-card rounded-2xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-calendar text-blue-400 text-xl"></i>
+                        </div>
+                    </div>
+                    <h3 class="text-3xl font-bold" id="arrValue">€0.00</h3>
+                    <p class="text-gray-400">ARR (Receita Anual)</p>
+                </div>
+                <div class="glass-card stat-card rounded-2xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-user-tag text-purple-400 text-xl"></i>
+                        </div>
+                    </div>
+                    <h3 class="text-3xl font-bold" id="arpuValue">€0.00</h3>
+                    <p class="text-gray-400">ARPU (Receita por Utilizador)</p>
+                </div>
+                <div class="glass-card stat-card rounded-2xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-pink-500/20 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-credit-card text-pink-400 text-xl"></i>
+                        </div>
+                    </div>
+                    <h3 class="text-3xl font-bold" id="payingUsers">0</h3>
+                    <p class="text-gray-400">Utilizadores Pagantes</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="glass-card rounded-2xl p-6">
+                    <h3 class="text-lg font-semibold mb-4">
+                        <i class="fas fa-chart-bar text-green-400 mr-2"></i>Receita por Plano
+                    </h3>
+                    <div style="height: 200px;">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+                <div class="glass-card rounded-2xl p-6">
+                    <h3 class="text-lg font-semibold mb-4">
+                        <i class="fas fa-info-circle text-blue-400 mr-2"></i>Detalhes
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center p-3 bg-white/5 rounded-lg">
+                            <span class="text-gray-400">Receita Pro</span>
+                            <span class="font-bold text-purple-400" id="mrrPro">€0.00</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-white/5 rounded-lg">
+                            <span class="text-gray-400">Receita Premium</span>
+                            <span class="font-bold text-pink-400" id="mrrPremium">€0.00</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-white/5 rounded-lg">
+                            <span class="text-gray-400">Preço Pro/mês</span>
+                            <span class="font-bold">€9.99</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-white/5 rounded-lg">
+                            <span class="text-gray-400">Preço Premium/mês</span>
+                            <span class="font-bold">€19.99</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Usage Tab -->
+        <div id="tab-usage" class="tab-content hidden">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="glass-card stat-card rounded-2xl p-6">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-cyan-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-fire text-cyan-400"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold">{{ total_usage }}</h3>
+                            <p class="text-gray-400 text-sm">Uso Total (este mês)</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-card stat-card rounded-2xl p-6">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-book-open text-orange-400"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold">{{ total_books }}</h3>
+                            <p class="text-gray-400 text-sm">Livros Criados</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-card stat-card rounded-2xl p-6">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-calendar-day text-yellow-400"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold">{{ users_today }}</h3>
+                            <p class="text-gray-400 text-sm">Novos Hoje</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="glass-card rounded-2xl p-6 mb-6">
+                <h3 class="text-lg font-semibold mb-4">
+                    <i class="fas fa-chart-area text-purple-400 mr-2"></i>Análises por Dia (últimos 30 dias)
+                </h3>
+                <div style="height: 300px;">
+                    <canvas id="dailyUsageChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Promo Codes Tab -->
+        <div id="tab-promo" class="tab-content hidden">
+            <div class="glass-card rounded-2xl p-6 mb-6">
+                <div class="flex flex-wrap gap-4 items-center justify-between mb-6">
+                    <h3 class="text-lg font-semibold">
+                        <i class="fas fa-ticket-alt text-green-400 mr-2"></i>Códigos Promocionais
+                    </h3>
+                    <button onclick="openPromoModal()" class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm">
+                        <i class="fas fa-plus mr-2"></i>Novo Código
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="text-left text-gray-400 text-sm border-b border-white/10">
+                                <th class="pb-3">Código</th>
+                                <th class="pb-3">Desconto</th>
+                                <th class="pb-3">Aplica-se a</th>
+                                <th class="pb-3">Usos</th>
+                                <th class="pb-3">Válido até</th>
+                                <th class="pb-3">Estado</th>
+                                <th class="pb-3">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="promoTableBody">
+                            <tr><td colspan="7" class="py-4 text-center text-gray-500">A carregar...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- Growth Comparison -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="glass-card rounded-2xl p-6">
+                    <h3 class="text-lg font-semibold mb-4">
+                        <i class="fas fa-chart-line text-blue-400 mr-2"></i>Crescimento Mês a Mês
+                    </h3>
+                    <div id="growthStats" class="space-y-4">
+                        <div class="flex justify-between items-center p-3 bg-white/5 rounded-lg">
+                            <span class="text-gray-400">Utilizadores este mês</span>
+                            <span class="font-bold" id="usersThisMonth">-</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-white/5 rounded-lg">
+                            <span class="text-gray-400">Utilizadores mês passado</span>
+                            <span class="font-bold" id="usersLastMonth">-</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-white/5 rounded-lg">
+                            <span class="text-gray-400">Crescimento</span>
+                            <span class="font-bold" id="userGrowth">-</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-card rounded-2xl p-6">
+                    <h3 class="text-lg font-semibold mb-4">
+                        <i class="fas fa-globe text-cyan-400 mr-2"></i>Utilizadores por Idioma
+                    </h3>
+                    <div id="languageStats" class="space-y-3">
+                        <p class="text-gray-500 text-center py-4">A carregar...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Errors Tab -->
+        <div id="tab-errors" class="tab-content hidden">
+            <div class="glass-card rounded-2xl p-6">
+                <div class="flex flex-wrap gap-4 items-center justify-between mb-6">
+                    <h3 class="text-lg font-semibold">
+                        <i class="fas fa-bug text-red-400 mr-2"></i>Log de Erros
+                    </h3>
+                    <span id="errorCount" class="text-gray-400 text-sm">0 erros</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="text-left text-gray-400 text-sm border-b border-white/10">
+                                <th class="pb-3">ID</th>
+                                <th class="pb-3">Tipo</th>
+                                <th class="pb-3">Mensagem</th>
+                                <th class="pb-3">Endpoint</th>
+                                <th class="pb-3">Data</th>
+                                <th class="pb-3">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="errorsTableBody">
+                            <tr><td colspan="6" class="py-4 text-center text-gray-500">Sem erros registados</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Tab -->
+        <div id="tab-analytics" class="tab-content hidden">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="glass-card stat-card rounded-2xl p-6">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 bg-red-500/20 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-user-minus text-red-400 text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold" id="churnRate">0%</h3>
+                            <p class="text-gray-400 text-sm">Churn Rate</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-card stat-card rounded-2xl p-6">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-redo text-green-400 text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold" id="retentionRate">0%</h3>
+                            <p class="text-gray-400 text-sm">Retenção (7 dias)</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-card stat-card rounded-2xl p-6">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-filter text-purple-400 text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold" id="freeToProRate">0%</h3>
+                            <p class="text-gray-400 text-sm">Free → Pro</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div class="glass-card rounded-2xl p-6">
+                    <h3 class="text-lg font-semibold mb-4"><i class="fas fa-funnel-dollar text-purple-400 mr-2"></i>Funil de Conversão</h3>
+                    <div id="funnelChart" class="space-y-3"></div>
+                </div>
+                <div class="glass-card rounded-2xl p-6">
+                    <h3 class="text-lg font-semibold mb-4"><i class="fas fa-chart-line text-green-400 mr-2"></i>Previsão de Receita (6 meses)</h3>
+                    <div style="height: 200px;"><canvas id="forecastChart"></canvas></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Communication Tab -->
+        <div id="tab-comms" class="tab-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div class="glass-card rounded-2xl p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold"><i class="fas fa-file-alt text-blue-400 mr-2"></i>Templates de Email</h3>
+                        <button onclick="openTemplateModal()" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-sm"><i class="fas fa-plus mr-1"></i>Novo</button>
+                    </div>
+                    <div id="templatesTable" class="space-y-2 max-h-64 overflow-y-auto"></div>
+                </div>
+                <div class="glass-card rounded-2xl p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold"><i class="fas fa-clock text-orange-400 mr-2"></i>Notificações Agendadas</h3>
+                        <button onclick="openScheduleModal()" class="px-3 py-1 bg-orange-600 hover:bg-orange-700 rounded text-sm"><i class="fas fa-plus mr-1"></i>Agendar</button>
+                    </div>
+                    <div id="scheduledTable" class="space-y-2 max-h-64 overflow-y-auto"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Tab -->
+        <div id="tab-security" class="tab-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div class="glass-card rounded-2xl p-6">
+                    <h3 class="text-lg font-semibold mb-4"><i class="fas fa-history text-blue-400 mr-2"></i>Logs de Login</h3>
+                    <div class="overflow-x-auto max-h-80">
+                        <table class="w-full text-sm">
+                            <thead><tr class="text-gray-400 border-b border-white/10"><th class="pb-2 text-left">Utilizador</th><th class="pb-2">IP</th><th class="pb-2">Data</th></tr></thead>
+                            <tbody id="loginLogsTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="glass-card rounded-2xl p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold"><i class="fas fa-ban text-red-400 mr-2"></i>IPs Bloqueados</h3>
+                        <button onclick="openBlockIPModal()" class="px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-sm"><i class="fas fa-plus mr-1"></i>Bloquear</button>
+                    </div>
+                    <div id="blockedIPsTable" class="space-y-2 max-h-64 overflow-y-auto"></div>
+                </div>
+            </div>
+            <div class="glass-card rounded-2xl p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold"><i class="fas fa-user-shield text-purple-400 mr-2"></i>Administradores</h3>
+                    <button onclick="openAddAdminModal()" class="px-3 py-1 bg-purple-600 hover:bg-purple-700 rounded text-sm"><i class="fas fa-plus mr-1"></i>Adicionar</button>
+                </div>
+                <div id="adminsTable" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+            </div>
+        </div>
+
+        <!-- Goals Tab -->
+        <div id="tab-goals" class="tab-content hidden">
+            <div class="glass-card rounded-2xl p-6 mb-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-semibold"><i class="fas fa-bullseye text-pink-400 mr-2"></i>Metas e Objetivos</h3>
+                    <button onclick="openGoalModal()" class="px-4 py-2 bg-pink-600 hover:bg-pink-700 rounded-lg text-sm"><i class="fas fa-plus mr-2"></i>Nova Meta</button>
+                </div>
+                <div id="goalsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            </div>
+            <div class="flex gap-4">
+                <a href="/api/admin/export-pdf" class="glass-card rounded-xl p-4 flex items-center gap-3 hover:bg-white/10 transition-colors">
+                    <div class="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center"><i class="fas fa-file-pdf text-red-400"></i></div>
+                    <div><p class="font-medium">Exportar Relatório</p><p class="text-gray-400 text-sm">Download HTML</p></div>
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Notification Modal -->
+    <div id="notificationModal" class="modal">
+        <div class="glass-card rounded-2xl p-6 w-full max-w-md mx-4">
+            <h3 class="text-lg font-semibold mb-4">
+                <i class="fas fa-bell text-purple-400 mr-2"></i>Enviar Notificação
+            </h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Título</label>
+                    <input type="text" id="notifTitle" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Mensagem</label>
+                    <textarea id="notifMessage" rows="3" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="sendNotification()" class="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg">
+                        <i class="fas fa-paper-plane mr-2"></i>Enviar a Todos
+                    </button>
+                    <button onclick="closeNotificationModal()" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Promo Code Modal -->
+    <div id="promoModal" class="modal">
+        <div class="glass-card rounded-2xl p-6 w-full max-w-md mx-4">
+            <h3 class="text-lg font-semibold mb-4">
+                <i class="fas fa-ticket-alt text-green-400 mr-2"></i>Novo Código Promocional
+            </h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Código</label>
+                    <input type="text" id="promoCode" placeholder="Ex: DESCONTO20" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 uppercase">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Desconto (%)</label>
+                        <input type="number" id="promoDiscount" value="10" min="1" max="100" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Máx. Usos</label>
+                        <input type="number" id="promoMaxUses" value="100" min="1" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Aplica-se a</label>
+                        <select id="promoApplies" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg">
+                            <option value="all">Todos os planos</option>
+                            <option value="pro">Apenas Pro</option>
+                            <option value="premium">Apenas Premium</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Válido até</label>
+                        <input type="date" id="promoValidUntil" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="createPromoCode()" class="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg">
+                        <i class="fas fa-check mr-2"></i>Criar Código
+                    </button>
+                    <button onclick="closePromoModal()" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template Modal -->
+    <div id="templateModal" class="modal">
+        <div class="glass-card rounded-2xl p-6 w-full max-w-lg mx-4">
+            <h3 class="text-lg font-semibold mb-4"><i class="fas fa-file-alt text-blue-400 mr-2"></i>Novo Template</h3>
+            <div class="space-y-4">
+                <input type="text" id="templateName" placeholder="Nome do template" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg">
+                <input type="text" id="templateSubject" placeholder="Assunto do email" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg">
+                <textarea id="templateBody" rows="4" placeholder="Corpo do email..." class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg"></textarea>
+                <div class="flex gap-2">
+                    <button onclick="createTemplate()" class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg">Criar</button>
+                    <button onclick="closeTemplateModal()" class="px-4 py-2 bg-gray-600 rounded-lg">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schedule Modal -->
+    <div id="scheduleModal" class="modal">
+        <div class="glass-card rounded-2xl p-6 w-full max-w-lg mx-4">
+            <h3 class="text-lg font-semibold mb-4"><i class="fas fa-clock text-orange-400 mr-2"></i>Agendar Notificação</h3>
+            <div class="space-y-4">
+                <input type="text" id="schedTitle" placeholder="Título" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg">
+                <textarea id="schedMessage" rows="3" placeholder="Mensagem..." class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg"></textarea>
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="datetime-local" id="schedDateTime" class="px-4 py-2 bg-white/10 border border-white/20 rounded-lg">
+                    <select id="schedSegment" class="px-4 py-2 bg-white/10 border border-white/20 rounded-lg">
+                        <option value="all">Todos</option><option value="free">Free</option><option value="pro">Pro</option><option value="premium">Premium</option>
+                    </select>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="createScheduled()" class="flex-1 px-4 py-2 bg-orange-600 hover:bg-orange-700 rounded-lg">Agendar</button>
+                    <button onclick="closeScheduleModal()" class="px-4 py-2 bg-gray-600 rounded-lg">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Block IP Modal -->
+    <div id="blockIPModal" class="modal">
+        <div class="glass-card rounded-2xl p-6 w-full max-w-md mx-4">
+            <h3 class="text-lg font-semibold mb-4"><i class="fas fa-ban text-red-400 mr-2"></i>Bloquear IP</h3>
+            <div class="space-y-4">
+                <input type="text" id="blockIP" placeholder="Endereço IP" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg">
+                <input type="text" id="blockReason" placeholder="Motivo (opcional)" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg">
+                <div class="flex gap-2">
+                    <button onclick="blockIPAddress()" class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg">Bloquear</button>
+                    <button onclick="closeBlockIPModal()" class="px-4 py-2 bg-gray-600 rounded-lg">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Admin Modal -->
+    <div id="addAdminModal" class="modal">
+        <div class="glass-card rounded-2xl p-6 w-full max-w-md mx-4">
+            <h3 class="text-lg font-semibold mb-4"><i class="fas fa-user-shield text-purple-400 mr-2"></i>Adicionar Admin</h3>
+            <div class="space-y-4">
+                <input type="email" id="adminEmail" placeholder="Email do utilizador" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg">
+                <div class="flex gap-2">
+                    <button onclick="addAdmin()" class="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg">Adicionar</button>
+                    <button onclick="closeAddAdminModal()" class="px-4 py-2 bg-gray-600 rounded-lg">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Goal Modal -->
+    <div id="goalModal" class="modal">
+        <div class="glass-card rounded-2xl p-6 w-full max-w-md mx-4">
+            <h3 class="text-lg font-semibold mb-4"><i class="fas fa-bullseye text-pink-400 mr-2"></i>Nova Meta</h3>
+            <div class="space-y-4">
+                <input type="text" id="goalTitle" placeholder="Título da meta" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg">
+                <div class="grid grid-cols-2 gap-4">
+                    <select id="goalType" class="px-4 py-2 bg-white/10 border border-white/20 rounded-lg">
+                        <option value="users">Utilizadores</option><option value="revenue">Receita (€)</option><option value="analyses">Análises</option>
+                    </select>
+                    <input type="number" id="goalTarget" placeholder="Objetivo" class="px-4 py-2 bg-white/10 border border-white/20 rounded-lg">
+                </div>
+                <input type="date" id="goalDeadline" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg">
+                <div class="flex gap-2">
+                    <button onclick="createGoal()" class="flex-1 px-4 py-2 bg-pink-600 hover:bg-pink-700 rounded-lg">Criar Meta</button>
+                    <button onclick="closeGoalModal()" class="px-4 py-2 bg-gray-600 rounded-lg">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center py-6 text-gray-500 text-sm">
+        <p>Dashboard Admin - Alma do Livro &copy; 2026</p>
+    </footer>
+
+    <script>
+        // Mobile Menu
+        function toggleMobileMenu() {
+            document.getElementById('mobileMenu').classList.toggle('active');
+        }
+        
+        function showTabMobile(tabName) {
+            showTab(tabName);
+            toggleMobileMenu();
+        }
+
+        // Tab switching
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tabName).classList.remove('hidden');
+            const tabBtn = document.querySelector(`[data-tab="${tabName}"]`);
+            if (tabBtn) tabBtn.classList.add('active');
+            
+            if (tabName === 'users') searchUsers();
+            if (tabName === 'revenue') loadRevenue();
+            if (tabName === 'usage') loadDailyUsage();
+            if (tabName === 'promo') { loadPromoCodes(); loadGrowth(); loadLanguages(); }
+            if (tabName === 'errors') loadErrors();
+            if (tabName === 'analytics') loadAnalytics();
+            if (tabName === 'comms') { loadTemplates(); loadScheduled(); }
+            if (tabName === 'security') { loadLoginLogs(); loadBlockedIPs(); loadAdmins(); }
+            if (tabName === 'goals') loadGoals();
+        }
+
+        // Plan Distribution Chart
+        const planCtx = document.getElementById('planChart').getContext('2d');
+        new Chart(planCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Free', 'Pro', 'Premium'],
+                datasets: [{
+                    data: [{{ users_free }}, {{ users_pro }}, {{ users_premium }}],
+                    backgroundColor: ['rgba(107, 114, 128, 0.8)', 'rgba(139, 92, 246, 0.8)', 'rgba(236, 72, 153, 0.8)'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                cutout: '60%'
+            }
+        });
+
+        // Daily Registrations Chart
+        const regCtx = document.getElementById('registrationsChart').getContext('2d');
+        const registrationData = [
+            {% for reg in daily_registrations %}
+            { date: '{{ reg.date }}', count: {{ reg.count }} }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ];
+        new Chart(regCtx, {
+            type: 'line',
+            data: {
+                labels: registrationData.map(d => new Date(d.date).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit' })),
+                datasets: [{
+                    label: 'Registos',
+                    data: registrationData.map(d => d.count),
+                    borderColor: 'rgba(34, 197, 94, 1)',
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'rgba(255,255,255,0.5)', maxTicksLimit: 7 } },
+                    y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'rgba(255,255,255,0.5)' } }
+                }
+            }
+        });
+
+        // User Management
+        function searchUsers(page = 1) {
+            const search = document.getElementById('userSearch').value;
+            const plan = document.getElementById('planFilter').value;
+            fetch(`/api/admin/users?search=${encodeURIComponent(search)}&plan=${plan}&page=${page}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        const tbody = document.getElementById('usersTableBody');
+                        tbody.innerHTML = data.users.map(u => `
+                            <tr class="border-b border-white/5 hover:bg-white/5">
+                                <td class="py-3 text-gray-500">${u.id}</td>
+                                <td class="py-3">${u.name}</td>
+                                <td class="py-3 text-gray-400">${u.email}</td>
+                                <td class="py-3">
+                                    <select class="bg-transparent border border-white/20 rounded px-2 py-1 text-xs" onchange="updateUserPlan(${u.id}, this.value)">
+                                        <option value="free" ${u.plan==='free'?'selected':''}>Free</option>
+                                        <option value="pro" ${u.plan==='pro'?'selected':''}>Pro</option>
+                                        <option value="premium" ${u.plan==='premium'?'selected':''}>Premium</option>
+                                    </select>
+                                </td>
+                                <td class="py-3 text-gray-400">${u.usage_count}</td>
+                                <td class="py-3 text-gray-400 text-sm">${u.created_at.split(' ')[0]}</td>
+                                <td class="py-3">
+                                    <button onclick="resetUserUsage(${u.id})" class="text-yellow-400 hover:text-yellow-300 mr-2"><i class="fas fa-redo"></i></button>
+                                    <button onclick="deleteUser(${u.id})" class="text-red-400 hover:text-red-300"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                        `).join('');
+                    }
+                });
+        }
+
+        function updateUserPlan(userId, plan) {
+            fetch(`/api/admin/user/${userId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ plan })
+            }).then(r => r.json()).then(data => {
+                if (data.success) alert('Plano atualizado!');
+            });
+        }
+
+        function resetUserUsage(userId) {
+            if (!confirm('Resetar uso deste utilizador?')) return;
+            fetch(`/api/admin/user/${userId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ usage_count: 0 })
+            }).then(r => r.json()).then(data => {
+                if (data.success) { alert('Uso resetado!'); searchUsers(); }
+            });
+        }
+
+        function deleteUser(userId) {
+            if (!confirm('Eliminar este utilizador? Esta ação é irreversível!')) return;
+            fetch(`/api/admin/user/${userId}`, { method: 'DELETE' })
+                .then(r => r.json()).then(data => {
+                    if (data.success) { alert('Utilizador eliminado!'); searchUsers(); }
+                    else alert(data.error);
+                });
+        }
+
+        // Revenue
+        let revenueChart;
+        function loadRevenue() {
+            fetch('/api/admin/revenue').then(r => r.json()).then(data => {
+                if (data.success) {
+                    const r = data.revenue;
+                    document.getElementById('mrrValue').textContent = '€' + r.mrr.toFixed(2);
+                    document.getElementById('arrValue').textContent = '€' + r.arr.toFixed(2);
+                    document.getElementById('arpuValue').textContent = '€' + r.arpu.toFixed(2);
+                    document.getElementById('payingUsers').textContent = r.paying_users;
+                    document.getElementById('mrrPro').textContent = '€' + r.mrr_pro.toFixed(2);
+                    document.getElementById('mrrPremium').textContent = '€' + r.mrr_premium.toFixed(2);
+                    
+                    if (revenueChart) revenueChart.destroy();
+                    revenueChart = new Chart(document.getElementById('revenueChart'), {
+                        type: 'bar',
+                        data: {
+                            labels: ['Pro', 'Premium'],
+                            datasets: [{ data: [r.mrr_pro, r.mrr_premium], backgroundColor: ['rgba(139, 92, 246, 0.8)', 'rgba(236, 72, 153, 0.8)'] }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                    });
+                }
+            });
+        }
+
+        // Daily Usage
+        let dailyUsageChart;
+        function loadDailyUsage() {
+            fetch('/api/admin/daily-usage').then(r => r.json()).then(data => {
+                if (data.success) {
+                    if (dailyUsageChart) dailyUsageChart.destroy();
+                    dailyUsageChart = new Chart(document.getElementById('dailyUsageChart'), {
+                        type: 'bar',
+                        data: {
+                            labels: data.data.map(d => new Date(d.date).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit' })),
+                            datasets: [{ label: 'Análises', data: data.data.map(d => d.count), backgroundColor: 'rgba(139, 92, 246, 0.6)' }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                x: { grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.5)', maxTicksLimit: 10 } },
+                                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'rgba(255,255,255,0.5)' } }
+                            }
+                        }
+                    });
+                }
+            });
+        }
+
+        // Notifications
+        function openNotificationModal() { document.getElementById('notificationModal').classList.add('active'); }
+        function closeNotificationModal() { document.getElementById('notificationModal').classList.remove('active'); }
+        function sendNotification() {
+            const title = document.getElementById('notifTitle').value;
+            const message = document.getElementById('notifMessage').value;
+            if (!title || !message) { alert('Preencha título e mensagem'); return; }
+            fetch('/api/admin/send-notification', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, message })
+            }).then(r => r.json()).then(data => {
+                if (data.success) { alert(`Notificação enviada a ${data.sent} utilizadores!`); closeNotificationModal(); }
+                else alert(data.error);
+            });
+        }
+
+        // Promo Codes
+        function openPromoModal() { document.getElementById('promoModal').classList.add('active'); }
+        function closePromoModal() { document.getElementById('promoModal').classList.remove('active'); }
+        
+        function loadPromoCodes() {
+            fetch('/api/admin/promo-codes').then(r => r.json()).then(data => {
+                if (data.success) {
+                    const tbody = document.getElementById('promoTableBody');
+                    if (data.codes.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="7" class="py-4 text-center text-gray-500">Nenhum código criado</td></tr>';
+                        return;
+                    }
+                    tbody.innerHTML = data.codes.map(c => `
+                        <tr class="border-b border-white/5">
+                            <td class="py-3 font-mono text-green-400">${c.code}</td>
+                            <td class="py-3">${c.discount_percent}%</td>
+                            <td class="py-3 text-gray-400">${c.applies_to === 'all' ? 'Todos' : c.applies_to.toUpperCase()}</td>
+                            <td class="py-3">${c.current_uses}/${c.max_uses}</td>
+                            <td class="py-3 text-gray-400">${c.valid_until || 'Sem limite'}</td>
+                            <td class="py-3">
+                                <span class="px-2 py-1 rounded text-xs ${c.is_valid ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}">
+                                    ${c.is_valid ? 'Ativo' : 'Inativo'}
+                                </span>
+                            </td>
+                            <td class="py-3">
+                                <button onclick="togglePromo(${c.id}, ${!c.is_active})" class="text-yellow-400 hover:text-yellow-300 mr-2">
+                                    <i class="fas fa-${c.is_active ? 'pause' : 'play'}"></i>
+                                </button>
+                                <button onclick="deletePromo(${c.id})" class="text-red-400 hover:text-red-300">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            });
+        }
+
+        function createPromoCode() {
+            const code = document.getElementById('promoCode').value.toUpperCase().trim();
+            const discount_percent = document.getElementById('promoDiscount').value;
+            const max_uses = document.getElementById('promoMaxUses').value;
+            const applies_to = document.getElementById('promoApplies').value;
+            const valid_until = document.getElementById('promoValidUntil').value;
+            
+            if (!code) { alert('Código é obrigatório'); return; }
+            
+            fetch('/api/admin/promo-codes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code, discount_percent, max_uses, applies_to, valid_until })
+            }).then(r => r.json()).then(data => {
+                if (data.success) { alert('Código criado!'); closePromoModal(); loadPromoCodes(); }
+                else alert(data.error);
+            });
+        }
+
+        function togglePromo(id, active) {
+            fetch(`/api/admin/promo-codes/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ is_active: active })
+            }).then(r => r.json()).then(data => { if (data.success) loadPromoCodes(); });
+        }
+
+        function deletePromo(id) {
+            if (!confirm('Eliminar este código?')) return;
+            fetch(`/api/admin/promo-codes/${id}`, { method: 'DELETE' })
+                .then(r => r.json()).then(data => { if (data.success) loadPromoCodes(); });
+        }
+
+        // Growth Stats
+        function loadGrowth() {
+            fetch('/api/admin/growth').then(r => r.json()).then(data => {
+                if (data.success) {
+                    const g = data.growth;
+                    document.getElementById('usersThisMonth').textContent = g.users_this_month;
+                    document.getElementById('usersLastMonth').textContent = g.users_last_month;
+                    const growthEl = document.getElementById('userGrowth');
+                    growthEl.textContent = (g.user_growth >= 0 ? '+' : '') + g.user_growth + '%';
+                    growthEl.className = 'font-bold ' + (g.user_growth >= 0 ? 'text-green-400' : 'text-red-400');
+                }
+            });
+        }
+
+        // Languages
+        function loadLanguages() {
+            fetch('/api/admin/users-by-language').then(r => r.json()).then(data => {
+                if (data.success) {
+                    const container = document.getElementById('languageStats');
+                    const langNames = {'pt-pt': '🇵🇹 Português (PT)', 'pt-br': '🇧🇷 Português (BR)', 'en': '🇬🇧 Inglês', 'es': '🇪🇸 Espanhol', 'fr': '🇫🇷 Francês', 'de': '🇩🇪 Alemão', 'it': '🇮🇹 Italiano'};
+                    const total = data.languages.reduce((a, l) => a + l.count, 0);
+                    container.innerHTML = data.languages.map(l => `
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-300">${langNames[l.language] || l.language}</span>
+                            <div class="flex items-center gap-3">
+                                <div class="w-20 bg-white/10 rounded-full h-2">
+                                    <div class="bg-cyan-500 h-2 rounded-full" style="width: ${(l.count/total)*100}%"></div>
+                                </div>
+                                <span class="text-gray-400 text-sm w-8">${l.count}</span>
+                            </div>
+                        </div>
+                    `).join('') || '<p class="text-gray-500 text-center">Sem dados</p>';
+                }
+            });
+        }
+
+        // Errors
+        function loadErrors() {
+            fetch('/api/admin/errors').then(r => r.json()).then(data => {
+                if (data.success) {
+                    document.getElementById('errorCount').textContent = data.total + ' erros';
+                    const tbody = document.getElementById('errorsTableBody');
+                    if (data.errors.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" class="py-4 text-center text-gray-500">Sem erros registados 🎉</td></tr>';
+                        return;
+                    }
+                    tbody.innerHTML = data.errors.map(e => `
+                        <tr class="border-b border-white/5 ${e.is_resolved ? 'opacity-50' : ''}">
+                            <td class="py-3 text-gray-500">${e.id}</td>
+                            <td class="py-3 text-red-400">${e.error_type}</td>
+                            <td class="py-3 text-sm">${e.error_message}</td>
+                            <td class="py-3 text-gray-400 text-sm">${e.endpoint || '-'}</td>
+                            <td class="py-3 text-gray-400 text-sm">${e.created_at}</td>
+                            <td class="py-3">
+                                ${!e.is_resolved ? `<button onclick="resolveError(${e.id})" class="text-green-400 hover:text-green-300 mr-2"><i class="fas fa-check"></i></button>` : ''}
+                                <button onclick="deleteError(${e.id})" class="text-red-400 hover:text-red-300"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            });
+        }
+
+        function resolveError(id) {
+            fetch(`/api/admin/errors/${id}`, { method: 'PUT' }).then(r => r.json()).then(data => { if (data.success) loadErrors(); });
+        }
+
+        function deleteError(id) {
+            fetch(`/api/admin/errors/${id}`, { method: 'DELETE' }).then(r => r.json()).then(data => { if (data.success) loadErrors(); });
+        }
+
+        // Analytics
+        let forecastChart;
+        function loadAnalytics() {
+            fetch('/api/admin/analytics').then(r => r.json()).then(data => {
+                if (data.success) {
+                    const a = data.analytics;
+                    document.getElementById('churnRate').textContent = a.churn_rate + '%';
+                    document.getElementById('retentionRate').textContent = a.retention_rate + '%';
+                    document.getElementById('freeToProRate').textContent = a.funnel.free_to_pro + '%';
+                    
+                    // Funnel visualization
+                    const f = a.funnel;
+                    document.getElementById('funnelChart').innerHTML = `
+                        <div class="space-y-2">
+                            <div class="flex items-center gap-3"><div class="w-full bg-gray-500/30 rounded h-8 flex items-center px-3"><span>Total: ${f.total}</span></div></div>
+                            <div class="flex items-center gap-3"><div class="bg-gray-500/50 rounded h-8 flex items-center px-3" style="width:${f.free/f.total*100}%"><span>Free: ${f.free}</span></div></div>
+                            <div class="flex items-center gap-3"><div class="bg-purple-500/50 rounded h-8 flex items-center px-3" style="width:${f.pro/f.total*100}%"><span>Pro: ${f.pro}</span></div></div>
+                            <div class="flex items-center gap-3"><div class="bg-pink-500/50 rounded h-8 flex items-center px-3" style="width:${f.premium/f.total*100}%"><span>Premium: ${f.premium}</span></div></div>
+                        </div>
+                    `;
+                }
+            });
+            
+            fetch('/api/admin/revenue-forecast').then(r => r.json()).then(data => {
+                if (data.success) {
+                    if (forecastChart) forecastChart.destroy();
+                    forecastChart = new Chart(document.getElementById('forecastChart'), {
+                        type: 'line',
+                        data: {
+                            labels: data.forecast.next_6_months.map(m => 'Mês ' + m.month),
+                            datasets: [{ label: 'MRR Previsto', data: data.forecast.next_6_months.map(m => m.mrr), borderColor: 'rgba(34, 197, 94, 1)', backgroundColor: 'rgba(34, 197, 94, 0.1)', fill: true, tension: 0.4 }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                    });
+                }
+            });
+        }
+
+        // Templates
+        function openTemplateModal() { document.getElementById('templateModal').classList.add('active'); }
+        function closeTemplateModal() { document.getElementById('templateModal').classList.remove('active'); }
+        function loadTemplates() {
+            fetch('/api/admin/email-templates').then(r => r.json()).then(data => {
+                if (data.success) {
+                    document.getElementById('templatesTable').innerHTML = data.templates.length ? data.templates.map(t => `
+                        <div class="flex justify-between items-center p-2 bg-white/5 rounded">
+                            <div><p class="font-medium">${t.name}</p><p class="text-gray-400 text-xs">${t.subject}</p></div>
+                            <button onclick="deleteTemplate(${t.id})" class="text-red-400"><i class="fas fa-trash"></i></button>
+                        </div>
+                    `).join('') : '<p class="text-gray-500 text-center py-4">Nenhum template</p>';
+                }
+            });
+        }
+        function createTemplate() {
+            fetch('/api/admin/email-templates', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: document.getElementById('templateName').value, subject: document.getElementById('templateSubject').value, body: document.getElementById('templateBody').value })
+            }).then(r => r.json()).then(data => { if (data.success) { closeTemplateModal(); loadTemplates(); } else alert(data.error); });
+        }
+        function deleteTemplate(id) { fetch(`/api/admin/email-templates/${id}`, { method: 'DELETE' }).then(() => loadTemplates()); }
+
+        // Scheduled Notifications
+        function openScheduleModal() { document.getElementById('scheduleModal').classList.add('active'); }
+        function closeScheduleModal() { document.getElementById('scheduleModal').classList.remove('active'); }
+        function loadScheduled() {
+            fetch('/api/admin/scheduled-notifications').then(r => r.json()).then(data => {
+                if (data.success) {
+                    document.getElementById('scheduledTable').innerHTML = data.notifications.length ? data.notifications.map(n => `
+                        <div class="flex justify-between items-center p-2 bg-white/5 rounded ${n.is_sent ? 'opacity-50' : ''}">
+                            <div><p class="font-medium">${n.title}</p><p class="text-gray-400 text-xs">${n.scheduled_for} - ${n.target_segment}</p></div>
+                            <div class="flex gap-2">
+                                ${n.is_sent ? '<span class="text-green-400 text-xs">Enviado</span>' : ''}
+                                <button onclick="deleteScheduled(${n.id})" class="text-red-400"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                    `).join('') : '<p class="text-gray-500 text-center py-4">Nenhuma agendada</p>';
+                }
+            });
+        }
+        function createScheduled() {
+            fetch('/api/admin/scheduled-notifications', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: document.getElementById('schedTitle').value, message: document.getElementById('schedMessage').value, scheduled_for: document.getElementById('schedDateTime').value, target_segment: document.getElementById('schedSegment').value })
+            }).then(r => r.json()).then(data => { if (data.success) { closeScheduleModal(); loadScheduled(); } else alert(data.error); });
+        }
+        function deleteScheduled(id) { fetch(`/api/admin/scheduled-notifications/${id}`, { method: 'DELETE' }).then(() => loadScheduled()); }
+
+        // Login Logs
+        function loadLoginLogs() {
+            fetch('/api/admin/login-logs').then(r => r.json()).then(data => {
+                if (data.success) {
+                    document.getElementById('loginLogsTable').innerHTML = data.logs.length ? data.logs.map(l => `
+                        <tr class="border-b border-white/5"><td class="py-2">${l.user_email}</td><td class="py-2 text-gray-400">${l.ip_address || '-'}</td><td class="py-2 text-gray-400">${l.created_at}</td></tr>
+                    `).join('') : '<tr><td colspan="3" class="py-4 text-center text-gray-500">Sem logs</td></tr>';
+                }
+            });
+        }
+
+        // Blocked IPs
+        function openBlockIPModal() { document.getElementById('blockIPModal').classList.add('active'); }
+        function closeBlockIPModal() { document.getElementById('blockIPModal').classList.remove('active'); }
+        function loadBlockedIPs() {
+            fetch('/api/admin/blocked-ips').then(r => r.json()).then(data => {
+                if (data.success) {
+                    document.getElementById('blockedIPsTable').innerHTML = data.ips.length ? data.ips.map(ip => `
+                        <div class="flex justify-between items-center p-2 bg-white/5 rounded">
+                            <div><p class="font-mono text-red-400">${ip.ip_address}</p><p class="text-gray-400 text-xs">${ip.reason || 'Sem motivo'}</p></div>
+                            <button onclick="unblockIP(${ip.id})" class="text-green-400"><i class="fas fa-unlock"></i></button>
+                        </div>
+                    `).join('') : '<p class="text-gray-500 text-center py-4">Nenhum IP bloqueado</p>';
+                }
+            });
+        }
+        function blockIPAddress() {
+            fetch('/api/admin/blocked-ips', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ip_address: document.getElementById('blockIP').value, reason: document.getElementById('blockReason').value })
+            }).then(r => r.json()).then(data => { if (data.success) { closeBlockIPModal(); loadBlockedIPs(); } else alert(data.error); });
+        }
+        function unblockIP(id) { fetch(`/api/admin/blocked-ips/${id}`, { method: 'DELETE' }).then(() => loadBlockedIPs()); }
+
+        // Admins
+        function openAddAdminModal() { document.getElementById('addAdminModal').classList.add('active'); }
+        function closeAddAdminModal() { document.getElementById('addAdminModal').classList.remove('active'); }
+        function loadAdmins() {
+            fetch('/api/admin/admins').then(r => r.json()).then(data => {
+                if (data.success) {
+                    document.getElementById('adminsTable').innerHTML = data.admins.map(a => `
+                        <div class="flex justify-between items-center p-3 bg-white/5 rounded-lg">
+                            <div><p class="font-medium">${a.name}</p><p class="text-gray-400 text-sm">${a.email}</p></div>
+                            <button onclick="removeAdmin(${a.id})" class="text-red-400 hover:text-red-300"><i class="fas fa-user-minus"></i></button>
+                        </div>
+                    `).join('');
+                }
+            });
+        }
+        function addAdmin() {
+            fetch('/api/admin/admins', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: document.getElementById('adminEmail').value })
+            }).then(r => r.json()).then(data => { if (data.success) { alert(data.message); closeAddAdminModal(); loadAdmins(); } else alert(data.error); });
+        }
+        function removeAdmin(id) {
+            if (!confirm('Remover este administrador?')) return;
+            fetch(`/api/admin/admins/${id}`, { method: 'DELETE' }).then(r => r.json()).then(data => { if (data.success) loadAdmins(); else alert(data.error); });
+        }
+
+        // Goals
+        function openGoalModal() { document.getElementById('goalModal').classList.add('active'); }
+        function closeGoalModal() { document.getElementById('goalModal').classList.remove('active'); }
+        function loadGoals() {
+            fetch('/api/admin/goals').then(r => r.json()).then(data => {
+                if (data.success) {
+                    const typeIcons = { users: 'fa-users', revenue: 'fa-euro-sign', analyses: 'fa-book' };
+                    const typeColors = { users: 'purple', revenue: 'green', analyses: 'blue' };
+                    document.getElementById('goalsContainer').innerHTML = data.goals.length ? data.goals.map(g => `
+                        <div class="glass-card rounded-xl p-4 ${g.is_completed ? 'border-green-500/50' : ''}">
+                            <div class="flex justify-between items-start mb-3">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-8 h-8 bg-${typeColors[g.goal_type]}-500/20 rounded-lg flex items-center justify-center">
+                                        <i class="fas ${typeIcons[g.goal_type]} text-${typeColors[g.goal_type]}-400"></i>
+                                    </div>
+                                    <span class="font-medium">${g.title}</span>
+                                </div>
+                                <button onclick="deleteGoal(${g.id})" class="text-red-400 text-sm"><i class="fas fa-times"></i></button>
+                            </div>
+                            <div class="mb-2">
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-gray-400">${g.current_value} / ${g.target_value}</span>
+                                    <span class="${g.is_completed ? 'text-green-400' : 'text-gray-400'}">${g.progress}%</span>
+                                </div>
+                                <div class="w-full bg-white/10 rounded-full h-2">
+                                    <div class="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all" style="width: ${g.progress}%"></div>
+                                </div>
+                            </div>
+                            ${g.deadline ? `<p class="text-gray-500 text-xs">Prazo: ${g.deadline}</p>` : ''}
+                            ${g.is_completed ? '<p class="text-green-400 text-xs mt-1">✓ Concluída!</p>' : ''}
+                        </div>
+                    `).join('') : '<p class="text-gray-500 text-center py-8 col-span-3">Nenhuma meta definida</p>';
+                }
+            });
+        }
+        function createGoal() {
+            fetch('/api/admin/goals', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: document.getElementById('goalTitle').value, goal_type: document.getElementById('goalType').value, target_value: document.getElementById('goalTarget').value, deadline: document.getElementById('goalDeadline').value })
+            }).then(r => r.json()).then(data => { if (data.success) { closeGoalModal(); loadGoals(); } else alert(data.error); });
+        }
+        function deleteGoal(id) { fetch(`/api/admin/goals/${id}`, { method: 'DELETE' }).then(() => loadGoals()); }
+
+        // Auto-refresh
+        setInterval(() => fetch('/api/admin/metrics').then(r => r.json()), 60000);
+    </script>
+</body>
+</html>

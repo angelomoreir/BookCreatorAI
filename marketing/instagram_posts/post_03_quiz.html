@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post 3 - Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #1a1a2e;
+            padding: 20px;
+        }
+        .post {
+            width: 540px;
+            height: 540px;
+            background: linear-gradient(135deg, #0f172a 0%, #b45309 50%, #f59e0b 100%);
+            position: relative;
+            overflow: hidden;
+            border-radius: 16px;
+        }
+        .glow {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.5;
+        }
+        .glow-1 { width: 300px; height: 300px; background: #fbbf24; top: -100px; right: -80px; }
+        .glow-2 { width: 250px; height: 250px; background: #f97316; bottom: -100px; left: -80px; }
+        .content {
+            position: relative;
+            z-index: 10;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 35px;
+            text-align: center;
+        }
+        .icon {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+            box-shadow: 0 20px 40px rgba(245, 158, 11, 0.4);
+            font-size: 50px;
+        }
+        .headline {
+            font-size: 46px;
+            font-weight: 900;
+            color: white;
+            margin-bottom: 15px;
+            line-height: 1.1;
+        }
+        .highlight {
+            background: linear-gradient(90deg, #fef3c7, #fde68a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .subheadline {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+            line-height: 1.4;
+            max-width: 380px;
+            margin-bottom: 25px;
+        }
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            max-width: 380px;
+        }
+        .quiz-option {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            padding: 14px 20px;
+            border-radius: 12px;
+            color: white;
+            font-size: 14px;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .quiz-option span {
+            background: rgba(255,255,255,0.2);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 13px;
+        }
+        .day-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #1e1b4b;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .feature-tag {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .caption {
+            margin-top: 20px;
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 12px;
+            max-width: 540px;
+            color: #ccc;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .caption strong { color: #f59e0b; }
+    </style>
+</head>
+<body>
+    <div class="post">
+        <div class="glow glow-1"></div>
+        <div class="glow glow-2"></div>
+        <div class="day-badge">DIA 3</div>
+        <div class="feature-tag">🎲 Funcionalidade</div>
+        <div class="content">
+            <div class="icon">🎲</div>
+            <h1 class="headline">Quiz de<br><span class="highlight">Conhecimentos</span></h1>
+            <p class="subheadline">Teste o quanto conhece os seus livros favoritos!</p>
+            <div class="quiz-options">
+                <div class="quiz-option"><span>A</span> Gryffindor</div>
+                <div class="quiz-option"><span>B</span> Slytherin</div>
+                <div class="quiz-option"><span>C</span> Ravenclaw</div>
+                <div class="quiz-option"><span>D</span> Hufflepuff</div>
+            </div>
+        </div>
+    </div>
+    <div class="caption">
+        <strong>🎲 Será que conhece mesmo os seus livros?</strong><br><br>
+        A Alma do Livro gera quizzes personalizados sobre qualquer livro que escolher!<br><br>
+        ✅ Perguntas sobre personagens<br>
+        ✅ Detalhes da história<br>
+        ✅ Citações famosas<br>
+        ✅ Diferentes níveis de dificuldade<br><br>
+        Desafie-se e descubra o quanto realmente conhece as suas histórias favoritas! 🏆<br><br>
+        #AlmaDoLivro #BookCreatorAI #Quiz #Livros #Desafio #Leitura
+    </div>
+</body>
+</html>

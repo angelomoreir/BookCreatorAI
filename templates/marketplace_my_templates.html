@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meus Templates - Marketplace</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <!-- Header -->
+    <header class="bg-black/30 backdrop-blur-lg border-b border-white/10 sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <a href="/marketplace" class="flex items-center gap-3">
+                    <span class="text-2xl">←</span>
+                    <span class="text-white">Voltar ao Marketplace</span>
+                </a>
+                <a href="/marketplace/create" class="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-sm rounded-lg transition-colors">
+                    + Criar Template
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-8">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-white mb-2">📦 Meus Templates</h1>
+            <p class="text-gray-400">Gere os teus templates e acompanha as vendas</p>
+        </div>
+
+        <!-- Earnings Summary -->
+        <div class="grid md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-gradient-to-br from-green-600/20 to-green-600/5 rounded-2xl border border-green-500/30 p-6 text-center">
+                <span class="text-3xl font-bold text-green-400">€{{ "%.2f"|format(total_earnings) }}</span>
+                <p class="text-gray-400 text-sm mt-1">Total Ganho</p>
+            </div>
+            <div class="bg-white/5 rounded-2xl border border-white/10 p-6 text-center">
+                <span class="text-3xl font-bold text-white">{{ templates|length }}</span>
+                <p class="text-gray-400 text-sm mt-1">Templates Criados</p>
+            </div>
+            <div class="bg-white/5 rounded-2xl border border-white/10 p-6 text-center">
+                <span class="text-3xl font-bold text-purple-400">{{ purchases|length }}</span>
+                <p class="text-gray-400 text-sm mt-1">Templates Comprados</p>
+            </div>
+        </div>
+
+        <!-- My Created Templates -->
+        <div class="mb-12">
+            <h2 class="text-xl font-bold text-white mb-4">✨ Templates que Criei</h2>
+            
+            {% if templates %}
+            <div class="space-y-4">
+                {% for template in templates %}
+                <div class="bg-white/5 backdrop-blur-lg rounded-xl border border-white/10 p-6">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-2">
+                                <h3 class="text-lg font-semibold text-white">{{ template.title }}</h3>
+                                <span class="px-2 py-1 bg-white/10 text-gray-300 text-xs rounded-full">{{ template.category }}</span>
+                                {% if template.price == 0 %}
+                                <span class="px-2 py-1 bg-green-600/20 text-green-400 text-xs rounded-full">Grátis</span>
+                                {% else %}
+                                <span class="px-2 py-1 bg-purple-600/20 text-purple-400 text-xs rounded-full">€{{ "%.2f"|format(template.price) }}</span>
+                                {% endif %}
+                            </div>
+                            <p class="text-gray-400 text-sm mb-3">{{ template.description or 'Sem descrição' }}</p>
+                            <div class="flex items-center gap-4 text-sm text-gray-500">
+                                <span>⬇️ {{ template.downloads }} downloads</span>
+                                {% if template.rating > 0 %}
+                                <span>⭐ {{ "%.1f"|format(template.rating) }}</span>
+                                {% endif %}
+                                <span>📅 {{ template.created_at.strftime('%d/%m/%Y') }}</span>
+                                {% if template.price > 0 %}
+                                <span class="text-green-400">💰 €{{ "%.2f"|format(template.purchases.count() * template.price * 0.7) }} ganhos</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            {% if template.is_active %}
+                            <span class="px-2 py-1 bg-green-600/20 text-green-400 text-xs rounded-full">Ativo</span>
+                            {% else %}
+                            <span class="px-2 py-1 bg-red-600/20 text-red-400 text-xs rounded-full">Inativo</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="bg-white/5 rounded-xl p-12 text-center">
+                <span class="text-6xl block mb-4">📝</span>
+                <p class="text-gray-400 mb-4">Ainda não criaste nenhum template.</p>
+                <a href="/marketplace/create" class="inline-block px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-colors">
+                    Criar primeiro template
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Purchased Templates -->
+        <div>
+            <h2 class="text-xl font-bold text-white mb-4">🛒 Templates que Comprei</h2>
+            
+            {% if purchases %}
+            <div class="grid md:grid-cols-2 gap-4">
+                {% for purchase in purchases %}
+                <div class="bg-white/5 backdrop-blur-lg rounded-xl border border-white/10 p-6">
+                    <div class="flex items-start justify-between mb-3">
+                        <h3 class="text-lg font-semibold text-white">{{ purchase.template.title }}</h3>
+                        <span class="text-gray-400 text-sm">€{{ "%.2f"|format(purchase.amount_paid) }}</span>
+                    </div>
+                    <p class="text-gray-400 text-sm mb-3">{{ purchase.template.description[:100] if purchase.template.description else 'Sem descrição' }}...</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-500 text-xs">Comprado em {{ purchase.purchased_at.strftime('%d/%m/%Y') }}</span>
+                        <button onclick="useTemplate({{ purchase.template_id }})" class="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded-lg transition-colors">
+                            Usar
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="bg-white/5 rounded-xl p-8 text-center">
+                <span class="text-4xl block mb-3">🛒</span>
+                <p class="text-gray-400">Ainda não compraste nenhum template.</p>
+                <a href="/marketplace" class="inline-block mt-3 text-purple-400 hover:text-purple-300">
+                    Explorar marketplace →
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </main>
+
+    <script>
+        function useTemplate(id) {
+            window.location.href = `/explorer?template=${id}`;
+        }
+    </script>
+    <script src="{{ url_for('static', filename='theme.js') }}"></script>
+</body>
+</html>

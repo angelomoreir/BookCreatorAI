@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post 8 - Análise Profunda</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #1a1a2e;
+            padding: 20px;
+        }
+        .post {
+            width: 540px;
+            height: 540px;
+            background: linear-gradient(135deg, #0f172a 0%, #0e7490 50%, #06b6d4 100%);
+            position: relative;
+            overflow: hidden;
+            border-radius: 16px;
+        }
+        .glow {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.5;
+        }
+        .glow-1 { width: 300px; height: 300px; background: #22d3ee; top: -100px; left: -80px; }
+        .glow-2 { width: 250px; height: 250px; background: #a855f7; bottom: -100px; right: -80px; }
+        .content {
+            position: relative;
+            z-index: 10;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 35px;
+            text-align: center;
+        }
+        .icon {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+            box-shadow: 0 20px 40px rgba(6, 182, 212, 0.4);
+            font-size: 50px;
+        }
+        .headline {
+            font-size: 44px;
+            font-weight: 900;
+            color: white;
+            margin-bottom: 15px;
+            line-height: 1.1;
+        }
+        .highlight {
+            background: linear-gradient(90deg, #fbbf24, #fb923c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .subheadline {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+            line-height: 1.4;
+            max-width: 400px;
+            margin-bottom: 25px;
+        }
+        .analysis-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            width: 100%;
+            max-width: 400px;
+        }
+        .analysis-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 16px;
+            border-radius: 14px;
+            text-align: center;
+        }
+        .analysis-card .emoji { font-size: 28px; margin-bottom: 8px; }
+        .analysis-card .title { font-size: 13px; font-weight: 700; color: white; }
+        .analysis-card .desc { font-size: 10px; color: rgba(255,255,255,0.6); margin-top: 4px; }
+        .day-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #1e1b4b;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .feature-tag {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .caption {
+            margin-top: 20px;
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 12px;
+            max-width: 540px;
+            color: #ccc;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .caption strong { color: #06b6d4; }
+    </style>
+</head>
+<body>
+    <div class="post">
+        <div class="glow glow-1"></div>
+        <div class="glow glow-2"></div>
+        <div class="day-badge">DIA 8</div>
+        <div class="feature-tag">🔬 Funcionalidade</div>
+        <div class="content">
+            <div class="icon">🔬</div>
+            <h1 class="headline">Análise<br><span class="highlight">Profunda</span></h1>
+            <p class="subheadline">Descubra todos os detalhes escondidos nos livros</p>
+            <div class="analysis-cards">
+                <div class="analysis-card">
+                    <div class="emoji">👥</div>
+                    <div class="title">Personagens</div>
+                    <div class="desc">Perfis detalhados</div>
+                </div>
+                <div class="analysis-card">
+                    <div class="emoji">🎭</div>
+                    <div class="title">Temas</div>
+                    <div class="desc">Mensagens ocultas</div>
+                </div>
+                <div class="analysis-card">
+                    <div class="emoji">📊</div>
+                    <div class="title">Estrutura</div>
+                    <div class="desc">Arcos narrativos</div>
+                </div>
+                <div class="analysis-card">
+                    <div class="emoji">💡</div>
+                    <div class="title">Simbolismo</div>
+                    <div class="desc">Significados ocultos</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="caption">
+        <strong>🔬 Vá além da superfície!</strong><br><br>
+        A Alma do Livro oferece análises profundas de qualquer obra:<br><br>
+        👥 Perfis completos de personagens<br>
+        🎭 Temas e mensagens principais<br>
+        📊 Estrutura narrativa explicada<br>
+        💡 Simbolismos e metáforas<br>
+        🌍 Contexto histórico e cultural<br><br>
+        Entenda os livros como nunca antes! 📚<br><br>
+        #AlmaDoLivro #BookCreatorAI #Analise #Literatura #Livros #Estudo
+    </div>
+</body>
+</html>

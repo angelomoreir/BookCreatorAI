@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title or 'Modo Leitura' }} - Alma do Livro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #1a1a2e;
+            --text-color: #e8e8e8;
+            --accent-color: #8b5cf6;
+            --secondary-bg: #16213e;
+        }
+        
+        body.theme-light {
+            --bg-color: #fafafa;
+            --text-color: #1a1a1a;
+            --secondary-bg: #f0f0f0;
+        }
+        
+        body.theme-sepia {
+            --bg-color: #f4ecd8;
+            --text-color: #5c4a32;
+            --secondary-bg: #e8dcc8;
+        }
+        
+        body.theme-dark {
+            --bg-color: #1a1a2e;
+            --text-color: #e8e8e8;
+            --secondary-bg: #16213e;
+        }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+        
+        .reader-content {
+            font-family: Georgia, 'Times New Roman', serif;
+            line-height: 1.9;
+            max-width: 750px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .reader-content.font-sans { font-family: 'Inter', system-ui, sans-serif; }
+        .reader-content.font-serif { font-family: Georgia, 'Times New Roman', serif; }
+        .reader-content.font-mono { font-family: 'JetBrains Mono', monospace; }
+        
+        .reader-content.size-small { font-size: 14px; }
+        .reader-content.size-medium { font-size: 18px; }
+        .reader-content.size-large { font-size: 22px; }
+        .reader-content.size-xlarge { font-size: 26px; }
+        
+        .chapter-marker {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin: 3em 0 1.5em;
+            padding-bottom: 0.5em;
+            border-bottom: 2px solid var(--accent-color);
+            color: var(--accent-color);
+        }
+        
+        .controls-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.95);
+            backdrop-filter: blur(10px);
+            transform: translateY(-100%);
+            transition: transform 0.3s ease;
+            z-index: 100;
+            padding: 1rem;
+        }
+        
+        .controls-bar.visible {
+            transform: translateY(0);
+        }
+        
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #8b5cf6, #06b6d4);
+            transition: width 0.1s;
+            z-index: 100;
+        }
+        
+        .toc-sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 320px;
+            background: rgba(0,0,0,0.98);
+            backdrop-filter: blur(10px);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            z-index: 150;
+            overflow-y: auto;
+            padding: 1.5rem;
+        }
+        
+        .toc-sidebar.visible {
+            transform: translateX(0);
+        }
+        
+        .toc-item {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 0.5rem;
+        }
+        
+        .toc-item:hover {
+            background: rgba(139, 92, 246, 0.2);
+        }
+        
+        .toc-item.active {
+            background: rgba(139, 92, 246, 0.3);
+            border-left: 3px solid #8b5cf6;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+        }
+        
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(139, 92, 246, 0.2);
+            border-top-color: #8b5cf6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .floating-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+            transition: transform 0.2s;
+            z-index: 90;
+        }
+        
+        .floating-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .settings-panel {
+            position: fixed;
+            bottom: 6rem;
+            right: 2rem;
+            background: rgba(0,0,0,0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 1.5rem;
+            width: 280px;
+            transform: scale(0);
+            transform-origin: bottom right;
+            transition: transform 0.2s ease;
+            z-index: 95;
+        }
+        
+        .settings-panel.visible {
+            transform: scale(1);
+        }
+        
+        .theme-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .theme-btn:hover, .theme-btn.active {
+            border-color: #8b5cf6;
+            transform: scale(1.1);
+        }
+        
+        .theme-light-btn { background: #fafafa; }
+        .theme-sepia-btn { background: #f4ecd8; }
+        .theme-dark-btn { background: #1a1a2e; }
+        
+        .bookmark-indicator {
+            position: fixed;
+            top: 50%;
+            right: 0;
+            transform: translateY(-50%);
+            background: #8b5cf6;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 8px 0 0 8px;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .bookmark-indicator.visible {
+            opacity: 1;
+        }
+        
+        .error-state {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+        
+        .error-state i {
+            font-size: 4rem;
+            color: #ef4444;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body class="theme-dark">
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p class="mt-4 text-gray-400">A carregar livro...</p>
+        <p class="mt-2 text-sm text-gray-500" id="loadingStatus">A obter texto do Project Gutenberg</p>
+    </div>
+
+    <!-- Controls Bar (appears on scroll up or click) -->
+    <div id="controlsBar" class="controls-bar">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <button onclick="toggleTOC()" class="text-white hover:text-purple-400 transition">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+                <div>
+                    <h1 id="bookTitleHeader" class="text-white font-bold truncate max-w-md">{{ title }}</h1>
+                    <p id="bookAuthorHeader" class="text-gray-400 text-sm">{{ author }}</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <span id="progressText" class="text-gray-400 text-sm">0%</span>
+                <a href="/book-explorer" class="text-white hover:text-purple-400 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table of Contents Sidebar -->
+    <div id="tocSidebar" class="toc-sidebar">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-white font-bold text-lg">Índice</h2>
+            <button onclick="toggleTOC()" class="text-gray-400 hover:text-white">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div id="tocList" class="space-y-1">
+            <!-- Chapters will be inserted here -->
+        </div>
+        <div class="mt-6 pt-4 border-t border-gray-700">
+            <div class="text-gray-400 text-sm">
+                <p><i class="fas fa-book-open mr-2"></i><span id="wordCountInfo">0 palavras</span></p>
+                <p class="mt-1"><i class="fas fa-clock mr-2"></i><span id="readingTimeInfo">~0 min</span></p>
+                <p class="mt-1"><i class="fas fa-database mr-2"></i><span id="sourceInfo">Project Gutenberg</span></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main id="readerMain" class="min-h-screen pt-8 pb-20">
+        <div id="readerContent" class="reader-content font-serif size-medium">
+            <!-- Book content will be inserted here -->
+        </div>
+    </main>
+
+    <!-- Error State (hidden by default) -->
+    <div id="errorState" class="error-state hidden">
+        <i class="fas fa-exclamation-circle"></i>
+        <h2 class="text-2xl font-bold mb-2">Livro Não Disponível</h2>
+        <p class="text-gray-400 mb-4" id="errorMessage">Este livro não está disponível para leitura gratuita.</p>
+        <a href="/book-explorer" class="inline-block px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
+            <i class="fas fa-arrow-left mr-2"></i>Voltar ao Explorer
+        </a>
+    </div>
+
+    <!-- Progress Bar -->
+    <div id="progressBar" class="progress-bar" style="width: 0%"></div>
+
+    <!-- Floating Settings Button -->
+    <div id="floatingBtn" class="floating-btn" onclick="toggleSettings()">
+        <i class="fas fa-cog text-white text-xl"></i>
+    </div>
+
+    <!-- Settings Panel -->
+    <div id="settingsPanel" class="settings-panel">
+        <h3 class="text-white font-bold mb-4">Definições de Leitura</h3>
+        
+        <!-- Theme -->
+        <div class="mb-4">
+            <label class="text-gray-400 text-sm block mb-2">Tema</label>
+            <div class="flex gap-3">
+                <button class="theme-btn theme-light-btn" onclick="setTheme('light')" title="Claro"></button>
+                <button class="theme-btn theme-sepia-btn" onclick="setTheme('sepia')" title="Sépia"></button>
+                <button class="theme-btn theme-dark-btn active" onclick="setTheme('dark')" title="Escuro"></button>
+            </div>
+        </div>
+        
+        <!-- Font Size -->
+        <div class="mb-4">
+            <label class="text-gray-400 text-sm block mb-2">Tamanho do Texto</label>
+            <div class="flex gap-2">
+                <button class="px-3 py-1 bg-gray-700 rounded text-white text-sm hover:bg-gray-600" onclick="setFontSize('small')">A</button>
+                <button class="px-3 py-1 bg-purple-600 rounded text-white hover:bg-purple-700" onclick="setFontSize('medium')">A</button>
+                <button class="px-3 py-1 bg-gray-700 rounded text-white text-lg hover:bg-gray-600" onclick="setFontSize('large')">A</button>
+                <button class="px-3 py-1 bg-gray-700 rounded text-white text-xl hover:bg-gray-600" onclick="setFontSize('xlarge')">A</button>
+            </div>
+        </div>
+        
+        <!-- Font Family -->
+        <div class="mb-4">
+            <label class="text-gray-400 text-sm block mb-2">Fonte</label>
+            <select id="fontSelect" class="w-full bg-gray-700 text-white rounded px-3 py-2" onchange="setFont(this.value)">
+                <option value="serif">Serif (Georgia)</option>
+                <option value="sans">Sans-serif (Inter)</option>
+                <option value="mono">Monospace</option>
+            </select>
+        </div>
+        
+        <!-- Bookmark -->
+        <div class="pt-4 border-t border-gray-700">
+            <button onclick="saveBookmark()" class="w-full py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
+                <i class="fas fa-bookmark mr-2"></i>Guardar Posição
+            </button>
+        </div>
+    </div>
+
+    <!-- Bookmark Indicator -->
+    <div id="bookmarkIndicator" class="bookmark-indicator" onclick="goToBookmark()">
+        <i class="fas fa-bookmark"></i>
+    </div>
+
+    <script>
+        // State
+        let bookData = null;
+        let currentTheme = 'dark';
+        let currentFontSize = 'medium';
+        let currentFont = 'serif';
+        let lastScrollY = 0;
+        let controlsVisible = false;
+        let tocVisible = false;
+        let settingsVisible = false;
+        
+        // Book info from URL/template
+        const bookTitle = "{{ title }}";
+        const bookAuthor = "{{ author }}";
+        const gutenbergId = "{{ gutenberg_id }}";
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSettings();
+            loadBook();
+            setupScrollHandler();
+        });
+        
+        async function loadBook() {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const loadingStatus = document.getElementById('loadingStatus');
+            const errorState = document.getElementById('errorState');
+            const readerMain = document.getElementById('readerMain');
+            
+            try {
+                loadingStatus.textContent = 'A verificar disponibilidade...';
+                
+                const response = await fetch('/api/book/read', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: bookTitle,
+                        author: bookAuthor,
+                        gutenberg_id: gutenbergId || null
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error || 'Livro não disponível');
+                }
+                
+                bookData = data;
+                
+                loadingStatus.textContent = 'A processar texto...';
+                
+                // Update UI
+                document.getElementById('bookTitleHeader').textContent = data.metadata?.title || bookTitle;
+                document.getElementById('bookAuthorHeader').textContent = data.metadata?.author || bookAuthor;
+                document.title = `${data.metadata?.title || bookTitle} - Alma do Livro`;
+                
+                // Render content
+                renderContent(data.text, data.chapters);
+                
+                // Update info
+                document.getElementById('wordCountInfo').textContent = `${data.word_count?.toLocaleString() || 0} palavras`;
+                document.getElementById('readingTimeInfo').textContent = `~${Math.ceil((data.word_count || 0) / 200)} min`;
+                document.getElementById('sourceInfo').textContent = data.source || 'Project Gutenberg';
+                
+                // Build TOC
+                buildTOC(data.chapters);
+                
+                // Hide loading, show content
+                loadingOverlay.classList.add('hidden');
+                readerMain.classList.remove('hidden');
+                
+                // Check for saved bookmark
+                checkBookmark();
+                
+            } catch (error) {
+                console.error('Error loading book:', error);
+                loadingOverlay.classList.add('hidden');
+                readerMain.classList.add('hidden');
+                errorState.classList.remove('hidden');
+                document.getElementById('errorMessage').textContent = error.message;
+            }
+        }
+        
+        function renderContent(text, chapters) {
+            const container = document.getElementById('readerContent');
+            
+            // Convert text to HTML with proper formatting
+            let html = text
+                .split('\n\n')
+                .map(para => {
+                    para = para.trim();
+                    if (!para) return '';
+                    
+                    // Check if it's a chapter heading
+                    const isChapter = chapters?.some(ch => para.includes(ch.title));
+                    if (isChapter || /^(CHAPTER|CAPÍTULO|PART|PARTE|BOOK|LIVRO)\s+/i.test(para)) {
+                        return `<h2 class="chapter-marker">${para}</h2>`;
+                    }
+                    
+                    return `<p class="mb-4">${para}</p>`;
+                })
+                .join('');
+            
+            container.innerHTML = html;
+        }
+        
+        function buildTOC(chapters) {
+            const tocList = document.getElementById('tocList');
+            
+            if (!chapters || chapters.length === 0) {
+                tocList.innerHTML = '<p class="text-gray-500">Sem capítulos identificados</p>';
+                return;
+            }
+            
+            tocList.innerHTML = chapters.map((ch, i) => `
+                <div class="toc-item" onclick="scrollToChapter(${ch.position})" data-position="${ch.position}">
+                    <span class="text-gray-400 text-sm mr-2">${i + 1}.</span>
+                    <span class="text-white">${ch.title}</span>
+                </div>
+            `).join('');
+        }
+        
+        function scrollToChapter(position) {
+            const content = document.getElementById('readerContent');
+            const text = content.textContent;
+            const ratio = position / text.length;
+            const scrollTarget = document.documentElement.scrollHeight * ratio;
+            
+            window.scrollTo({
+                top: scrollTarget,
+                behavior: 'smooth'
+            });
+            
+            toggleTOC();
+        }
+        
+        function setupScrollHandler() {
+            let ticking = false;
+            
+            window.addEventListener('scroll', () => {
+                if (!ticking) {
+                    requestAnimationFrame(() => {
+                        updateProgress();
+                        handleControlsVisibility();
+                        ticking = false;
+                    });
+                    ticking = true;
+                }
+            });
+            
+            // Show controls on click
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.controls-bar') && 
+                    !e.target.closest('.toc-sidebar') && 
+                    !e.target.closest('.settings-panel') &&
+                    !e.target.closest('.floating-btn')) {
+                    toggleControls();
+                }
+            });
+        }
+        
+        function updateProgress() {
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const progress = (scrollTop / docHeight) * 100;
+            
+            document.getElementById('progressBar').style.width = `${progress}%`;
+            document.getElementById('progressText').textContent = `${Math.round(progress)}%`;
+        }
+        
+        function handleControlsVisibility() {
+            const currentScrollY = window.scrollY;
+            const controlsBar = document.getElementById('controlsBar');
+            
+            if (currentScrollY < lastScrollY - 50 || currentScrollY < 100) {
+                controlsBar.classList.add('visible');
+            } else if (currentScrollY > lastScrollY + 20) {
+                controlsBar.classList.remove('visible');
+            }
+            
+            lastScrollY = currentScrollY;
+        }
+        
+        function toggleControls() {
+            const controlsBar = document.getElementById('controlsBar');
+            controlsBar.classList.toggle('visible');
+        }
+        
+        function toggleTOC() {
+            const sidebar = document.getElementById('tocSidebar');
+            tocVisible = !tocVisible;
+            sidebar.classList.toggle('visible', tocVisible);
+        }
+        
+        function toggleSettings() {
+            const panel = document.getElementById('settingsPanel');
+            settingsVisible = !settingsVisible;
+            panel.classList.toggle('visible', settingsVisible);
+        }
+        
+        function setTheme(theme) {
+            document.body.className = `theme-${theme}`;
+            currentTheme = theme;
+            
+            // Update active button
+            document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.theme-${theme}-btn`).classList.add('active');
+            
+            saveSettings();
+        }
+        
+        function setFontSize(size) {
+            const content = document.getElementById('readerContent');
+            content.classList.remove('size-small', 'size-medium', 'size-large', 'size-xlarge');
+            content.classList.add(`size-${size}`);
+            currentFontSize = size;
+            saveSettings();
+        }
+        
+        function setFont(font) {
+            const content = document.getElementById('readerContent');
+            content.classList.remove('font-sans', 'font-serif', 'font-mono');
+            content.classList.add(`font-${font}`);
+            currentFont = font;
+            saveSettings();
+        }
+        
+        function saveSettings() {
+            localStorage.setItem('readerSettings', JSON.stringify({
+                theme: currentTheme,
+                fontSize: currentFontSize,
+                font: currentFont
+            }));
+        }
+        
+        function loadSettings() {
+            const saved = localStorage.getItem('readerSettings');
+            if (saved) {
+                const settings = JSON.parse(saved);
+                setTheme(settings.theme || 'dark');
+                setFontSize(settings.fontSize || 'medium');
+                setFont(settings.font || 'serif');
+                document.getElementById('fontSelect').value = settings.font || 'serif';
+            }
+        }
+        
+        function saveBookmark() {
+            const scrollPosition = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight;
+            const progress = scrollPosition / docHeight;
+            
+            const bookmarkKey = `bookmark_${bookTitle}_${bookAuthor}`;
+            localStorage.setItem(bookmarkKey, JSON.stringify({
+                position: progress,
+                timestamp: Date.now()
+            }));
+            
+            // Show confirmation
+            alert('Posição guardada! Pode continuar a leitura mais tarde.');
+        }
+        
+        function checkBookmark() {
+            const bookmarkKey = `bookmark_${bookTitle}_${bookAuthor}`;
+            const saved = localStorage.getItem(bookmarkKey);
+            
+            if (saved) {
+                const bookmark = JSON.parse(saved);
+                const indicator = document.getElementById('bookmarkIndicator');
+                indicator.classList.add('visible');
+                
+                // Ask user if they want to continue
+                setTimeout(() => {
+                    if (confirm('Tem uma posição guardada. Deseja continuar de onde parou?')) {
+                        goToBookmark();
+                    }
+                }, 1000);
+            }
+        }
+        
+        function goToBookmark() {
+            const bookmarkKey = `bookmark_${bookTitle}_${bookAuthor}`;
+            const saved = localStorage.getItem(bookmarkKey);
+            
+            if (saved) {
+                const bookmark = JSON.parse(saved);
+                const scrollTarget = document.documentElement.scrollHeight * bookmark.position;
+                
+                window.scrollTo({
+                    top: scrollTarget,
+                    behavior: 'smooth'
+                });
+            }
+        }
+    </script>
+</body>
+</html>

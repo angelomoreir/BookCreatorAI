@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="pt" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planos para Escolas e Empresas - Alma do Livro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <!-- Header -->
+    <header class="bg-black/30 backdrop-blur-lg border-b border-white/10 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <a href="/" class="flex items-center gap-3">
+                    <span class="text-3xl">🔍</span>
+                    <div>
+                        <h1 class="text-xl font-bold text-white">Alma do Livro</h1>
+                        <p class="text-xs text-gray-400 hidden sm:block">Para Organizações</p>
+                    </div>
+                </a>
+                <div class="flex items-center gap-3">
+                    <a href="/" class="px-3 py-1.5 text-gray-300 hover:text-white text-sm transition-colors">
+                        ← Voltar
+                    </a>
+                    <a href="/subscription/pricing" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded-lg transition-colors">
+                        Planos Individuais
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-12">
+        <!-- Hero Section -->
+        <div class="text-center mb-16">
+            <span class="inline-block px-4 py-1 bg-purple-600/20 text-purple-300 text-sm rounded-full mb-4">
+                🏫 Escolas & Empresas
+            </span>
+            <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">
+                Licenças em Volume
+            </h1>
+            <p class="text-xl text-gray-400 max-w-2xl mx-auto">
+                Potencia a literacia e análise crítica na tua organização com acesso ilimitado ao Alma do Livro
+            </p>
+        </div>
+
+        <!-- Benefits Grid -->
+        <div class="grid md:grid-cols-3 gap-6 mb-16">
+            <div class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-6 text-center">
+                <span class="text-4xl block mb-4">🎓</span>
+                <h3 class="text-lg font-semibold text-white mb-2">Para Escolas</h3>
+                <p class="text-gray-400 text-sm">Ferramenta pedagógica para análise literária, compreensão de textos e desenvolvimento do pensamento crítico</p>
+            </div>
+            <div class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-6 text-center">
+                <span class="text-4xl block mb-4">🏢</span>
+                <h3 class="text-lg font-semibold text-white mb-2">Para Empresas</h3>
+                <p class="text-gray-400 text-sm">Formação contínua, clubes de leitura corporativos e desenvolvimento de competências de comunicação</p>
+            </div>
+            <div class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-6 text-center">
+                <span class="text-4xl block mb-4">📚</span>
+                <h3 class="text-lg font-semibold text-white mb-2">Para Bibliotecas</h3>
+                <p class="text-gray-400 text-sm">Enriquece a experiência dos utilizadores com análises interativas e recomendações personalizadas</p>
+            </div>
+        </div>
+
+        <!-- Plans Section -->
+        <div class="mb-16">
+            <h2 class="text-2xl font-bold text-white text-center mb-8">Planos Organizacionais</h2>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Education Plan -->
+                <div class="bg-gradient-to-b from-blue-600/20 to-blue-600/5 backdrop-blur-lg rounded-2xl border border-blue-500/30 p-8">
+                    <div class="text-center mb-6">
+                        <span class="text-4xl block mb-2">🎓</span>
+                        <h3 class="text-xl font-bold text-white">Educação</h3>
+                        <p class="text-gray-400 text-sm">Escolas e Universidades</p>
+                    </div>
+                    <div class="text-center mb-6">
+                        <span class="text-3xl font-bold text-white">€4.99</span>
+                        <span class="text-gray-400">/utilizador/mês</span>
+                        <p class="text-blue-300 text-sm mt-1">Mínimo 10 utilizadores</p>
+                    </div>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-center gap-2 text-gray-300 text-sm">
+                            <span class="text-green-400">✓</span> 200 análises/utilizador/mês
+                        </li>
+                        <li class="flex items-center gap-2 text-gray-300 text-sm">
+                            <span class="text-green-400">✓</span> Todas as funcionalidades Pro
+                        </li>
+                        <li class="flex items-center gap-2 text-gray-300 text-sm">
+                            <span class="text-green-400">✓</span> Painel de administração
+                        </li>
+                        <li class="flex items-center gap-2 text-gray-300 text-sm">
+                            <span class="text-green-400">✓</span> Relatórios de utilização
+                        </li>
+                        <li class="flex items-center gap-2 text-gray-300 text-sm">
+                            <span class="text-green-400">✓</span> Suporte por email
+                        </li>
+                        <li class="flex items-center gap-2 text-gray-300 text-sm">
+                            <span class="text-green-400">✓</span> Desconto educacional 50%
+                        </li>
+                    </ul>
+                    <button onclick="openContactForm('education')" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all">
+                        Contactar Vendas
+                    </button>
+                </div>
+
+                <!-- Business Plan -->
+                <div class="bg-gradient-to-b from-purple-600/20 to-pink-600/10 backdrop-blur-lg rounded-2xl border-2 border-purple-500/50 p-8 transform scale-105">
+                    <div class="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm font-semibold rounded-full">
+                        Mais Popular
+                    </div>
+                    <div class="text-center mb-6">
+                        <span class="text-4xl block mb-2">🏢</span>
+                        <h3 class="text-xl font-bold text-white">Empresarial</h3>
+                        <p class="text-gray-400 text-sm">Empresas e Organizações</p>
+                    </div>
+                    <div class="text-center mb-6">
+                        <span class="text-3xl font-bold text-white">€9.99</span>
+                        <span class="text-gray-400">/utilizador/mês</span>
+                        <p class="text-purple-300 text-sm mt-1">Mínimo 5 utilizadores</p>
+                    </div>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-center gap-2 text-gray-300 text-sm">
+                            <span class="text-green-400">✓</span> 500 análises/utilizador/mês
+                        </li>
+                        <li class="flex items-center gap-2 text-gray-300 text-sm">
+                            <span class="text-green-400">✓</span> Todas as funcionalidades Premium
+                        </li>
+                        <li class="flex items-center gap-2 text-gray-300 text-sm">
+                            <span class="text-green-400">✓</span> Painel de administração avançado
+                        </li>
+                        <li class="flex items-center gap-2 text-gray-300 text-sm">
+                            <span class="text-green-400">✓</span> SSO (Single Sign-On)
+                        </li>
+                        <li class="flex items-center gap-2 text-gray-300 text-sm">
+                            <span class="text-green-400">✓</span> API de integração
+                        </li>
+                        <li class="flex items-center gap-2 text-gray-300 text-sm">
+                            <span class="text-green-400">✓</span> Suporte prioritário
+                        </li>
+                    </ul>
+                    <button onclick="openContactForm('business')" class="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-xl transition-all">
+                        Contactar Vendas
+                    </button>
+                </div>
+
+                <!-- Enterprise Plan -->
+                <div class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-8">
+                    <div class="text-center mb-6">
+                        <span class="text-4xl block mb-2">🌐</span>
+                        <h3 class="text-xl font-bold text-white">Enterprise</h3>
+                        <p class="text-gray-400 text-sm">Grandes Organizações</p>
+                    </div>
+                    <div class="text-center mb-6">
+                        <span class="text-3xl font-bold text-white">Personalizado</span>
+                        <p class="text-gray-400 text-sm mt-1">Contacte-nos para orçamento</p>
+                    </div>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-center gap-2 text-gray-300 text-sm">
+                            <span class="text-green-400">✓</span> Análises ilimitadas
+                        </li>
+                        <li class="flex items-center gap-2 text-gray-300 text-sm">
+                            <span class="text-green-400">✓</span> Implementação dedicada
+                        </li>
+                        <li class="flex items-center gap-2 text-gray-300 text-sm">
+                            <span class="text-green-400">✓</span> Personalização da marca
+                        </li>
+                        <li class="flex items-center gap-2 text-gray-300 text-sm">
+                            <span class="text-green-400">✓</span> Servidor dedicado
+                        </li>
+                        <li class="flex items-center gap-2 text-gray-300 text-sm">
+                            <span class="text-green-400">✓</span> SLA garantido
+                        </li>
+                        <li class="flex items-center gap-2 text-gray-300 text-sm">
+                            <span class="text-green-400">✓</span> Gestor de conta dedicado
+                        </li>
+                    </ul>
+                    <button onclick="openContactForm('enterprise')" class="w-full py-3 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl transition-all">
+                        Falar com Especialista
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features for Organizations -->
+        <div class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-8 mb-16">
+            <h2 class="text-2xl font-bold text-white text-center mb-8">Funcionalidades para Organizações</h2>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="text-center">
+                    <div class="w-12 h-12 bg-purple-600/30 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <span class="text-2xl">👥</span>
+                    </div>
+                    <h4 class="text-white font-medium mb-1">Gestão de Utilizadores</h4>
+                    <p class="text-gray-400 text-xs">Adicione e remova utilizadores facilmente</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-12 h-12 bg-purple-600/30 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <span class="text-2xl">📊</span>
+                    </div>
+                    <h4 class="text-white font-medium mb-1">Relatórios Detalhados</h4>
+                    <p class="text-gray-400 text-xs">Acompanhe a utilização e progresso</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-12 h-12 bg-purple-600/30 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <span class="text-2xl">🔒</span>
+                    </div>
+                    <h4 class="text-white font-medium mb-1">Segurança Avançada</h4>
+                    <p class="text-gray-400 text-xs">SSO, 2FA e conformidade RGPD</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-12 h-12 bg-purple-600/30 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <span class="text-2xl">🎯</span>
+                    </div>
+                    <h4 class="text-white font-medium mb-1">Onboarding Dedicado</h4>
+                    <p class="text-gray-400 text-xs">Formação e suporte na implementação</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Testimonials -->
+        <div class="mb-16">
+            <h2 class="text-2xl font-bold text-white text-center mb-8">O Que Dizem os Nossos Clientes</h2>
+            
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-6">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-12 h-12 bg-blue-600/30 rounded-full flex items-center justify-center text-xl">🎓</div>
+                        <div>
+                            <p class="text-white font-medium">Escola Secundária de Lisboa</p>
+                            <p class="text-gray-400 text-sm">Prof. Maria Santos</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-300 text-sm italic">"O Alma do Livro revolucionou as nossas aulas de Português. Os alunos estão muito mais envolvidos na análise literária e os quizzes são fantásticos para avaliar a compreensão."</p>
+                </div>
+                <div class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-6">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-12 h-12 bg-purple-600/30 rounded-full flex items-center justify-center text-xl">🏢</div>
+                        <div>
+                            <p class="text-white font-medium">TechCorp Portugal</p>
+                            <p class="text-gray-400 text-sm">João Ferreira, RH</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-300 text-sm italic">"Usamos o Alma do Livro no nosso clube de leitura corporativo. É uma forma excelente de promover a aprendizagem contínua e discussões enriquecedoras entre equipas."</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- FAQ -->
+        <div class="mb-16">
+            <h2 class="text-2xl font-bold text-white text-center mb-8">Perguntas Frequentes</h2>
+            
+            <div class="space-y-4 max-w-3xl mx-auto">
+                <div class="bg-white/5 rounded-xl p-6">
+                    <h3 class="text-white font-medium mb-2">Qual é o número mínimo de licenças?</h3>
+                    <p class="text-gray-400 text-sm">Para o plano Educação são necessárias no mínimo 10 licenças. Para o plano Empresarial, o mínimo é de 5 licenças.</p>
+                </div>
+                <div class="bg-white/5 rounded-xl p-6">
+                    <h3 class="text-white font-medium mb-2">Oferecem período de teste gratuito?</h3>
+                    <p class="text-gray-400 text-sm">Sim! Oferecemos 30 dias de teste gratuito para organizações, com acesso completo a todas as funcionalidades.</p>
+                </div>
+                <div class="bg-white/5 rounded-xl p-6">
+                    <h3 class="text-white font-medium mb-2">Como funciona a faturação?</h3>
+                    <p class="text-gray-400 text-sm">A faturação é mensal ou anual (com 2 meses grátis). Emitimos faturas com todos os requisitos legais para organizações.</p>
+                </div>
+                <div class="bg-white/5 rounded-xl p-6">
+                    <h3 class="text-white font-medium mb-2">É possível integrar com o nosso LMS?</h3>
+                    <p class="text-gray-400 text-sm">Sim, oferecemos integração via API com os principais sistemas LMS (Moodle, Canvas, etc.) no plano Empresarial e Enterprise.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Contact Modal -->
+    <div id="contactModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-800 rounded-2xl border border-white/20 p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-bold text-white">Contactar Vendas</h2>
+                <button onclick="closeContactForm()" class="text-gray-400 hover:text-white">✕</button>
+            </div>
+            
+            <form id="enterpriseForm" onsubmit="submitEnterpriseForm(event)">
+                <input type="hidden" id="planType" name="plan_type" value="">
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-sm text-gray-400 block mb-1">Nome da Organização *</label>
+                        <input type="text" name="organization" required
+                               class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                               placeholder="Ex: Escola Secundária de Lisboa">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-sm text-gray-400 block mb-1">Nome do Contacto *</label>
+                            <input type="text" name="contact_name" required
+                                   class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                   placeholder="João Silva">
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-400 block mb-1">Cargo</label>
+                            <input type="text" name="role"
+                                   class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                   placeholder="Diretor">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="text-sm text-gray-400 block mb-1">Email Profissional *</label>
+                        <input type="email" name="email" required
+                               class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                               placeholder="joao@escola.pt">
+                    </div>
+                    
+                    <div>
+                        <label class="text-sm text-gray-400 block mb-1">Telefone</label>
+                        <input type="tel" name="phone"
+                               class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                               placeholder="+351 912 345 678">
+                    </div>
+                    
+                    <div>
+                        <label class="text-sm text-gray-400 block mb-1">Número de Utilizadores Estimado *</label>
+                        <select name="user_count" required
+                                class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            <option value="">Selecionar...</option>
+                            <option value="5-10">5-10 utilizadores</option>
+                            <option value="11-25">11-25 utilizadores</option>
+                            <option value="26-50">26-50 utilizadores</option>
+                            <option value="51-100">51-100 utilizadores</option>
+                            <option value="101-500">101-500 utilizadores</option>
+                            <option value="500+">Mais de 500 utilizadores</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="text-sm text-gray-400 block mb-1">Mensagem</label>
+                        <textarea name="message" rows="3"
+                                  class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                  placeholder="Conte-nos mais sobre as necessidades da sua organização..."></textarea>
+                    </div>
+                </div>
+                
+                <button type="submit" id="submitBtn"
+                        class="w-full mt-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-xl transition-all">
+                    Enviar Pedido
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="py-8 border-t border-white/10">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-gray-400 text-sm">© 2026 Alma do Livro. Todos os direitos reservados.</p>
+            <p class="text-gray-500 text-xs mt-2">
+                <a href="/terms" class="hover:text-white">Termos</a> · 
+                <a href="/privacy" class="hover:text-white">Privacidade</a> · 
+                <a href="mailto:enterprise@almadelivro.pt" class="hover:text-white">enterprise@almadelivro.pt</a>
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        function openContactForm(planType) {
+            document.getElementById('planType').value = planType;
+            document.getElementById('contactModal').classList.remove('hidden');
+        }
+        
+        function closeContactForm() {
+            document.getElementById('contactModal').classList.add('hidden');
+        }
+        
+        async function submitEnterpriseForm(e) {
+            e.preventDefault();
+            
+            const form = e.target;
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.textContent = 'A enviar...';
+            
+            try {
+                const response = await fetch('/api/enterprise/contact', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    form.innerHTML = `
+                        <div class="text-center py-8">
+                            <span class="text-6xl block mb-4">✅</span>
+                            <h3 class="text-xl font-bold text-white mb-2">Pedido Enviado!</h3>
+                            <p class="text-gray-400">Entraremos em contacto em breve.</p>
+                        </div>
+                    `;
+                } else {
+                    alert(result.error || 'Erro ao enviar pedido');
+                    btn.disabled = false;
+                    btn.textContent = 'Enviar Pedido';
+                }
+            } catch (error) {
+                alert('Erro de conexão');
+                btn.disabled = false;
+                btn.textContent = 'Enviar Pedido';
+            }
+        }
+        
+        // Close modal on outside click
+        document.getElementById('contactModal').addEventListener('click', function(e) {
+            if (e.target === this) closeContactForm();
+        });
+    </script>
+    <script src="{{ url_for('static', filename='theme.js') }}"></script>
+</body>
+</html>

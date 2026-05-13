@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ & Suporte - Alma do Livro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <!-- Navigation -->
+    <nav class="bg-black/30 backdrop-blur-lg border-b border-white/10 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <a href="/" class="flex items-center gap-3">
+                    <span class="text-3xl">🔍</span>
+                    <span class="text-xl font-bold text-white">Alma do Livro</span>
+                </a>
+                <div class="hidden md:flex items-center gap-6">
+                    <a href="/#features" class="text-gray-300 hover:text-white transition-colors" data-i18n="nav_features">Funcionalidades</a>
+                    <a href="/#pricing" class="text-gray-300 hover:text-white transition-colors" data-i18n="nav_pricing">Preços</a>
+                    <a href="/faq" class="text-white transition-colors" data-i18n="nav_faq">FAQ</a>
+                    <a href="/manual" class="text-gray-300 hover:text-white transition-colors" data-i18n="nav_manual">Manual</a>
+                </div>
+                <div class="flex items-center gap-3">
+                    <!-- Language Selector -->
+                    <select id="uiLangSelect" class="bg-white/10 border border-white/20 text-white text-sm rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-purple-500">
+                        <option value="pt-pt" class="bg-gray-800">🇵🇹 PT</option>
+                        <option value="pt-br" class="bg-gray-800">🇧🇷 BR</option>
+                        <option value="en" class="bg-gray-800">🇬🇧 EN</option>
+                        <option value="es" class="bg-gray-800">🇪🇸 ES</option>
+                        <option value="fr" class="bg-gray-800">🇫🇷 FR</option>
+                        <option value="de" class="bg-gray-800">🇩🇪 DE</option>
+                        <option value="it" class="bg-gray-800">🇮🇹 IT</option>
+                    </select>
+                    {% if current_user.is_authenticated %}
+                        <a href="/explorer" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all" data-i18n="nav_go_app">
+                            Ir para App
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="px-4 py-2 text-gray-300 hover:text-white transition-colors" data-i18n="nav_login">
+                            Entrar
+                        </a>
+                        <a href="{{ url_for('register') }}" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all" data-i18n="nav_register">
+                            Começar Grátis
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto px-4 py-12">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-white mb-4">❓ <span data-i18n="faq_title">FAQ & Suporte</span></h1>
+            <p class="text-xl text-gray-400" data-i18n="faq_subtitle">Encontra respostas às perguntas mais frequentes</p>
+        </div>
+
+        <!-- Search -->
+        <div class="mb-12">
+            <div class="relative">
+                <input type="text" id="faqSearch" data-i18n-placeholder="faq_search" placeholder="Pesquisar nas perguntas..." 
+                       class="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+            </div>
+        </div>
+
+        <!-- FAQ Categories -->
+        <div class="grid md:grid-cols-3 gap-4 mb-12">
+            <button onclick="filterFaq('all')" class="faq-filter active p-4 bg-purple-600/30 border border-purple-500/50 rounded-xl text-white text-center transition-all hover:bg-purple-600/50" data-filter="all">
+                📚 <span data-i18n="faq_all">Todas</span>
+            </button>
+            <button onclick="filterFaq('general')" class="faq-filter p-4 bg-white/5 border border-white/10 rounded-xl text-white text-center transition-all hover:bg-white/10" data-filter="general">
+                ℹ️ <span data-i18n="faq_general">Geral</span>
+            </button>
+            <button onclick="filterFaq('billing')" class="faq-filter p-4 bg-white/5 border border-white/10 rounded-xl text-white text-center transition-all hover:bg-white/10" data-filter="billing">
+                💳 <span data-i18n="faq_billing">Pagamentos</span>
+            </button>
+        </div>
+
+        <!-- FAQ Items -->
+        <div class="space-y-4" id="faqList">
+            <!-- General Questions -->
+            <div class="faq-item" data-category="general">
+                <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between p-6 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-left transition-all">
+                    <span class="text-white font-medium" data-i18n="faq_q1">O que é o Alma do Livro?</span>
+                    <span class="faq-icon text-purple-400 transition-transform">▼</span>
+                </button>
+                <div class="faq-answer hidden px-6 pb-6 bg-white/5 border-x border-b border-white/10 rounded-b-xl -mt-2">
+                    <p class="text-gray-300" data-i18n="faq_a1">
+                        O Alma do Livro é uma plataforma que usa inteligência artificial para te ajudar a explorar e compreender qualquer livro em profundidade. 
+                        Podes obter resumos, análises de personagens, criar quizzes, entrevistar personagens fictícios, gerar continuações de histórias e muito mais.
+                    </p>
+                </div>
+            </div>
+
+            <div class="faq-item" data-category="general">
+                <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between p-6 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-left transition-all">
+                    <span class="text-white font-medium" data-i18n="faq_q2">Que livros posso analisar?</span>
+                    <span class="faq-icon text-purple-400 transition-transform">▼</span>
+                </button>
+                <div class="faq-answer hidden px-6 pb-6 bg-white/5 border-x border-b border-white/10 rounded-b-xl -mt-2">
+                    <p class="text-gray-300" data-i18n="faq_a2">
+                        Podes analisar praticamente qualquer livro publicado! A nossa IA tem conhecimento de milhões de obras literárias, desde clássicos a bestsellers contemporâneos.
+                        Basta introduzir o título e autor do livro que queres explorar.
+                    </p>
+                </div>
+            </div>
+
+            <div class="faq-item" data-category="general">
+                <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between p-6 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-left transition-all">
+                    <span class="text-white font-medium" data-i18n="faq_q3">Como funcionam as entrevistas com personagens?</span>
+                    <span class="faq-icon text-purple-400 transition-transform">▼</span>
+                </button>
+                <div class="faq-answer hidden px-6 pb-6 bg-white/5 border-x border-b border-white/10 rounded-b-xl -mt-2">
+                    <p class="text-gray-300" data-i18n="faq_a3">
+                        A nossa IA assume o papel do personagem que escolheres, respondendo às tuas perguntas como se fosse essa personagem.
+                        Mantém a personalidade, conhecimentos e forma de falar do personagem original, criando uma experiência imersiva e educativa.
+                    </p>
+                </div>
+            </div>
+
+            <div class="faq-item" data-category="general">
+                <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between p-6 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-left transition-all">
+                    <span class="text-white font-medium" data-i18n="faq_q4">As análises são precisas?</span>
+                    <span class="faq-icon text-purple-400 transition-transform">▼</span>
+                </button>
+                <div class="faq-answer hidden px-6 pb-6 bg-white/5 border-x border-b border-white/10 rounded-b-xl -mt-2">
+                    <p class="text-gray-300" data-i18n="faq_a4">
+                        A nossa IA é treinada com vasto conhecimento literário e produz análises de alta qualidade. No entanto, como qualquer ferramenta de IA, 
+                        pode ocasionalmente cometer erros. Recomendamos usar as análises como ponto de partida para a tua própria reflexão e verificar informações importantes.
+                    </p>
+                </div>
+            </div>
+
+            <div class="faq-item" data-category="general">
+                <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between p-6 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-left transition-all">
+                    <span class="text-white font-medium" data-i18n="faq_q5">Posso usar para fins educativos?</span>
+                    <span class="faq-icon text-purple-400 transition-transform">▼</span>
+                </button>
+                <div class="faq-answer hidden px-6 pb-6 bg-white/5 border-x border-b border-white/10 rounded-b-xl -mt-2">
+                    <p class="text-gray-300" data-i18n="faq_a5">
+                        Sim! O Alma do Livro é excelente para estudantes, professores e clubes de leitura. Os quizzes são perfeitos para testar conhecimentos,
+                        e as análises podem ajudar a preparar trabalhos e discussões. Muitos professores usam a plataforma para criar materiais de aula.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Billing Questions -->
+            <div class="faq-item" data-category="billing">
+                <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between p-6 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-left transition-all">
+                    <span class="text-white font-medium" data-i18n="faq_q6">Quais são os planos disponíveis?</span>
+                    <span class="faq-icon text-purple-400 transition-transform">▼</span>
+                </button>
+                <div class="faq-answer hidden px-6 pb-6 bg-white/5 border-x border-b border-white/10 rounded-b-xl -mt-2">
+                    <p class="text-gray-300" data-i18n="faq_a6">
+                        Oferecemos três planos:<br><br>
+                        <strong class="text-white">Gratuito:</strong> 10 análises/mês, funcionalidades básicas<br>
+                        <strong class="text-white">Pro (€9.99/mês):</strong> 100 análises/mês, todas as funcionalidades<br>
+                        <strong class="text-white">Premium (€19.99/mês):</strong> 1000 análises/mês, exportação PDF, suporte prioritário
+                    </p>
+                </div>
+            </div>
+
+            <div class="faq-item" data-category="billing">
+                <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between p-6 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-left transition-all">
+                    <span class="text-white font-medium" data-i18n="faq_q7">Como funciona o período de faturação?</span>
+                    <span class="faq-icon text-purple-400 transition-transform">▼</span>
+                </button>
+                <div class="faq-answer hidden px-6 pb-6 bg-white/5 border-x border-b border-white/10 rounded-b-xl -mt-2">
+                    <p class="text-gray-300" data-i18n="faq_a7">
+                        A subscrição é mensal e renova automaticamente. O teu limite de análises é reposto no primeiro dia de cada mês.
+                        Podes cancelar a qualquer momento e continuarás a ter acesso até ao fim do período pago.
+                    </p>
+                </div>
+            </div>
+
+            <div class="faq-item" data-category="billing">
+                <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between p-6 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-left transition-all">
+                    <span class="text-white font-medium" data-i18n="faq_q8">Posso cancelar a minha subscrição?</span>
+                    <span class="faq-icon text-purple-400 transition-transform">▼</span>
+                </button>
+                <div class="faq-answer hidden px-6 pb-6 bg-white/5 border-x border-b border-white/10 rounded-b-xl -mt-2">
+                    <p class="text-gray-300" data-i18n="faq_a8">
+                        Sim, podes cancelar a qualquer momento através da página de gestão de subscrição. Após o cancelamento, 
+                        manterás acesso às funcionalidades pagas até ao fim do período atual. Não há taxas de cancelamento.
+                    </p>
+                </div>
+            </div>
+
+            <div class="faq-item" data-category="billing">
+                <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between p-6 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-left transition-all">
+                    <span class="text-white font-medium" data-i18n="faq_q9">Que métodos de pagamento aceitam?</span>
+                    <span class="faq-icon text-purple-400 transition-transform">▼</span>
+                </button>
+                <div class="faq-answer hidden px-6 pb-6 bg-white/5 border-x border-b border-white/10 rounded-b-xl -mt-2">
+                    <p class="text-gray-300" data-i18n="faq_a9">
+                        Aceitamos cartões de crédito e débito (Visa, Mastercard, American Express) através do Stripe, 
+                        uma das plataformas de pagamento mais seguras do mundo. Todos os pagamentos são processados de forma segura e encriptada.
+                    </p>
+                </div>
+            </div>
+
+            <div class="faq-item" data-category="billing">
+                <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between p-6 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-left transition-all">
+                    <span class="text-white font-medium" data-i18n="faq_q10">Oferecem reembolsos?</span>
+                    <span class="faq-icon text-purple-400 transition-transform">▼</span>
+                </button>
+                <div class="faq-answer hidden px-6 pb-6 bg-white/5 border-x border-b border-white/10 rounded-b-xl -mt-2">
+                    <p class="text-gray-300" data-i18n="faq_a10">
+                        Se não estiveres satisfeito com o serviço, contacta-nos nos primeiros 7 dias após a subscrição e 
+                        avaliaremos o teu pedido de reembolso caso a caso. Queremos que estejas completamente satisfeito com o nosso serviço.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Section -->
+        <div class="mt-16 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-2xl border border-purple-500/30 p-8">
+            <div class="text-center mb-8">
+                <h2 class="text-2xl font-bold text-white mb-2" data-i18n="faq_contact_title">Não encontraste o que procuravas?</h2>
+                <p class="text-gray-400" data-i18n="faq_contact_subtitle">A nossa equipa está pronta para ajudar!</p>
+            </div>
+            
+            <form id="supportForm" class="space-y-4 max-w-xl mx-auto">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1" data-i18n="faq_email">Email</label>
+                    <input type="email" name="email" required 
+                           value="{{ current_user.email if current_user.is_authenticated else '' }}"
+                           class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1" data-i18n="faq_subject">Assunto</label>
+                    <select name="subject" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <option value="general" class="bg-gray-800" data-i18n="faq_subject_general">Pergunta Geral</option>
+                        <option value="billing" class="bg-gray-800" data-i18n="faq_subject_billing">Pagamentos/Faturação</option>
+                        <option value="technical" class="bg-gray-800" data-i18n="faq_subject_technical">Problema Técnico</option>
+                        <option value="feature" class="bg-gray-800" data-i18n="faq_subject_feature">Sugestão de Funcionalidade</option>
+                        <option value="other" class="bg-gray-800" data-i18n="faq_subject_other">Outro</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1" data-i18n="faq_message">Mensagem</label>
+                    <textarea name="message" rows="4" required
+                              class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                              placeholder="Descreve a tua questão..."></textarea>
+                </div>
+                <button type="submit" class="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-lg transition-all" data-i18n="faq_send">
+                    Enviar Mensagem
+                </button>
+            </form>
+            
+            <div class="mt-8 text-center">
+                <p class="text-gray-400 text-sm" data-i18n="faq_contact_direct">Ou contacta-nos diretamente:</p>
+                <a href="mailto:suporte@almadolivro.com" class="text-purple-400 hover:text-purple-300 transition-colors">
+                    suporte@almadolivro.com
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-8 border-t border-white/10">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p class="text-gray-400 text-sm">© 2026 Alma do Livro. <span data-i18n="footer_rights">Todos os direitos reservados.</span></p>
+            <div class="flex items-center gap-6 text-sm">
+                <a href="/terms" class="text-gray-400 hover:text-white transition-colors" data-i18n="footer_terms">Termos</a>
+                <a href="/privacy" class="text-gray-400 hover:text-white transition-colors" data-i18n="footer_privacy">Privacidade</a>
+                <a href="/" class="text-gray-400 hover:text-white transition-colors" data-i18n="footer_home">Início</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function toggleFaq(button) {
+            const answer = button.nextElementSibling;
+            const icon = button.querySelector('.faq-icon');
+            const isOpen = !answer.classList.contains('hidden');
+            
+            // Close all others
+            document.querySelectorAll('.faq-answer').forEach(a => a.classList.add('hidden'));
+            document.querySelectorAll('.faq-icon').forEach(i => i.style.transform = 'rotate(0deg)');
+            
+            if (!isOpen) {
+                answer.classList.remove('hidden');
+                icon.style.transform = 'rotate(180deg)';
+            }
+        }
+        
+        function filterFaq(category) {
+            // Update buttons
+            document.querySelectorAll('.faq-filter').forEach(btn => {
+                btn.classList.remove('bg-purple-600/30', 'border-purple-500/50');
+                btn.classList.add('bg-white/5', 'border-white/10');
+            });
+            document.querySelector(`[data-filter="${category}"]`).classList.remove('bg-white/5', 'border-white/10');
+            document.querySelector(`[data-filter="${category}"]`).classList.add('bg-purple-600/30', 'border-purple-500/50');
+            
+            // Filter items
+            document.querySelectorAll('.faq-item').forEach(item => {
+                if (category === 'all' || item.dataset.category === category) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+        
+        // Search functionality
+        document.getElementById('faqSearch').addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase();
+            document.querySelectorAll('.faq-item').forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.style.display = text.includes(query) ? 'block' : 'none';
+            });
+        });
+        
+        // Support form
+        document.getElementById('supportForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData);
+            
+            try {
+                const response = await fetch('/api/support', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    alert('Mensagem enviada com sucesso! Responderemos em breve.');
+                    this.reset();
+                } else {
+                    alert('Erro ao enviar mensagem. Tenta novamente.');
+                }
+            } catch (error) {
+                alert('Erro de conexão. Tenta novamente.');
+            }
+        });
+    </script>
+    <script src="{{ url_for('static', filename='i18n.js') }}"></script>
+</body>
+</html>

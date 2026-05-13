@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Termos de Serviço - Alma do Livro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <!-- Navigation -->
+    <nav class="bg-black/30 backdrop-blur-lg border-b border-white/10 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <a href="/" class="flex items-center gap-3">
+                    <span class="text-3xl">🔍</span>
+                    <span class="text-xl font-bold text-white">Alma do Livro</span>
+                </a>
+                <div class="flex items-center gap-3">
+                    <!-- Language Selector -->
+                    <select id="uiLangSelect" class="bg-white/10 border border-white/20 text-white text-sm rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-purple-500">
+                        <option value="pt-pt" class="bg-gray-800">🇵🇹 PT</option>
+                        <option value="pt-br" class="bg-gray-800">🇧🇷 BR</option>
+                        <option value="en" class="bg-gray-800">🇬🇧 EN</option>
+                        <option value="es" class="bg-gray-800">🇪🇸 ES</option>
+                        <option value="fr" class="bg-gray-800">🇫🇷 FR</option>
+                        <option value="de" class="bg-gray-800">🇩🇪 DE</option>
+                        <option value="it" class="bg-gray-800">🇮🇹 IT</option>
+                    </select>
+                    <a href="/faq" class="px-4 py-2 text-gray-300 hover:text-white transition-colors" data-i18n="nav_faq">FAQ</a>
+                    <a href="/explorer" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all" data-i18n="nav_go_app">
+                        Ir para App
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto px-4 py-12">
+        <div class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-8 md:p-12">
+            <h1 class="text-3xl font-bold text-white mb-2">📜 <span data-i18n="terms_title">Termos de Serviço</span></h1>
+            <p class="text-gray-400 mb-8" data-i18n="terms_updated">Última atualização: Dezembro 2024</p>
+            
+            <div class="prose prose-invert max-w-none space-y-8 text-gray-300">
+                <section>
+                    <h2 class="text-xl font-semibold text-white mb-4" data-i18n="terms_s1_title">1. Aceitação dos Termos</h2>
+                    <p data-i18n="terms_s1_text">
+                        Ao aceder e utilizar o serviço Alma do Livro ("Serviço"), aceita estar vinculado a estes Termos de Serviço ("Termos"). 
+                        Se não concordar com qualquer parte destes termos, não poderá aceder ao Serviço.
+                    </p>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-semibold text-white mb-4" data-i18n="terms_s2_title">2. Descrição do Serviço</h2>
+                    <p data-i18n="terms_s2_text">
+                        O Alma do Livro é uma plataforma que utiliza inteligência artificial para análise e exploração de obras literárias. 
+                        O Serviço permite aos utilizadores:
+                    </p>
+                    <ul class="list-disc pl-6 mt-2 space-y-1">
+                        <li data-i18n="terms_s2_li1">Obter resumos e análises de livros</li>
+                        <li data-i18n="terms_s2_li2">Explorar personagens e temas literários</li>
+                        <li data-i18n="terms_s2_li3">Criar quizzes interativos</li>
+                        <li data-i18n="terms_s2_li4">Simular entrevistas com personagens fictícios</li>
+                        <li data-i18n="terms_s2_li5">Gerar continuações e finais alternativos de histórias</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-semibold text-white mb-4" data-i18n="terms_s3_title">3. Contas de Utilizador</h2>
+                    <p data-i18n="terms_s3_text">
+                        Para utilizar certas funcionalidades do Serviço, deve criar uma conta. Ao criar uma conta, concorda em:
+                    </p>
+                    <ul class="list-disc pl-6 mt-2 space-y-1">
+                        <li data-i18n="terms_s3_li1">Fornecer informações verdadeiras, precisas e completas</li>
+                        <li data-i18n="terms_s3_li2">Manter a confidencialidade da sua palavra-passe</li>
+                        <li data-i18n="terms_s3_li3">Ser responsável por todas as atividades na sua conta</li>
+                        <li data-i18n="terms_s3_li4">Notificar-nos imediatamente de qualquer uso não autorizado</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-semibold text-white mb-4" data-i18n="terms_s4_title">4. Planos e Pagamentos</h2>
+                    <p data-i18n="terms_s4_text">
+                        O Serviço oferece planos gratuitos e pagos. Para planos pagos:
+                    </p>
+                    <ul class="list-disc pl-6 mt-2 space-y-1">
+                        <li data-i18n="terms_s4_li1">Os pagamentos são processados através do Stripe</li>
+                        <li data-i18n="terms_s4_li2">As subscrições são renovadas automaticamente</li>
+                        <li data-i18n="terms_s4_li3">Pode cancelar a qualquer momento através das definições da conta</li>
+                        <li data-i18n="terms_s4_li4">Não há reembolsos parciais por períodos não utilizados</li>
+                        <li data-i18n="terms_s4_li5">Os preços podem ser alterados com aviso prévio de 30 dias</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-semibold text-white mb-4" data-i18n="terms_s5_title">5. Uso Aceitável</h2>
+                    <p data-i18n="terms_s5_text">Ao utilizar o Serviço, concorda em não:</p>
+                    <ul class="list-disc pl-6 mt-2 space-y-1">
+                        <li data-i18n="terms_s5_li1">Violar quaisquer leis ou regulamentos aplicáveis</li>
+                        <li data-i18n="terms_s5_li2">Infringir direitos de propriedade intelectual de terceiros</li>
+                        <li data-i18n="terms_s5_li3">Utilizar o Serviço para fins ilegais ou não autorizados</li>
+                        <li data-i18n="terms_s5_li4">Tentar aceder a áreas restritas do sistema</li>
+                        <li data-i18n="terms_s5_li5">Interferir com o funcionamento normal do Serviço</li>
+                        <li data-i18n="terms_s5_li6">Partilhar a sua conta com terceiros</li>
+                        <li data-i18n="terms_s5_li7">Utilizar bots ou scripts automatizados sem autorização</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-semibold text-white mb-4" data-i18n="terms_s6_title">6. Propriedade Intelectual</h2>
+                    <p data-i18n="terms_s6_text1">
+                        O Serviço e todo o seu conteúdo original, funcionalidades e design são propriedade do Alma do Livro e estão protegidos 
+                        por leis de direitos de autor e outras leis de propriedade intelectual.
+                    </p>
+                    <p class="mt-2" data-i18n="terms_s6_text2">
+                        O conteúdo gerado pela IA com base em obras literárias existentes é fornecido apenas para fins educativos e de entretenimento. 
+                        Os direitos sobre as obras originais pertencem aos respetivos autores e editoras.
+                    </p>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-semibold text-white mb-4" data-i18n="terms_s7_title">7. Conteúdo Gerado por IA</h2>
+                    <p data-i18n="terms_s7_text">
+                        O conteúdo gerado pelo nosso sistema de IA:
+                    </p>
+                    <ul class="list-disc pl-6 mt-2 space-y-1">
+                        <li data-i18n="terms_s7_li1">É fornecido "tal como está" sem garantias de precisão</li>
+                        <li data-i18n="terms_s7_li2">Pode conter erros ou imprecisões</li>
+                        <li data-i18n="terms_s7_li3">Não substitui a leitura das obras originais</li>
+                        <li data-i18n="terms_s7_li4">Não deve ser utilizado como fonte académica primária</li>
+                        <li data-i18n="terms_s7_li5">Pode ser utilizado para fins pessoais e educativos</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-semibold text-white mb-4" data-i18n="terms_s8_title">8. Limitação de Responsabilidade</h2>
+                    <p data-i18n="terms_s8_text">
+                        Na máxima extensão permitida por lei, o Alma do Livro não será responsável por quaisquer danos indiretos, 
+                        incidentais, especiais, consequenciais ou punitivos, incluindo perda de lucros, dados ou outras perdas intangíveis, 
+                        resultantes do uso ou incapacidade de usar o Serviço.
+                    </p>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-semibold text-white mb-4" data-i18n="terms_s9_title">9. Modificações do Serviço</h2>
+                    <p data-i18n="terms_s9_text">
+                        Reservamo-nos o direito de modificar ou descontinuar, temporária ou permanentemente, o Serviço ou qualquer parte dele, 
+                        com ou sem aviso prévio. Não seremos responsáveis perante si ou terceiros por qualquer modificação, suspensão ou descontinuação do Serviço.
+                    </p>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-semibold text-white mb-4" data-i18n="terms_s10_title">10. Alterações aos Termos</h2>
+                    <p data-i18n="terms_s10_text">
+                        Podemos atualizar estes Termos periodicamente. Notificaremos sobre alterações significativas através do email associado à sua conta 
+                        ou através de um aviso no Serviço. O uso continuado do Serviço após tais alterações constitui aceitação dos novos Termos.
+                    </p>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-semibold text-white mb-4" data-i18n="terms_s11_title">11. Lei Aplicável</h2>
+                    <p data-i18n="terms_s11_text">
+                        Estes Termos são regidos pelas leis de Portugal. Qualquer disputa relacionada com estes Termos será submetida 
+                        à jurisdição exclusiva dos tribunais portugueses.
+                    </p>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-semibold text-white mb-4" data-i18n="terms_s12_title">12. Contacto</h2>
+                    <p data-i18n="terms_s12_text">
+                        Para questões sobre estes Termos de Serviço, contacte-nos através de:
+                    </p>
+                    <p class="mt-2">
+                        <strong class="text-white" data-i18n="terms_email">Email:</strong> 
+                        <a href="mailto:legal@almadolivro.com" class="text-purple-400 hover:text-purple-300">legal@almadolivro.com</a>
+                    </p>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-8 border-t border-white/10">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p class="text-gray-400 text-sm">© 2026 Alma do Livro. <span data-i18n="footer_rights">Todos os direitos reservados.</span></p>
+            <div class="flex items-center gap-6 text-sm">
+                <a href="/terms" class="text-white" data-i18n="footer_terms">Termos</a>
+                <a href="/privacy" class="text-gray-400 hover:text-white transition-colors" data-i18n="footer_privacy">Privacidade</a>
+                <a href="/faq" class="text-gray-400 hover:text-white transition-colors" data-i18n="nav_faq">FAQ</a>
+            </div>
+        </div>
+    </footer>
+    <script src="{{ url_for('static', filename='i18n.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="pt" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparar Livros - Alma do Livro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <!-- Header -->
+    <header class="bg-black/30 backdrop-blur-lg border-b border-white/10 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <a href="/explorer" class="flex items-center gap-3">
+                    <span class="text-3xl">🔍</span>
+                    <div>
+                        <h1 class="text-xl font-bold text-white">Alma do Livro</h1>
+                        <p class="text-xs text-gray-400 hidden sm:block">Comparar Livros</p>
+                    </div>
+                </a>
+                <div class="flex items-center gap-3">
+                    <a href="/explorer" class="px-3 py-1.5 text-gray-300 hover:text-white text-sm transition-colors">
+                        Explorador
+                    </a>
+                    <a href="/history" class="px-3 py-1.5 text-gray-300 hover:text-white text-sm transition-colors">
+                        📚 Histórico
+                    </a>
+                    <a href="/compare" class="px-3 py-1.5 text-gray-300 hover:text-white text-sm transition-colors">
+                        ⚖️ Comparar
+                    </a>
+                    <button onclick="toggleTheme()" class="theme-toggle" title="Alternar tema">
+                        <div class="theme-toggle-circle">
+                            <span id="themeIcon">🌙</span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-8">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-white mb-2">⚖️ Comparar Livros</h1>
+            <p class="text-gray-400">Descobre semelhanças e diferenças entre duas obras literárias</p>
+        </div>
+
+        <!-- Book Selection -->
+        <div class="grid md:grid-cols-2 gap-6 mb-8">
+            <!-- Book 1 -->
+            <div class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-6">
+                <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <span class="w-8 h-8 bg-purple-600/30 rounded-full flex items-center justify-center text-sm">1</span>
+                    Primeiro Livro
+                </h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-sm text-gray-400 block mb-1">Título *</label>
+                        <input type="text" id="book1Title" placeholder="Ex: 1984" 
+                               class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label class="text-sm text-gray-400 block mb-1">Autor</label>
+                        <input type="text" id="book1Author" placeholder="Ex: George Orwell" 
+                               class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Book 2 -->
+            <div class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-6">
+                <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <span class="w-8 h-8 bg-pink-600/30 rounded-full flex items-center justify-center text-sm">2</span>
+                    Segundo Livro
+                </h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-sm text-gray-400 block mb-1">Título *</label>
+                        <input type="text" id="book2Title" placeholder="Ex: Admirável Mundo Novo" 
+                               class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label class="text-sm text-gray-400 block mb-1">Autor</label>
+                        <input type="text" id="book2Author" placeholder="Ex: Aldous Huxley" 
+                               class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comparison Type -->
+        <div class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-6 mb-6">
+            <h3 class="text-lg font-semibold text-white mb-4">🎯 Tipo de Comparação</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <label class="cursor-pointer">
+                    <input type="radio" name="compareType" value="complete" checked class="hidden peer">
+                    <div class="p-4 bg-white/5 border border-white/10 rounded-xl text-center transition-all peer-checked:bg-purple-600/30 peer-checked:border-purple-500 hover:bg-white/10">
+                        <span class="text-2xl block mb-1">📊</span>
+                        <span class="text-white text-sm">Completa</span>
+                    </div>
+                </label>
+                <label class="cursor-pointer">
+                    <input type="radio" name="compareType" value="themes" class="hidden peer">
+                    <div class="p-4 bg-white/5 border border-white/10 rounded-xl text-center transition-all peer-checked:bg-purple-600/30 peer-checked:border-purple-500 hover:bg-white/10">
+                        <span class="text-2xl block mb-1">🎨</span>
+                        <span class="text-white text-sm">Temas</span>
+                    </div>
+                </label>
+                <label class="cursor-pointer">
+                    <input type="radio" name="compareType" value="characters" class="hidden peer">
+                    <div class="p-4 bg-white/5 border border-white/10 rounded-xl text-center transition-all peer-checked:bg-purple-600/30 peer-checked:border-purple-500 hover:bg-white/10">
+                        <span class="text-2xl block mb-1">👥</span>
+                        <span class="text-white text-sm">Personagens</span>
+                    </div>
+                </label>
+                <label class="cursor-pointer">
+                    <input type="radio" name="compareType" value="style" class="hidden peer">
+                    <div class="p-4 bg-white/5 border border-white/10 rounded-xl text-center transition-all peer-checked:bg-purple-600/30 peer-checked:border-purple-500 hover:bg-white/10">
+                        <span class="text-2xl block mb-1">✍️</span>
+                        <span class="text-white text-sm">Estilo</span>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <!-- Quick Examples -->
+        <div class="mb-6">
+            <p class="text-sm text-gray-400 mb-3">💡 Comparações populares:</p>
+            <div class="flex flex-wrap gap-2">
+                <button onclick="setComparison('1984', 'George Orwell', 'Admirável Mundo Novo', 'Aldous Huxley')" 
+                        class="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-gray-300 text-xs rounded-full transition-colors">
+                    1984 vs Admirável Mundo Novo
+                </button>
+                <button onclick="setComparison('O Senhor dos Anéis', 'J.R.R. Tolkien', 'As Crónicas de Nárnia', 'C.S. Lewis')" 
+                        class="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-gray-300 text-xs rounded-full transition-colors">
+                    Senhor dos Anéis vs Nárnia
+                </button>
+                <button onclick="setComparison('Harry Potter', 'J.K. Rowling', 'Percy Jackson', 'Rick Riordan')" 
+                        class="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-gray-300 text-xs rounded-full transition-colors">
+                    Harry Potter vs Percy Jackson
+                </button>
+                <button onclick="setComparison('Crime e Castigo', 'Dostoiévski', 'O Estrangeiro', 'Albert Camus')" 
+                        class="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-gray-300 text-xs rounded-full transition-colors">
+                    Crime e Castigo vs O Estrangeiro
+                </button>
+            </div>
+        </div>
+
+        <!-- Compare Button -->
+        <button onclick="compareBooks()" id="compareBtn"
+                class="w-full px-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-600 disabled:to-gray-600 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2">
+            <span>⚖️</span>
+            <span>Comparar Livros</span>
+        </button>
+
+        <!-- Results Area -->
+        <div id="resultsArea" class="hidden mt-8">
+            <!-- Books Header -->
+            <div class="grid md:grid-cols-2 gap-4 mb-6">
+                <div class="bg-purple-600/20 rounded-xl border border-purple-500/30 p-4 text-center">
+                    <span class="text-3xl block mb-2">📖</span>
+                    <h3 id="result1Title" class="text-lg font-bold text-white"></h3>
+                    <p id="result1Author" class="text-sm text-purple-300"></p>
+                </div>
+                <div class="bg-pink-600/20 rounded-xl border border-pink-500/30 p-4 text-center">
+                    <span class="text-3xl block mb-2">📖</span>
+                    <h3 id="result2Title" class="text-lg font-bold text-white"></h3>
+                    <p id="result2Author" class="text-sm text-pink-300"></p>
+                </div>
+            </div>
+
+            <!-- Comparison Content -->
+            <div id="comparisonContent" class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-6">
+                <div class="prose prose-invert max-w-none">
+                    <!-- Content will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex justify-center gap-4 mt-6">
+                <button onclick="newComparison()" class="px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-xl transition-all">
+                    Nova Comparação
+                </button>
+                <button onclick="shareComparison()" class="px-6 py-3 bg-purple-600/30 hover:bg-purple-600/50 border border-purple-500/30 text-white rounded-xl transition-all">
+                    📤 Partilhar
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function setComparison(title1, author1, title2, author2) {
+            document.getElementById('book1Title').value = title1;
+            document.getElementById('book1Author').value = author1;
+            document.getElementById('book2Title').value = title2;
+            document.getElementById('book2Author').value = author2;
+        }
+
+        async function compareBooks() {
+            const book1Title = document.getElementById('book1Title').value.trim();
+            const book1Author = document.getElementById('book1Author').value.trim();
+            const book2Title = document.getElementById('book2Title').value.trim();
+            const book2Author = document.getElementById('book2Author').value.trim();
+            const compareType = document.querySelector('input[name="compareType"]:checked').value;
+
+            if (!book1Title || !book2Title) {
+                alert('Por favor, introduz o título de ambos os livros');
+                return;
+            }
+
+            const btn = document.getElementById('compareBtn');
+            btn.disabled = true;
+            showLoadingOverlay('compare');
+
+            try {
+                const response = await fetch('/api/compare-books', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        book1: { title: book1Title, author: book1Author },
+                        book2: { title: book2Title, author: book2Author },
+                        compare_type: compareType
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Show results
+                    document.getElementById('result1Title').textContent = book1Title;
+                    document.getElementById('result1Author').textContent = book1Author ? `por ${book1Author}` : '';
+                    document.getElementById('result2Title').textContent = book2Title;
+                    document.getElementById('result2Author').textContent = book2Author ? `por ${book2Author}` : '';
+                    
+                    // Format content with markdown-like styling
+                    let content = data.content;
+                    content = content.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>');
+                    content = content.replace(/\n\n/g, '</p><p class="mb-4 text-gray-300">');
+                    content = content.replace(/\n- /g, '</p><li class="text-gray-300 ml-4">');
+                    content = content.replace(/^# (.*?)$/gm, '<h2 class="text-xl font-bold text-white mt-6 mb-3">$1</h2>');
+                    content = content.replace(/^## (.*?)$/gm, '<h3 class="text-lg font-semibold text-purple-300 mt-4 mb-2">$1</h3>');
+                    content = content.replace(/^### (.*?)$/gm, '<h4 class="text-md font-medium text-pink-300 mt-3 mb-2">$1</h4>');
+                    
+                    document.getElementById('comparisonContent').innerHTML = `<p class="mb-4 text-gray-300">${content}</p>`;
+                    document.getElementById('resultsArea').classList.remove('hidden');
+                    
+                    // Scroll to results
+                    document.getElementById('resultsArea').scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    alert(data.error || 'Erro ao comparar livros');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Erro de conexão');
+            } finally {
+                hideLoadingOverlay();
+                btn.disabled = false;
+                btn.innerHTML = '<span>⚖️</span><span>Comparar Livros</span>';
+            }
+        }
+
+        function newComparison() {
+            document.getElementById('book1Title').value = '';
+            document.getElementById('book1Author').value = '';
+            document.getElementById('book2Title').value = '';
+            document.getElementById('book2Author').value = '';
+            document.getElementById('resultsArea').classList.add('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function shareComparison() {
+            const book1 = document.getElementById('book1Title').value;
+            const book2 = document.getElementById('book2Title').value;
+            const url = `${window.location.origin}/compare?book1=${encodeURIComponent(book1)}&book2=${encodeURIComponent(book2)}`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: `Comparação: ${book1} vs ${book2}`,
+                    text: `Vê a comparação entre "${book1}" e "${book2}" no Alma do Livro!`,
+                    url: url
+                });
+            } else {
+                navigator.clipboard.writeText(url);
+                alert('Link copiado para a área de transferência!');
+            }
+        }
+
+        // Check URL params for pre-filled comparison
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('book1')) {
+            document.getElementById('book1Title').value = urlParams.get('book1');
+        }
+        if (urlParams.get('book2')) {
+            document.getElementById('book2Title').value = urlParams.get('book2');
+        }
+    </script>
+    <script src="{{ url_for('static', filename='theme.js') }}"></script>
+    <script src="{{ url_for('static', filename='loading.js') }}"></script>
+</body>
+</html>

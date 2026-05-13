@@ -2,6 +2,8 @@ services:
   - type: web
     name: bookcreatorai
     env: python
+    runtime: python
+    pythonVersion: "3.11.9"
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app
     envVars:

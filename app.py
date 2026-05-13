@@ -7641,22 +7641,33 @@ def notifications_vapid_key():
 @app.route('/api/notifications/subscribe', methods=['POST'])
 @login_required
 def notifications_subscribe():
-    data = request.get_json()
-    subscription = data.get('subscription', {})
-    endpoint = subscription.get('endpoint')
-    if not endpoint:
-        return jsonify({'success': False, 'error': 'No endpoint'})
-    existing = PushSubscription.query.filter_by(user_id=current_user.id, endpoint=endpoint).first()
-    if not existing:
-        sub = PushSubscription(
-            user_id=current_user.id,
-            endpoint=endpoint,
-            p256dh_key=subscription.get('keys', {}).get('p256dh', ''),
-            auth_key=subscription.get('keys', {}).get('auth', '')
-        )
-        db.session.add(sub)
+    try:
+        data = request.get_json()
+        subscription = data.get('subscription', {})
+        endpoint = subscription.get('endpoint')
+        if not endpoint:
+            return jsonify({'success': False, 'error': 'No endpoint'})
+        p256dh = subscription.get('keys', {}).get('p256dh', '')
+        auth = subscription.get('keys', {}).get('auth', '')
+        existing = PushSubscription.query.filter_by(endpoint=endpoint).first()
+        if existing:
+            existing.user_id = current_user.id
+            existing.p256dh_key = p256dh
+            existing.auth_key = auth
+            existing.is_active = True
+        else:
+            sub = PushSubscription(
+                user_id=current_user.id,
+                endpoint=endpoint,
+                p256dh_key=p256dh,
+                auth_key=auth
+            )
+            db.session.add(sub)
         db.session.commit()
-    return jsonify({'success': True})
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/notifications/unsubscribe', methods=['POST'])
 @login_required

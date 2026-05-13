@@ -7716,32 +7716,6 @@ def notifications_test():
     except ImportError:
         return jsonify({'success': False, 'error': 'pywebpush não instalado'})
 
-@app.route('/api/admin/send-notification', methods=['POST'])
-@admin_required
-def admin_send_notification():
-    try:
-        from pywebpush import webpush, WebPushException
-        data = request.get_json()
-        title = data.get('title', 'Alma do Livro')
-        body = data.get('body', '')
-        all_subs = PushSubscription.query.filter_by(is_active=True).all()
-        sent = 0
-        for sub in all_subs:
-            try:
-                webpush(
-                    subscription_info={'endpoint': sub.endpoint, 'keys': {'p256dh': sub.p256dh_key, 'auth': sub.auth_key}},
-                    data=json.dumps({'title': title, 'body': body, 'data': {'url': '/'}}),
-                    vapid_private_key=VAPID_PRIVATE_KEY,
-                    vapid_claims=VAPID_CLAIMS
-                )
-                sent += 1
-            except Exception:
-                sub.is_active = False
-                db.session.commit()
-        return jsonify({'success': True, 'sent': sent})
-    except ImportError:
-        return jsonify({'success': False, 'error': 'pywebpush não instalado'})
-
 @app.route('/api/admin/revenue')
 @admin_required
 def admin_revenue():

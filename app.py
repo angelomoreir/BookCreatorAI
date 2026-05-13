@@ -7620,6 +7620,51 @@ def admin_daily_usage():
         'data': [{'date': str(d.date), 'count': d.count} for d in daily_analyses]
     })
 
+# ==================== PUSH NOTIFICATIONS API ====================
+
+VAPID_PUBLIC_KEY = os.environ.get('VAPID_PUBLIC_KEY', 'BPYVgcwG299uWv3SpiSs5DIiAyFZhX0N9vaDMYZDIqT6MdiMs7fzoOFI-MUD4xRp8vJjzmFhS3wK_31_J8E2scM')
+VAPID_PRIVATE_KEY = os.environ.get('VAPID_PRIVATE_KEY', 'MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQg/pRTL66oMme+8V9GPYNcIb3SnCUk2URRWG5n5g4pKNqhRANCAAT2FYHMBtvfblr90qYkrOQyIgMhWYV9Dfb2gzGGQyKk+jHYjLO386DhSPjFA+MUafLyY85hYUt8Cv99fyfBNrHD')
+VAPID_CLAIMS = {'sub': 'mailto:admin@bookcreatorai.com'}
+
+@app.route('/api/notifications/vapid-key')
+def notifications_vapid_key():
+    return jsonify({'success': True, 'publicKey': VAPID_PUBLIC_KEY})
+
+@app.route('/api/notifications/subscribe', methods=['POST'])
+@login_required
+def notifications_subscribe():
+    data = request.get_json()
+    subscription = data.get('subscription', {})
+    endpoint = subscription.get('endpoint')
+    if not endpoint:
+        return jsonify({'success': False, 'error': 'No endpoint'})
+    existing = PushSubscription.query.filter_by(user_id=current_user.id, endpoint=endpoint).first()
+    if not existing:
+        sub = PushSubscription(
+            user_id=current_user.id,
+            endpoint=endpoint,
+            p256dh_key=subscription.get('keys', {}).get('p256dh', ''),
+            auth_key=subscription.get('keys', {}).get('auth', '')
+        )
+        db.session.add(sub)
+        db.session.commit()
+    return jsonify({'success': True})
+
+@app.route('/api/notifications/unsubscribe', methods=['POST'])
+@login_required
+def notifications_unsubscribe():
+    data = request.get_json()
+    endpoint = data.get('endpoint')
+    if endpoint:
+        PushSubscription.query.filter_by(user_id=current_user.id, endpoint=endpoint).delete()
+        db.session.commit()
+    return jsonify({'success': True})
+
+@app.route('/api/notifications/preferences', methods=['POST'])
+@login_required
+def notifications_preferences():
+    return jsonify({'success': True})
+
 @app.route('/api/admin/revenue')
 @admin_required
 def admin_revenue():

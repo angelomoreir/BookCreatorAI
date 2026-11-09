@@ -1,7 +1,9 @@
-from flask import Flask, render_template, request, jsonify, Response, redirect, url_for, flash, session
+from flask import Flask, render_template, request, jsonify, Response, redirect, url_for, flash, session, has_request_context, send_file
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_bcrypt import Bcrypt
 import google.generativeai as genai
+from google.ai import generativelanguage as glm
+from google.api_core import exceptions as gexc
 import json
 import os
 import logging
@@ -11,7 +13,7 @@ from datetime import datetime
 # Load environment variables
 load_dotenv()
 
-from models.book import db, Book, Series, User, SubscriptionHistory, AnalysisHistory, Favorite, PLAN_CONFIG, PushSubscription, Notification, UserTasteProfile, BookPrediction, PromoCode, ErrorLog, LoginLog, EmailTemplate, ScheduledNotification, AdminGoal, AppSettings, BlockedIP
+from models.book import db, Book, Series, User, SubscriptionHistory, AnalysisHistory, Favorite, PLAN_CONFIG, PushSubscription, Notification, UserTasteProfile, BookPrediction, PromoCode, ErrorLog, LoginLog, EmailTemplate, ScheduledNotification, AdminGoal, AppSettings, BlockedIP, Referral, ReferralSignup, PromptTemplate, PromptPurchase
 import config
 
 # Configure logging
@@ -36,6 +38,9 @@ if database_url:
     # Render provides postgres:// but SQLAlchemy requires postgresql://
     if database_url.startswith('postgres://'):
         database_url = database_url.replace('postgres://', 'postgresql://', 1)
+    # SQLAlchemy 2.x defaults postgresql:// to psycopg3; we ship psycopg2-binary
+    if database_url.startswith('postgresql://'):
+        database_url = database_url.replace('postgresql://', 'postgresql+psycopg2://', 1)
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 else:
     basedir = os.path.abspath(os.path.dirname(__file__))
@@ -105,6 +110,74 @@ if not config.GEMINI_API_KEY:
     logger.error("GEMINI_API_KEY is missing from environment variables!")
 
 genai.configure(api_key=config.GEMINI_API_KEY)
+
+# Ordered model chain: try the primary first, fall back on quota/availability
+# errors. Override with GEMINI_MODEL (primary) and GEMINI_FALLBACK_MODELS (csv).
+GEMINI_MODEL = os.environ.get('GEMINI_MODEL', 'gemini-3.5-flash')
+_fallback_csv = os.environ.get('GEMINI_FALLBACK_MODELS', 'gemini-2.5-flash,gemini-3.1-flash-lite')
+GEMINI_MODELS = [GEMINI_MODEL] + [m.strip() for m in _fallback_csv.split(',') if m.strip() and m.strip() != GEMINI_MODEL]
+
+# Errors worth retrying on the next model (quota, overload, missing model)
+_GEMINI_RETRYABLE = (
+    gexc.ResourceExhausted,      # 429 quota/rate limit
+    gexc.ServiceUnavailable,     # 503 high demand
+    gexc.DeadlineExceeded,       # 504 timeout
+    gexc.InternalServerError,    # 500 upstream
+    gexc.NotFound,               # 404 model unavailable/retired
+)
+
+class _GeminiFallbackModel:
+    """Duck-typed drop-in for GenerativeModel that retries generate_content
+    across GEMINI_MODELS when a model is out of quota or unavailable."""
+
+    def __init__(self, api_key=None):
+        self._api_key = api_key
+
+    def _build(self, model_name):
+        m = genai.GenerativeModel(model_name)
+        if self._api_key:
+            m._client = glm.GenerativeServiceClient(
+                client_options={"api_key": self._api_key}
+            )
+        return m
+
+    def generate_content(self, *args, **kwargs):
+        last_exc = None
+        for name in GEMINI_MODELS:
+            try:
+                return self._build(name).generate_content(*args, **kwargs)
+            except _GEMINI_RETRYABLE as e:
+                logger.warning(f"Gemini model '{name}' unavailable ({type(e).__name__}); trying next")
+                _log_model_fallback(name, e)
+                last_exc = e
+        raise last_exc
+
+def _log_model_fallback(model_name, exc):
+    """Record a Gemini model fallback event in ErrorLog (visible in admin 'Erros')."""
+    try:
+        db.session.add(ErrorLog(
+            error_type=f'model_fallback:{model_name}',
+            error_message=f'{type(exc).__name__}: {str(exc)[:300]}',
+            endpoint=request.path if has_request_context() else None,
+            user_id=current_user.id if has_request_context() and current_user.is_authenticated else None,
+            ip_address=request.remote_addr if has_request_context() else None,
+        ))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+
+def get_gemini_model():
+    """Return a Gemini model that falls back across GEMINI_MODELS.
+    Uses the logged-in user's own API key (required), or the server key
+    for anonymous calls."""
+    api_key = None
+    if has_request_context() and current_user.is_authenticated:
+        api_key = current_user.get_gemini_key()
+        if not api_key:
+            raise RuntimeError(
+                "Chave de API do Gemini não configurada. Configura a tua chave em /setup-api-key."
+            )
+    return _GeminiFallbackModel(api_key=api_key)
 
 def generate_book_with_gemini(theme, style, num_chapters, num_pages=50, language='pt-pt'):
     """
@@ -200,7 +273,7 @@ IMPORTANTE:
 
     try:
         # Use Gemini Pro model
-        model = genai.GenerativeModel('gemini-2.5-flash')
+        model = get_gemini_model()
         response = model.generate_content(prompt)
         
         if response and response.text:
@@ -262,7 +335,7 @@ Formata a resposta EXATAMENTE assim:
 """
 
     try:
-        model = genai.GenerativeModel('gemini-2.5-flash')
+        model = get_gemini_model()
         response = model.generate_content(prompt)
         
         if response and response.text:
@@ -400,138 +473,21 @@ def manual():
 
 @app.route('/manual/download')
 def download_manual():
-    """Download manual as PDF"""
-    from reportlab.lib.pagesizes import A4
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-    from reportlab.lib.units import cm
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
-    from reportlab.lib import colors
-    from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
-    from io import BytesIO
-    
-    buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=2*cm, leftMargin=2*cm, topMargin=2*cm, bottomMargin=2*cm)
-    
-    styles = getSampleStyleSheet()
-    
-    # Custom styles
-    title_style = ParagraphStyle('CustomTitle', parent=styles['Heading1'], fontSize=24, spaceAfter=30, alignment=TA_CENTER, textColor=colors.HexColor('#6366f1'))
-    h1_style = ParagraphStyle('CustomH1', parent=styles['Heading1'], fontSize=18, spaceBefore=20, spaceAfter=10, textColor=colors.HexColor('#6366f1'))
-    h2_style = ParagraphStyle('CustomH2', parent=styles['Heading2'], fontSize=14, spaceBefore=15, spaceAfter=8, textColor=colors.HexColor('#8b5cf6'))
-    body_style = ParagraphStyle('CustomBody', parent=styles['Normal'], fontSize=11, spaceAfter=8, alignment=TA_JUSTIFY)
-    bullet_style = ParagraphStyle('CustomBullet', parent=styles['Normal'], fontSize=11, leftIndent=20, spaceAfter=4)
-    tip_style = ParagraphStyle('CustomTip', parent=styles['Normal'], fontSize=10, leftIndent=10, textColor=colors.HexColor('#7c3aed'), spaceAfter=10)
-    
-    story = []
-    
-    # Title
-    story.append(Paragraph("📖 Manual de Utilização", title_style))
-    story.append(Paragraph("Alma do Livro - Guia Completo", styles['Heading2']))
-    story.append(Spacer(1, 30))
-    
-    # Section 1
-    story.append(Paragraph("1. Introdução", h1_style))
-    story.append(Paragraph("Bem-vindo ao Alma do Livro! Esta aplicação utiliza inteligência artificial avançada para te ajudar a explorar, compreender e interagir com qualquer livro de forma única e envolvente.", body_style))
-    story.append(Paragraph("Com o Alma do Livro, podes:", body_style))
-    story.append(Paragraph("• Obter resumos detalhados de qualquer livro", bullet_style))
-    story.append(Paragraph("• Analisar personagens, temas e simbolismo", bullet_style))
-    story.append(Paragraph("• Entrevistar personagens fictícios", bullet_style))
-    story.append(Paragraph("• Criar quizzes para testar conhecimentos", bullet_style))
-    story.append(Paragraph("• Gerar continuações e finais alternativos", bullet_style))
-    story.append(Paragraph("• Descobrir playlists, casting de filmes e muito mais", bullet_style))
-    story.append(Spacer(1, 15))
-    
-    # Section 2
-    story.append(Paragraph("2. Como Começar", h1_style))
-    story.append(Paragraph("<b>Passo 1: Criar Conta</b> - Clica em 'Começar Grátis' na página inicial e preenche o formulário com o teu nome, email e password. A conta gratuita dá-te acesso a 10 análises por mês.", body_style))
-    story.append(Paragraph("<b>Passo 2: Fazer Login</b> - Após criar a conta, faz login com o teu email e password para aceder ao Explorador de Livros.", body_style))
-    story.append(Paragraph("<b>Passo 3: Explorar um Livro</b> - No Explorador, introduz o título do livro que queres analisar (e opcionalmente o autor). Clica em 'Explorar Livro' para começar!", body_style))
-    story.append(Spacer(1, 15))
-    
-    # Section 3
-    story.append(Paragraph("3. Explorador de Livros", h1_style))
-    story.append(Paragraph("O Explorador é a funcionalidade principal da aplicação. Permite-te analisar qualquer livro publicado usando inteligência artificial.", body_style))
-    story.append(Paragraph("💡 Dica: A IA conhece milhões de livros! Desde clássicos como 'Dom Quixote' até bestsellers modernos como 'Harry Potter'.", tip_style))
-    
-    story.append(Paragraph("3.1 Análises Disponíveis", h2_style))
-    story.append(Paragraph("• <b>Resumo</b> - Sinopse completa e detalhada do livro", bullet_style))
-    story.append(Paragraph("• <b>Personagens</b> - Lista e análise de todos os personagens", bullet_style))
-    story.append(Paragraph("• <b>Temas</b> - Temas principais e mensagens da obra", bullet_style))
-    story.append(Paragraph("• <b>Mundo</b> - Cenário, época e ambientação", bullet_style))
-    story.append(Paragraph("• <b>Estilo</b> - Análise do estilo literário do autor", bullet_style))
-    story.append(Paragraph("• <b>Citações</b> - Citações famosas e memoráveis", bullet_style))
-    story.append(Paragraph("• <b>Similares</b> - Recomendações de livros semelhantes", bullet_style))
-    story.append(Paragraph("• <b>Simbolismo</b> - Símbolos e significados ocultos", bullet_style))
-    story.append(Spacer(1, 15))
-    
-    # Section 4
-    story.append(Paragraph("4. Funcionalidades Interativas", h1_style))
-    story.append(Paragraph("Estas são as funcionalidades mais divertidas e únicas do Alma do Livro! Disponíveis nos planos Pro e Premium.", body_style))
-    
-    story.append(Paragraph("4.1 Entrevistas com Personagens", h2_style))
-    story.append(Paragraph("Conversa diretamente com qualquer personagem do livro! A IA assume a personalidade do personagem e responde como se fosse ele.", body_style))
-    
-    story.append(Paragraph("4.2 Quiz Interativo", h2_style))
-    story.append(Paragraph("Testa os teus conhecimentos sobre o livro com perguntas de escolha múltipla geradas pela IA. Disponível em três níveis: Fácil, Médio e Difícil.", body_style))
-    
-    story.append(Paragraph("4.3 Continuações de História", h2_style))
-    story.append(Paragraph("Gera novos conteúdos para o livro: próximo capítulo, epílogo ou início de uma sequela.", body_style))
-    
-    story.append(Paragraph("4.4 Finais Alternativos", h2_style))
-    story.append(Paragraph("Explora cenários 'E se...?' e descobre como a história poderia ter sido diferente.", body_style))
-    story.append(Spacer(1, 15))
-    
-    # Section 5
-    story.append(Paragraph("5. Funcionalidades Extra", h1_style))
-    story.append(Paragraph("• <b>Playlist Sugerida</b> - Músicas reais que combinam com a atmosfera do livro", bullet_style))
-    story.append(Paragraph("• <b>Trailer Cinematográfico</b> - Texto descritivo para um trailer de filme", bullet_style))
-    story.append(Paragraph("• <b>Casting de Filme</b> - Sugestões de atores para cada personagem", bullet_style))
-    story.append(Paragraph("• <b>Prompt para Capa</b> - Descrições otimizadas para DALL-E/Midjourney", bullet_style))
-    story.append(Paragraph("• <b>Cronologia</b> - Linha temporal dos eventos do livro", bullet_style))
-    story.append(Paragraph("• <b>Adaptações</b> - Filmes e séries baseados no livro", bullet_style))
-    story.append(Spacer(1, 15))
-    
-    # Section 6
-    story.append(Paragraph("6. Gestão de Conta", h1_style))
-    story.append(Paragraph("Na tua conta podes:", body_style))
-    story.append(Paragraph("• Ver o teu uso mensal (quantas análises já fizeste)", bullet_style))
-    story.append(Paragraph("• Histórico de leitura (todos os livros que exploraste)", bullet_style))
-    story.append(Paragraph("• Favoritos (guardar livros e análises favoritas)", bullet_style))
-    story.append(Paragraph("• Dashboard (estatísticas detalhadas de utilização)", bullet_style))
-    story.append(Paragraph("• Gerir subscrição (fazer upgrade ou cancelar plano)", bullet_style))
-    story.append(Paragraph("💡 Dica: O contador de uso reinicia no primeiro dia de cada mês!", tip_style))
-    story.append(Spacer(1, 15))
-    
-    # Section 7
-    story.append(Paragraph("7. Planos e Preços", h1_style))
-    story.append(Paragraph("<b>Gratuito (€0/mês)</b> - 10 análises/mês, resumos e personagens, temas e análise básica.", body_style))
-    story.append(Paragraph("<b>Pro (€9.99/mês)</b> - 100 análises/mês, todas as análises, quiz e entrevistas, continuações e finais alternativos.", body_style))
-    story.append(Paragraph("<b>Premium (€19.99/mês)</b> - 1000 análises/mês, tudo do Pro, exportação PDF, suporte prioritário.", body_style))
-    story.append(Spacer(1, 15))
-    
-    # Section 8
-    story.append(Paragraph("8. Dicas e Truques", h1_style))
-    story.append(Paragraph("💡 <b>Sê específico com o título</b> - Se existem vários livros com o mesmo nome, adiciona o autor para melhores resultados.", tip_style))
-    story.append(Paragraph("💡 <b>Usa os exemplos rápidos</b> - Clica nos botões de exemplo para testar rapidamente com livros populares.", tip_style))
-    story.append(Paragraph("💡 <b>Guarda nos favoritos</b> - Usa o botão ⭐ para guardar livros e análises que queres revisitar.", tip_style))
-    story.append(Paragraph("💡 <b>Exporta as análises</b> - Usa o botão 📥 para exportar todas as análises de um livro em PDF ou EPUB.", tip_style))
-    story.append(Paragraph("💡 <b>Muda o idioma</b> - Usa o seletor de idioma no topo para obter análises em diferentes línguas.", tip_style))
-    
-    story.append(Spacer(1, 30))
-    story.append(Paragraph("Alma do Livro © 2026 - Manual de Utilização v1.0", ParagraphStyle('Footer', parent=styles['Normal'], fontSize=9, alignment=TA_CENTER, textColor=colors.gray)))
-    
-    doc.build(story)
-    buffer.seek(0)
-    
-    return Response(
-        buffer.getvalue(),
-        mimetype='application/pdf',
-        headers={
-            'Content-Disposition': 'attachment; filename="Manual_Alma_do_Livro.pdf"',
-            'Content-Type': 'application/pdf'
-        }
-    )
+    """Download the full user manual as PDF.
 
+    The PDF is pre-generated from the /manual page (with screenshots) by
+    scripts/generate_manual_pdf.py. Regenerate it when the manual changes.
+    """
+    pdf_path = os.path.join(app.static_folder, 'manual', 'Manual_Alma_do_Livro.pdf')
+    if not os.path.exists(pdf_path):
+        flash('O PDF do manual ainda não foi gerado.', 'error')
+        return redirect(url_for('manual'))
+    return send_file(
+        pdf_path,
+        as_attachment=True,
+        download_name='Manual_Alma_do_Livro.pdf'
+    )
+    
 # ==================== PUSH NOTIFICATIONS API ====================
 
 # VAPID keys for Web Push
@@ -859,7 +815,7 @@ Moods: escape, learn, emotion, excitement, comfort, challenge, etc.
 
 Responde APENAS com o JSON, sem texto adicional."""
 
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = get_gemini_model()
         response = model.generate_content(prompt)
         response_text = response.text.strip()
         
@@ -989,7 +945,7 @@ Responde em JSON com esta estrutura EXATA:
 
 Ordena por match_score (maior primeiro). Responde APENAS com JSON."""
 
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = get_gemini_model()
         response = model.generate_content(prompt)
         response_text = response.text.strip()
         
@@ -1328,7 +1284,7 @@ INSTRUÇÕES:
 - Inclui todas as relações importantes entre os personagens
 - Responde em {language}. Apenas JSON, sem texto adicional."""
 
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = get_gemini_model()
         response = model.generate_content(prompt)
         content = response.text.strip()
         
@@ -1437,7 +1393,7 @@ INSTRUÇÕES:
 - Sê específico nas explicações
 - Responde em {language}"""
 
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = get_gemini_model()
         response = model.generate_content(prompt)
         content = response.text.strip()
         
@@ -1559,7 +1515,7 @@ Responde APENAS em JSON válido com esta estrutura:
 
 Responde em {language}. Sê criativo e fiel aos personagens!"""
 
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = get_gemini_model()
         response = model.generate_content(prompt)
         content = response.text.strip()
         
@@ -1712,7 +1668,7 @@ INSTRUÇÕES:
 - Sê equilibrado - ambos os lados devem ter argumentos válidos
 - Responde em {language}"""
 
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = get_gemini_model()
         response = model.generate_content(prompt)
         content = response.text.strip()
         
@@ -1827,7 +1783,7 @@ Responde APENAS em JSON válido com esta estrutura:
 
 Responde em {language}. Sê criativo e fiel ao personagem!"""
 
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = get_gemini_model()
         response = model.generate_content(prompt)
         content = response.text.strip()
         
@@ -1932,7 +1888,7 @@ Responde APENAS em JSON válido com esta estrutura:
 
 Responde em {language}. Sê criativo e profundamente fiel à voz interior do personagem!"""
 
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = get_gemini_model()
         response = model.generate_content(prompt)
         content = response.text.strip()
         
@@ -2044,7 +2000,7 @@ Responde APENAS em JSON válido com esta estrutura:
 
 Responde em {language}. Sê criativo e fiel ao estilo do livro original!"""
 
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = get_gemini_model()
         response = model.generate_content(prompt)
         content = response.text.strip()
         
@@ -2160,7 +2116,7 @@ Responde APENAS em JSON válido com esta estrutura:
 
 Responde em {language}. Sê preciso e educativo nas definições!"""
 
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = get_gemini_model()
         response = model.generate_content(prompt)
         content = response.text.strip()
         
@@ -2302,7 +2258,7 @@ Responde APENAS em JSON válido com esta estrutura:
 
 Responde em {language}. Sê historicamente preciso e educativo!"""
 
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = get_gemini_model()
         response = model.generate_content(prompt)
         content = response.text.strip()
         
@@ -2468,7 +2424,7 @@ Responde APENAS em JSON válido com esta estrutura:
 
 Responde em {language}. Sê educativo e útil para estudantes!"""
 
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = get_gemini_model()
         response = model.generate_content(prompt)
         content = response.text.strip()
         
@@ -2585,7 +2541,7 @@ Se o livro se passa num mundo completamente fictício sem base geográfica real,
 
 Responde em {language}. Sê preciso com as coordenadas geográficas!"""
 
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = get_gemini_model()
         response = model.generate_content(prompt)
         content = response.text.strip()
         
@@ -2726,7 +2682,7 @@ Responde APENAS em JSON válido com esta estrutura:
 
 Responde em {language}. Sê criativo e faz uma transformação memorável!"""
 
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = get_gemini_model()
         response = model.generate_content(prompt)
         content = response.text.strip()
         
@@ -2853,7 +2809,7 @@ Responde APENAS em JSON válido com esta estrutura:
 
 Responde em {language}. Sê fiel à voz e personalidade do personagem!"""
 
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = get_gemini_model()
         response = model.generate_content(prompt)
         content = response.text.strip()
         
@@ -2998,7 +2954,7 @@ Responde APENAS em JSON válido com esta estrutura:
 
 Responde em {language}. Sê criativo mas mantém coerência com o livro original!"""
 
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = get_gemini_model()
         response = model.generate_content(prompt)
         content = response.text.strip()
         
@@ -3176,7 +3132,7 @@ Responde APENAS em JSON válido com esta estrutura:
 
 Responde em {language}. Sê criativo e divertido!"""
 
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = get_gemini_model()
         response = model.generate_content(prompt)
         content = response.text.strip()
         
@@ -3291,7 +3247,7 @@ Responde APENAS em JSON válido com esta estrutura:
 
 Responde em {language}. As citações devem ser fiéis ao livro!"""
 
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = get_gemini_model()
         response = model.generate_content(prompt)
         content = response.text.strip()
         
@@ -3389,7 +3345,7 @@ Responde APENAS em JSON válido com esta estrutura exata:
 
 Responde em {language}. Apenas JSON, sem texto adicional."""
 
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = get_gemini_model()
         response = model.generate_content(prompt)
         content = response.text.strip()
         
@@ -3683,7 +3639,7 @@ Analisa:
         prompt += "\n\nResponde em português de Portugal. Sê detalhado mas conciso."
         
         # Call Gemini API
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = get_gemini_model()
         response = model.generate_content(prompt)
         content = response.text.strip()
         
@@ -3844,7 +3800,7 @@ As tags devem ser 2-4 palavras descritivas (género, tom, tema).
 Responde APENAS com o JSON válido, sem texto adicional."""
 
         # Call Gemini API
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = get_gemini_model()
         response = model.generate_content(prompt)
         content = response.text.strip()
         
@@ -4521,6 +4477,8 @@ def login():
             
             next_page = request.args.get('next')
             flash('Login efetuado com sucesso!', 'success')
+            if not user.gemini_api_key:
+                return redirect(url_for('setup_api_key', next=next_page or ''))
             return redirect(next_page if next_page else url_for('book_explorer_page'))
         else:
             flash('Email ou password incorretos.', 'error')
@@ -4541,7 +4499,9 @@ def register():
         user = User(
             name=form.name.data,
             email=form.email.data.lower(),
-            password_hash=hashed_password
+            password_hash=hashed_password,
+            plan='premium',
+            subscription_status='active'
         )
         db.session.add(user)
         db.session.commit()
@@ -4583,6 +4543,43 @@ def logout():
 def profile():
     """User profile page"""
     return render_template('auth/profile.html')
+
+@app.route('/setup-api-key', methods=['GET', 'POST'])
+@login_required
+def setup_api_key():
+    """Let the user configure their own Gemini API key (BYOK)"""
+    next_page = request.args.get('next') or url_for('book_explorer_page')
+
+    if request.method == 'POST':
+        if request.form.get('action') == 'remove':
+            current_user.set_gemini_key(None)
+            db.session.commit()
+            flash('Chave de API removida.', 'success')
+            return redirect(url_for('setup_api_key'))
+
+        api_key = request.form.get('api_key', '').strip()
+        if not api_key:
+            flash('Insere uma chave de API.', 'error')
+            return redirect(url_for('setup_api_key'))
+
+        # Validate the key with a minimal test call before saving
+        try:
+            _GeminiFallbackModel(api_key=api_key).generate_content('Responde apenas: OK')
+        except _GEMINI_RETRYABLE as e:
+            logger.warning(f"Quota exhausted on all models for user {current_user.id}: {e}")
+            flash('A chave é válida mas a quota gratuita de hoje está esgotada em todos os modelos. Tenta amanhã ou ativa faturação no AI Studio.', 'error')
+            return redirect(url_for('setup_api_key', next=next_page))
+        except Exception as e:
+            logger.warning(f"Invalid Gemini API key submitted by user {current_user.id}: {e}")
+            flash('Esta chave não funcionou. Verifica se a copiaste corretamente do Google AI Studio.', 'error')
+            return redirect(url_for('setup_api_key', next=next_page))
+
+        current_user.set_gemini_key(api_key)
+        db.session.commit()
+        flash('Chave de API guardada! As tuas análises passam a usar a tua própria chave.', 'success')
+        return redirect(next_page)
+
+    return render_template('setup_api_key.html', next_page=next_page)
 
 # ==================== END AUTHENTICATION ROUTES ====================
 
@@ -5155,7 +5152,7 @@ Conteúdo original para referência:
 
 Escreve APENAS o conteúdo do capítulo, começando com o título."""
 
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = get_gemini_model()
         response = model.generate_content(prompt)
         new_content = response.text.strip()
         
@@ -5347,7 +5344,7 @@ Responde APENAS em formato JSON válido, como array:
 
 Sê criativo e original. Evita clichés. Os temas devem ser adequados para um livro completo."""
 
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = get_gemini_model()
         response = model.generate_content(prompt)
         response_text = response.text
         
@@ -5430,7 +5427,7 @@ Responde APENAS em formato JSON válido:
 
 Cada variação deve ser significativamente diferente das outras."""
 
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = get_gemini_model()
         response = model.generate_content(prompt)
         
         text = response.text.strip()
@@ -5514,7 +5511,7 @@ Responde APENAS em formato JSON válido:
   "summary": "Resumo geral da análise em 2-3 frases"
 }}"""
 
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = get_gemini_model()
         response = model.generate_content(prompt)
         
         text_response = response.text.strip()
@@ -5589,7 +5586,7 @@ Responde APENAS em formato JSON válido:
 
 Cria personagens diversos, complexos e memoráveis."""
 
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = get_gemini_model()
         response = model.generate_content(prompt)
         
         text = response.text.strip()
@@ -5644,7 +5641,7 @@ Responde APENAS em formato JSON válido:
 
 Sê criativo e consistente com o género."""
 
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = get_gemini_model()
         response = model.generate_content(prompt)
         
         text = response.text.strip()
@@ -5878,7 +5875,7 @@ Escreve uma sinopse de 2-3 parágrafos que:
 
 Responde APENAS com a sinopse, sem títulos ou explicações."""
 
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = get_gemini_model()
         response = model.generate_content(prompt)
         synopsis = response.text.strip()
         
@@ -5902,7 +5899,7 @@ def generate_chapter_summaries(book_id):
         chapters = book.get_chapters_content()
         
         summaries = []
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = get_gemini_model()
         
         for i, chapter in enumerate(chapters):
             prompt = f"""Resume este capítulo em 2-3 frases concisas.
@@ -5991,7 +5988,7 @@ def chat_with_book(book_id):
 
 === RESPOSTA ==="""
 
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = get_gemini_model()
         response = model.generate_content(prompt)
         answer = response.text.strip()
         
@@ -6870,7 +6867,7 @@ O campo "correct" é o índice (0-3) da opção correta.
 Cria perguntas variadas sobre enredo, personagens, temas e detalhes.
 Responde APENAS com o JSON, sem texto adicional."""
 
-            model = genai.GenerativeModel("gemini-2.5-flash")
+            model = get_gemini_model()
             response = model.generate_content(prompt)
             text = response.text.strip()
             
@@ -7041,7 +7038,7 @@ Responde em português."""
                 logger.debug(f"Cache hit for {aspect}: {title}")
         
         if not content:
-            model = genai.GenerativeModel("gemini-2.5-flash")
+            model = get_gemini_model()
             response = model.generate_content(prompt)
             content = response.text.strip()
             
@@ -7254,7 +7251,7 @@ Responde às perguntas do entrevistador COMO SE FOSSES esse personagem.
 
 === RESPOSTA DE {character_name.upper()} ==="""
 
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = get_gemini_model()
         response = model.generate_content(prompt)
         
         return jsonify({
@@ -7292,7 +7289,7 @@ Lista os 5-8 personagens mais importantes no formato JSON:
 
 Responde APENAS com o JSON, sem texto adicional."""
 
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = get_gemini_model()
         response = model.generate_content(prompt)
         
         import json
@@ -7377,7 +7374,7 @@ Estilo: {book.style}
 
 === CONTINUAÇÃO ==="""
 
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = get_gemini_model()
         response = model.generate_content(prompt)
         
         return jsonify({
@@ -7441,7 +7438,7 @@ Responde APENAS com JSON válido neste formato:
 O campo "correct" é o índice (0-3) da opção correta.
 Responde APENAS com o JSON, sem texto adicional."""
 
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = get_gemini_model()
         response = model.generate_content(prompt)
         
         import json
@@ -7521,9 +7518,20 @@ def admin_dashboard():
     
     # Recent users
     recent_users = User.query.order_by(User.created_at.desc()).limit(10).all()
-    
+
     # Usage stats (total usage across all users)
     total_usage = db.session.query(func.sum(User.usage_count)).scalar() or 0
+
+    # Gemini model fallbacks today (degraded-mode indicator)
+    fallback_rows = db.session.query(
+        ErrorLog.error_type,
+        func.count(ErrorLog.id)
+    ).filter(
+        ErrorLog.error_type.like('model_fallback:%'),
+        func.date(ErrorLog.created_at) == today
+    ).group_by(ErrorLog.error_type).all()
+    fallbacks_today = sum(c for _, c in fallback_rows)
+    fallbacks_by_model = [(t.split(':', 1)[1], c) for t, c in fallback_rows]
     
     # Daily registrations for chart (last 30 days)
     daily_registrations = db.session.query(
@@ -7549,7 +7557,9 @@ def admin_dashboard():
         conversion_rate=conversion_rate,
         recent_users=recent_users,
         total_usage=total_usage,
-        daily_registrations=daily_registrations
+        daily_registrations=daily_registrations,
+        fallbacks_today=fallbacks_today,
+        fallbacks_by_model=fallbacks_by_model
     )
 
 @app.route('/api/admin/metrics')
@@ -7634,9 +7644,36 @@ def admin_user_detail(user_id):
     elif request.method == 'DELETE':
         if user.is_admin:
             return jsonify({'success': False, 'error': 'Não pode eliminar um admin'}), 400
-        db.session.delete(user)
-        db.session.commit()
-        return jsonify({'success': True, 'message': 'Utilizador eliminado'})
+        try:
+            uid = user.id
+
+            # Marketplace: purchases of this user's templates first (FK NOT NULL),
+            # then own purchases, then the templates themselves
+            template_ids = [t.id for t in PromptTemplate.query.filter_by(creator_id=uid)]
+            if template_ids:
+                PromptPurchase.query.filter(PromptPurchase.template_id.in_(template_ids)).delete(synchronize_session=False)
+            PromptPurchase.query.filter_by(user_id=uid).delete(synchronize_session=False)
+            PromptTemplate.query.filter_by(creator_id=uid).delete(synchronize_session=False)
+
+            # Referrals: signups pointing at this user's referral codes first (FK NOT NULL)
+            referral_ids = [r.id for r in Referral.query.filter_by(referrer_id=uid)]
+            if referral_ids:
+                ReferralSignup.query.filter(ReferralSignup.referral_id.in_(referral_ids)).delete(synchronize_session=False)
+            ReferralSignup.query.filter_by(referred_user_id=uid).delete(synchronize_session=False)
+            Referral.query.filter_by(referrer_id=uid).delete(synchronize_session=False)
+
+            # All tables with user_id NOT NULL
+            for model in (AnalysisHistory, Favorite, SubscriptionHistory, PushSubscription,
+                          UserTasteProfile, BookPrediction, LoginLog, Book):
+                model.query.filter_by(user_id=uid).delete(synchronize_session=False)
+
+            db.session.delete(user)
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Utilizador eliminado'})
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error deleting user {user_id}: {e}")
+            return jsonify({'success': False, 'error': f'Erro ao eliminar: {e}'}), 500
 
 @app.route('/api/admin/daily-usage')
 @admin_required
@@ -8303,6 +8340,20 @@ with app.app_context():
         os.makedirs(db_dir)
     
     db.create_all()
+
+    # Idempotent auto-migration for columns added after initial deploys
+    # (db.create_all only creates new tables, it never alters existing ones).
+    # Works on SQLite and Postgres.
+    from sqlalchemy import inspect as sa_inspect, text as sa_text
+    try:
+        user_cols = [c['name'] for c in sa_inspect(db.engine).get_columns('users')]
+        if 'gemini_api_key' not in user_cols:
+            with db.engine.begin() as conn:
+                conn.execute(sa_text('ALTER TABLE users ADD COLUMN gemini_api_key VARCHAR(200)'))
+            logger.info("Auto-migration: added users.gemini_api_key")
+    except Exception as e:
+        logger.warning(f"Auto-migration check failed: {e}")
+
     print("Database tables created successfully!")
 
 if __name__ == '__main__':

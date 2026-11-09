@@ -229,6 +229,22 @@
                 </div>
             </div>
 
+            {% if fallbacks_today %}
+            <!-- AI Degraded Mode Banner -->
+            <div class="mb-8 glass-card rounded-2xl p-5 border border-yellow-500/40 bg-yellow-500/10">
+                <div class="flex items-center gap-4">
+                    <i class="fas fa-exclamation-triangle text-yellow-400 text-2xl"></i>
+                    <div>
+                        <p class="text-white font-semibold">IA em modo degradado — {{ fallbacks_today }} fallback(s) hoje</p>
+                        <p class="text-sm text-gray-400">
+                            {% for model, count in fallbacks_by_model %}{{ model }}: {{ count }}{% if not loop.last %} · {% endif %}{% endfor %}
+                            — detalhes no separador Erros
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
             <!-- Charts Row -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                 <div class="glass-card rounded-2xl p-6">
@@ -1024,10 +1040,12 @@
         function deleteUser(userId) {
             if (!confirm('Eliminar este utilizador? Esta ação é irreversível!')) return;
             fetch(`/api/admin/user/${userId}`, { method: 'DELETE' })
-                .then(r => r.json()).then(data => {
+                .then(r => r.json().catch(() => ({ success: false, error: 'Erro ' + r.status })))
+                .then(data => {
                     if (data.success) { alert('Utilizador eliminado!'); searchUsers(); }
-                    else alert(data.error);
-                });
+                    else alert(data.error || 'Erro ao eliminar');
+                })
+                .catch(() => alert('Erro de ligação'));
         }
 
         // Revenue

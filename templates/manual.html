@@ -7,22 +7,57 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
-        .manual-section {
-            scroll-margin-top: 100px;
+        .manual-section { scroll-margin-top: 100px; }
+        .toc-link { transition: all 0.2s ease; }
+        .toc-link:hover { padding-left: 8px; color: #a78bfa; }
+        figure img { transition: transform 0.3s ease; }
+        figure img:hover { transform: scale(1.01); }
+        .kbd {
+            display: inline-block; padding: 1px 8px; border-radius: 6px;
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+            font-family: monospace; font-size: 0.85em;
         }
-        .toc-link {
-            transition: all 0.2s ease;
-        }
-        .toc-link:hover {
-            padding-left: 8px;
-            color: #a78bfa;
-        }
-        .feature-card {
-            transition: all 0.3s ease;
-        }
-        .feature-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(139, 92, 246, 0.2);
+
+        /* ============ PRINT STYLES (para o PDF) ============ */
+        @media print {
+            nav, aside, footer, script { display: none !important; }
+            body { background: #ffffff !important; }
+            main { margin-left: 0 !important; max-width: 100% !important; padding: 0 !important; }
+
+            /* Texto escuro para papel branco */
+            .text-white { color: #1a1a2e !important; }
+            .text-gray-300, .text-gray-400 { color: #374151 !important; }
+            .text-gray-500 { color: #6b7280 !important; }
+            .text-purple-300, .text-purple-400 { color: #7c3aed !important; }
+            .text-blue-200 { color: #1e40af !important; }
+            .text-green-200 { color: #166534 !important; }
+            .text-yellow-200 { color: #854d0e !important; }
+
+            /* Cartões claros */
+            .bg-white\/5, .bg-white\/10 {
+                background: #f6f5fb !important;
+                border-color: #d9d6ec !important;
+            }
+            .backdrop-blur-lg { backdrop-filter: none !important; }
+
+            /* Tip callouts mantêm cor suave */
+            .bg-purple-500\/10 { background: #f3eefe !important; border-color: #c4b5fd !important; }
+            .bg-blue-500\/10 { background: #eff6ff !important; border-color: #bfdbfe !important; }
+            .bg-green-500\/10 { background: #f0fdf4 !important; border-color: #bbf7d0 !important; }
+            .bg-yellow-500\/10 { background: #fefce8 !important; border-color: #fde68a !important; }
+
+            /* Paginação: cada secção grande numa página nova */
+            .manual-section { page-break-before: always; }
+            .manual-section:first-of-type { page-break-before: avoid; }
+            figure { page-break-inside: avoid; }
+            table, .space-y-4 > div { page-break-inside: avoid; }
+            h2, h3 { page-break-after: avoid; }
+
+            /* Screenshots cabem na página (mesmo os muito altos) */
+            figure img { max-height: 165mm; object-fit: contain; }
+            figcaption { color: #6b7280 !important; }
+
+            a { color: #7c3aed !important; text-decoration: none; }
         }
     </style>
 </head>
@@ -36,10 +71,10 @@
                     <span class="text-xl font-bold text-white">Alma do Livro</span>
                 </a>
                 <div class="hidden md:flex items-center gap-6">
-                    <a href="/#features" class="text-gray-300 hover:text-white transition-colors" data-i18n="nav_features">Funcionalidades</a>
-                    <a href="/#pricing" class="text-gray-300 hover:text-white transition-colors" data-i18n="nav_pricing">Preços</a>
-                    <a href="/faq" class="text-gray-300 hover:text-white transition-colors" data-i18n="nav_faq">FAQ</a>
-                    <a href="/manual" class="text-white transition-colors" data-i18n="nav_manual">Manual</a>
+                    <a href="/#features" class="text-gray-300 hover:text-white transition-colors">Funcionalidades</a>
+                    <a href="/#pricing" class="text-gray-300 hover:text-white transition-colors">Preços</a>
+                    <a href="/faq" class="text-gray-300 hover:text-white transition-colors">FAQ</a>
+                    <a href="/manual" class="text-white transition-colors">Manual</a>
                 </div>
                 <div class="flex items-center gap-3">
                     <select id="uiLangSelect" class="bg-white/10 border border-white/20 text-white text-sm rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-purple-500">
@@ -52,16 +87,10 @@
                         <option value="it" class="bg-gray-800">🇮🇹 IT</option>
                     </select>
                     {% if current_user.is_authenticated %}
-                        <a href="/explorer" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all" data-i18n="nav_go_app">
-                            Ir para App
-                        </a>
+                        <a href="/explorer" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all">Ir para App</a>
                     {% else %}
-                        <a href="{{ url_for('login') }}" class="px-4 py-2 text-gray-300 hover:text-white transition-colors" data-i18n="nav_login">
-                            Entrar
-                        </a>
-                        <a href="{{ url_for('register') }}" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all" data-i18n="nav_register">
-                            Começar Grátis
-                        </a>
+                        <a href="{{ url_for('login') }}" class="px-4 py-2 text-gray-300 hover:text-white transition-colors">Entrar</a>
+                        <a href="{{ url_for('register') }}" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all">Começar Grátis</a>
                     {% endif %}
                 </div>
             </div>
@@ -73,26 +102,24 @@
         <aside class="hidden lg:block w-72 fixed left-0 top-20 h-[calc(100vh-5rem)] overflow-y-auto bg-black/20 border-r border-white/10 p-6">
             <div class="mb-6">
                 <a href="/manual/download" class="flex items-center justify-center gap-2 w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-xl transition-all">
-                    <span>📥</span>
-                    <span data-i18n="manual_download_pdf">Download PDF</span>
+                    <span>📥</span><span>Download PDF</span>
                 </a>
             </div>
-            
-            <h3 class="text-white font-semibold mb-4">📑 <span data-i18n="manual_toc">Índice</span></h3>
+            <h3 class="text-white font-semibold mb-4">📑 Índice</h3>
             <nav class="space-y-2">
-                <a href="#introducao" class="toc-link block text-gray-400 hover:text-purple-400 text-sm py-1" data-i18n="manual_toc_1">1. Introdução</a>
-                <a href="#comecar" class="toc-link block text-gray-400 hover:text-purple-400 text-sm py-1" data-i18n="manual_toc_2">2. Como Começar</a>
-                <a href="#explorador" class="toc-link block text-gray-400 hover:text-purple-400 text-sm py-1" data-i18n="manual_toc_3">3. Explorador de Livros</a>
-                <a href="#analises" class="toc-link block text-gray-400 hover:text-purple-400 text-sm py-1 pl-4" data-i18n="manual_toc_3_1">3.1 Análises Disponíveis</a>
-                <a href="#interativas" class="toc-link block text-gray-400 hover:text-purple-400 text-sm py-1" data-i18n="manual_toc_4">4. Funcionalidades Interativas</a>
-                <a href="#entrevistas" class="toc-link block text-gray-400 hover:text-purple-400 text-sm py-1 pl-4" data-i18n="manual_toc_4_1">4.1 Entrevistas</a>
-                <a href="#quiz" class="toc-link block text-gray-400 hover:text-purple-400 text-sm py-1 pl-4" data-i18n="manual_toc_4_2">4.2 Quiz</a>
-                <a href="#continuacoes" class="toc-link block text-gray-400 hover:text-purple-400 text-sm py-1 pl-4" data-i18n="manual_toc_4_3">4.3 Continuações</a>
-                <a href="#finais" class="toc-link block text-gray-400 hover:text-purple-400 text-sm py-1 pl-4" data-i18n="manual_toc_4_4">4.4 Finais Alternativos</a>
-                <a href="#extras" class="toc-link block text-gray-400 hover:text-purple-400 text-sm py-1" data-i18n="manual_toc_5">5. Funcionalidades Extra</a>
-                <a href="#conta" class="toc-link block text-gray-400 hover:text-purple-400 text-sm py-1" data-i18n="manual_toc_6">6. Gestão de Conta</a>
-                <a href="#planos" class="toc-link block text-gray-400 hover:text-purple-400 text-sm py-1" data-i18n="manual_toc_7">7. Planos e Preços</a>
-                <a href="#dicas" class="toc-link block text-gray-400 hover:text-purple-400 text-sm py-1" data-i18n="manual_toc_8">8. Dicas e Truques</a>
+                <a href="#introducao" class="toc-link block text-gray-400 hover:text-purple-400 text-sm py-1">1. Introdução</a>
+                <a href="#comecar" class="toc-link block text-gray-400 hover:text-purple-400 text-sm py-1">2. Primeiros Passos</a>
+                <a href="#apikey" class="toc-link block text-gray-400 hover:text-purple-400 text-sm py-1 pl-4">2.1 Chave de API (obrigatória)</a>
+                <a href="#explorador" class="toc-link block text-gray-400 hover:text-purple-400 text-sm py-1">3. O Explorador</a>
+                <a href="#analises" class="toc-link block text-gray-400 hover:text-purple-400 text-sm py-1">4. Tipos de Análise (29)</a>
+                <a href="#interativas" class="toc-link block text-gray-400 hover:text-purple-400 text-sm py-1">5. Funcionalidades Interativas</a>
+                <a href="#chat" class="toc-link block text-gray-400 hover:text-purple-400 text-sm py-1">6. Chat com o Livro</a>
+                <a href="#biblioteca" class="toc-link block text-gray-400 hover:text-purple-400 text-sm py-1">7. Favoritos, Histórico e Exportar</a>
+                <a href="#extras" class="toc-link block text-gray-400 hover:text-purple-400 text-sm py-1">8. Ferramentas Extra</a>
+                <a href="#conta" class="toc-link block text-gray-400 hover:text-purple-400 text-sm py-1">9. Conta e Definições</a>
+                <a href="#planos" class="toc-link block text-gray-400 hover:text-purple-400 text-sm py-1">10. Planos e Limites</a>
+                <a href="#problemas" class="toc-link block text-gray-400 hover:text-purple-400 text-sm py-1">11. Resolução de Problemas</a>
+                <a href="#dicas" class="toc-link block text-gray-400 hover:text-purple-400 text-sm py-1">12. Dicas e Boas Práticas</a>
             </nav>
         </aside>
 
@@ -100,380 +127,704 @@
         <main class="flex-1 lg:ml-72 px-4 lg:px-8 py-8 max-w-4xl">
             <!-- Header -->
             <div class="text-center mb-12">
-                <h1 class="text-4xl font-bold text-white mb-4">📖 <span data-i18n="manual_title">Manual de Utilização</span></h1>
-                <p class="text-xl text-gray-400" data-i18n="manual_subtitle">Guia completo para explorar livros com IA</p>
-                
-                <!-- Mobile Download Button -->
-                <div class="lg:hidden mt-6">
-                    <a href="/manual/download" class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-xl transition-all">
-                        <span>📥</span>
-                        <span data-i18n="manual_download_pdf">Download PDF</span>
-                    </a>
-                </div>
+                <h1 class="text-4xl font-bold text-white mb-4">📖 Manual de Utilização</h1>
+                <p class="text-gray-400 text-lg max-w-2xl mx-auto">
+                    Guia completo da <strong class="text-purple-300">Alma do Livro</strong> — com instruções passo a passo,
+                    capturas de ecrã reais e exemplos concretos usando o livro
+                    <em class="text-purple-300">"Cartas de Amor aos Mortos"</em> de <strong class="text-purple-300">Ava Dellaira</strong>.
+                </p>
             </div>
 
-            <!-- Section 1: Introdução -->
+            <!-- ============ 1. INTRODUÇÃO ============ -->
             <section id="introducao" class="manual-section mb-12">
                 <div class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-8">
                     <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-                        <span class="w-10 h-10 bg-purple-600/30 rounded-lg flex items-center justify-center">1</span>
-                        <span data-i18n="manual_s1_title">Introdução</span>
+                        <span>👋</span> 1. Introdução
                     </h2>
-                    <div class="text-gray-300 space-y-4">
-                        <p data-i18n-html="manual_s1_p1">
-                            Bem-vindo ao <strong class="text-purple-400">Alma do Livro</strong>! Esta aplicação utiliza inteligência artificial avançada para te ajudar a explorar, compreender e interagir com qualquer livro de forma única e envolvente.
+                    <p class="text-gray-300 mb-4">
+                        A <strong>Alma do Livro</strong> é uma aplicação web que usa Inteligência Artificial
+                        (Google Gemini) para <strong>explorar, analisar e interagir</strong> com qualquer livro —
+                        sem precisares de o carregar. Basta indicares o título e o autor.
+                    </p>
+                    <p class="text-gray-300 mb-6">Com um único livro podes, por exemplo:</p>
+                    <div class="grid sm:grid-cols-2 gap-3 mb-6">
+                        <div class="bg-white/5 rounded-xl p-4 border border-white/10">
+                            <p class="text-white font-medium">📊 Analisar em profundidade</p>
+                            <p class="text-sm text-gray-400">29 tipos de análise: resumo, personagens, temas, simbolismo, cronologia, curiosidades…</p>
+                        </div>
+                        <div class="bg-white/5 rounded-xl p-4 border border-white/10">
+                            <p class="text-white font-medium">🎭 Interagir com a história</p>
+                            <p class="text-sm text-gray-400">Entrevistar personagens, falar com o autor, fazer quizzes, criar finais alternativos…</p>
+                        </div>
+                        <div class="bg-white/5 rounded-xl p-4 border border-white/10">
+                            <p class="text-white font-medium">🎨 Criar conteúdo</p>
+                            <p class="text-sm text-gray-400">Playlists, trailers, castings de filme, poemas, receitas, guias de estudo…</p>
+                        </div>
+                        <div class="bg-white/5 rounded-xl p-4 border border-white/10">
+                            <p class="text-white font-medium">📚 Gerir a tua leitura</p>
+                            <p class="text-sm text-gray-400">Favoritos, histórico, exportação PDF/EPUB, comparações e recomendações.</p>
+                        </div>
+                    </div>
+                    <figure class="my-6">
+                        <img src="{{ url_for('static', filename='img/manual/01-landing.png') }}" alt="Página inicial da Alma do Livro" class="rounded-xl border border-white/20 shadow-2xl w-full">
+                        <figcaption class="text-center text-sm text-gray-500 mt-2">Fig. 1 — Página inicial da aplicação.</figcaption>
+                    </figure>
+                    <div class="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 mt-4">
+                        <p class="text-sm text-blue-200">
+                            <strong>ℹ️ Como funciona por dentro:</strong> cada pedido de análise é enviado ao modelo
+                            <em>Gemini</em> com um prompt especializado. Os resultados são gerados em tempo real
+                            (normalmente 10–60 segundos) e nunca são "respostas gravadas".
                         </p>
-                        <p data-i18n="manual_s1_p2">
-                            Com o Alma do Livro, podes:
-                        </p>
-                        <ul class="list-disc list-inside space-y-2 ml-4">
-                            <li data-i18n="manual_s1_li1">Obter resumos detalhados de qualquer livro</li>
-                            <li data-i18n="manual_s1_li2">Analisar personagens, temas e simbolismo</li>
-                            <li data-i18n="manual_s1_li3">Entrevistar personagens fictícios</li>
-                            <li data-i18n="manual_s1_li4">Criar quizzes para testar conhecimentos</li>
-                            <li data-i18n="manual_s1_li5">Gerar continuações e finais alternativos</li>
-                            <li data-i18n="manual_s1_li6">Descobrir playlists, casting de filmes e muito mais</li>
-                        </ul>
                     </div>
                 </div>
             </section>
 
-            <!-- Section 2: Como Começar -->
+            <!-- ============ 2. PRIMEIROS PASSOS ============ -->
             <section id="comecar" class="manual-section mb-12">
                 <div class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-8">
                     <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-                        <span class="w-10 h-10 bg-purple-600/30 rounded-lg flex items-center justify-center">2</span>
-                        <span data-i18n="manual_s2_title">Como Começar</span>
+                        <span>🚀</span> 2. Primeiros Passos
                     </h2>
-                    <div class="text-gray-300 space-y-6">
-                        <div class="bg-white/5 rounded-xl p-6">
-                            <h3 class="text-lg font-semibold text-white mb-3">📝 <span data-i18n="manual_s2_step1_title">Passo 1: Criar Conta</span></h3>
-                            <p data-i18n="manual_s2_step1_text">Clica em "Começar Grátis" na página inicial e preenche o formulário com o teu nome, email e password. A conta gratuita dá-te acesso a 10 análises por mês.</p>
-                        </div>
-                        
-                        <div class="bg-white/5 rounded-xl p-6">
-                            <h3 class="text-lg font-semibold text-white mb-3">🔐 <span data-i18n="manual_s2_step2_title">Passo 2: Fazer Login</span></h3>
-                            <p data-i18n="manual_s2_step2_text">Após criar a conta, faz login com o teu email e password para aceder ao Explorador de Livros.</p>
-                        </div>
-                        
-                        <div class="bg-white/5 rounded-xl p-6">
-                            <h3 class="text-lg font-semibold text-white mb-3">🔍 <span data-i18n="manual_s2_step3_title">Passo 3: Explorar um Livro</span></h3>
-                            <p data-i18n="manual_s2_step3_text">No Explorador, introduz o título do livro que queres analisar (e opcionalmente o autor). Clica em "Explorar Livro" para começar!</p>
-                        </div>
+
+                    <h3 class="text-lg font-semibold text-purple-300 mb-3">2.0 Criar conta e entrar</h3>
+                    <ol class="list-decimal list-inside space-y-2 text-gray-300 mb-4">
+                        <li>Abre a página inicial e clica em <strong>"Começar Grátis"</strong>.</li>
+                        <li>Preenche <strong>nome</strong>, <strong>email</strong> e <strong>password</strong> (mín. 6 caracteres, confirmar no 2.º campo).</li>
+                        <li>Clica em <strong>"Criar Conta"</strong>. Serás redirecionado para o login.</li>
+                        <li>Entra com o teu email e password. Opcionalmente ativa <em>"Lembrar-me"</em>.</li>
+                    </ol>
+
+                    <div class="grid md:grid-cols-2 gap-4 my-6">
+                        <figure>
+                            <img src="{{ url_for('static', filename='img/manual/02-register.png') }}" alt="Página de registo" class="rounded-xl border border-white/20 shadow-2xl w-full">
+                            <figcaption class="text-center text-sm text-gray-500 mt-2">Fig. 2 — Registo de nova conta.</figcaption>
+                        </figure>
+                        <figure>
+                            <img src="{{ url_for('static', filename='img/manual/03-login.png') }}" alt="Página de login" class="rounded-xl border border-white/20 shadow-2xl w-full">
+                            <figcaption class="text-center text-sm text-gray-500 mt-2">Fig. 3 — Início de sessão.</figcaption>
+                        </figure>
+                    </div>
+
+                    <h3 id="apikey" class="text-lg font-semibold text-purple-300 mb-3 mt-8">2.1 Configurar a tua chave de API do Gemini (obrigatório)</h3>
+                    <p class="text-gray-300 mb-4">
+                        Na Alma do Livro, <strong>cada utilizador usa a sua própria chave gratuita do Google Gemini</strong>.
+                        Sem ela, as funcionalidades de IA não funcionam. A boa notícia: é gratuita e obtém-se em menos de 1 minuto.
+                    </p>
+                    <div class="bg-white/5 border border-white/10 rounded-xl p-5 mb-6">
+                        <h4 class="text-white font-semibold mb-3 text-sm uppercase tracking-wide">Como obter a chave</h4>
+                        <ol class="space-y-3 text-sm text-gray-300">
+                            <li class="flex gap-3">
+                                <span class="flex-shrink-0 w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold">1</span>
+                                <span>Abre o <strong class="text-white">Google AI Studio</strong> em <code class="kbd">aistudio.google.com/app/apikey</code> e inicia sessão com a tua conta Google.</span>
+                            </li>
+                            <li class="flex gap-3">
+                                <span class="flex-shrink-0 w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold">2</span>
+                                <span>Clica em <strong class="text-white">"Get API key"</strong> → <strong class="text-white">"Create API key"</strong>.</span>
+                            </li>
+                            <li class="flex gap-3">
+                                <span class="flex-shrink-0 w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold">3</span>
+                                <span>Copia a chave gerada (começa por <code class="kbd">AIza...</code>).</span>
+                            </li>
+                            <li class="flex gap-3">
+                                <span class="flex-shrink-0 w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold">4</span>
+                                <span>Cola-a na app e clica <strong class="text-white">"Guardar chave"</strong>. A app testa-a automaticamente antes de gravar.</span>
+                            </li>
+                        </ol>
+                    </div>
+                    <figure class="my-6">
+                        <img src="{{ url_for('static', filename='img/manual/04-setup-api-key.png') }}" alt="Página de configuração da chave de API" class="rounded-xl border border-white/20 shadow-2xl w-full">
+                        <figcaption class="text-center text-sm text-gray-500 mt-2">Fig. 4 — Página de configuração da chave (após o primeiro login és levado aqui automaticamente).</figcaption>
+                    </figure>
+                    <div class="bg-green-500/10 border border-green-500/30 rounded-xl p-4">
+                        <p class="text-sm text-green-200">
+                            <strong>🔒 Privacidade:</strong> a tua chave é guardada <strong>cifrada</strong> na base de dados e
+                            usada apenas nos teus próprios pedidos. Podes substituí-la ou removê-la a qualquer momento
+                            nesta mesma página ou no teu <a href="/profile" class="underline">Perfil</a>.
+                        </p>
                     </div>
                 </div>
             </section>
 
-            <!-- Section 3: Explorador de Livros -->
+            <!-- ============ 3. O EXPLORADOR ============ -->
             <section id="explorador" class="manual-section mb-12">
                 <div class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-8">
                     <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-                        <span class="w-10 h-10 bg-purple-600/30 rounded-lg flex items-center justify-center">3</span>
-                        <span data-i18n="manual_s3_title">Explorador de Livros</span>
+                        <span>🔍</span> 3. O Explorador
                     </h2>
-                    <div class="text-gray-300 space-y-4">
-                        <p data-i18n="manual_s3_p1">
-                            O Explorador é a funcionalidade principal da aplicação. Permite-te analisar qualquer livro publicado usando inteligência artificial.
-                        </p>
-                        
-                        <div class="bg-purple-600/10 border border-purple-500/30 rounded-xl p-4">
-                            <p class="text-purple-300" data-i18n-html="manual_s3_tip">
-                                <strong>💡 Dica:</strong> A IA conhece milhões de livros! Desde clássicos como "Dom Quixote" até bestsellers modernos como "Harry Potter".
-                            </p>
-                        </div>
+                    <p class="text-gray-300 mb-4">
+                        O Explorador (<a href="/explorer" class="text-purple-400 underline">/explorer</a>) é o coração da app.
+                        Funciona assim:
+                    </p>
+                    <ol class="list-decimal list-inside space-y-2 text-gray-300 mb-6">
+                        <li>Escreve o <strong>título</strong> do livro (obrigatório) e o <strong>autor</strong> (opcional, mas recomendado para precisão).</li>
+                        <li>Ou clica num dos <strong>exemplos rápidos</strong> (1984, Harry Potter, Os Lusíadas…).</li>
+                        <li>Clica <strong>"Explorar Livro"</strong> e aguarda alguns segundos.</li>
+                        <li>Aparece o cabeçalho do livro, as funcionalidades interativas, a análise de sentimento e a grelha de análises.</li>
+                    </ol>
+                    <figure class="my-6">
+                        <img src="{{ url_for('static', filename='img/manual/05-explorer.png') }}" alt="Formulário do explorador" class="rounded-xl border border-white/20 shadow-2xl w-full">
+                        <figcaption class="text-center text-sm text-gray-500 mt-2">Fig. 5 — Formulário inicial do Explorador.</figcaption>
+                    </figure>
 
-                        <h3 id="analises" class="text-xl font-semibold text-white mt-8 mb-4" data-i18n="manual_s3_analyses_title">3.1 Análises Disponíveis</h3>
-                        
-                        <div class="grid md:grid-cols-2 gap-4">
-                            <div class="feature-card bg-white/5 rounded-xl p-4 border border-white/10">
-                                <span class="text-2xl">📝</span>
-                                <h4 class="text-white font-medium mt-2" data-i18n="manual_analysis_summary">Resumo</h4>
-                                <p class="text-sm text-gray-400" data-i18n="manual_analysis_summary_desc">Sinopse completa e detalhada do livro</p>
-                            </div>
-                            <div class="feature-card bg-white/5 rounded-xl p-4 border border-white/10">
-                                <span class="text-2xl">👥</span>
-                                <h4 class="text-white font-medium mt-2" data-i18n="manual_analysis_characters">Personagens</h4>
-                                <p class="text-sm text-gray-400" data-i18n="manual_analysis_characters_desc">Lista e análise de todos os personagens</p>
-                            </div>
-                            <div class="feature-card bg-white/5 rounded-xl p-4 border border-white/10">
-                                <span class="text-2xl">💡</span>
-                                <h4 class="text-white font-medium mt-2" data-i18n="manual_analysis_themes">Temas</h4>
-                                <p class="text-sm text-gray-400" data-i18n="manual_analysis_themes_desc">Temas principais e mensagens da obra</p>
-                            </div>
-                            <div class="feature-card bg-white/5 rounded-xl p-4 border border-white/10">
-                                <span class="text-2xl">🌍</span>
-                                <h4 class="text-white font-medium mt-2" data-i18n="manual_analysis_world">Mundo</h4>
-                                <p class="text-sm text-gray-400" data-i18n="manual_analysis_world_desc">Cenário, época e ambientação</p>
-                            </div>
-                            <div class="feature-card bg-white/5 rounded-xl p-4 border border-white/10">
-                                <span class="text-2xl">✍️</span>
-                                <h4 class="text-white font-medium mt-2" data-i18n="manual_analysis_style">Estilo</h4>
-                                <p class="text-sm text-gray-400" data-i18n="manual_analysis_style_desc">Análise do estilo literário do autor</p>
-                            </div>
-                            <div class="feature-card bg-white/5 rounded-xl p-4 border border-white/10">
-                                <span class="text-2xl">💬</span>
-                                <h4 class="text-white font-medium mt-2" data-i18n="manual_analysis_quotes">Citações</h4>
-                                <p class="text-sm text-gray-400" data-i18n="manual_analysis_quotes_desc">Citações famosas e memoráveis</p>
-                            </div>
-                            <div class="feature-card bg-white/5 rounded-xl p-4 border border-white/10">
-                                <span class="text-2xl">📚</span>
-                                <h4 class="text-white font-medium mt-2" data-i18n="manual_analysis_similar">Similares</h4>
-                                <p class="text-sm text-gray-400" data-i18n="manual_analysis_similar_desc">Recomendações de livros semelhantes</p>
-                            </div>
-                            <div class="feature-card bg-white/5 rounded-xl p-4 border border-white/10">
-                                <span class="text-2xl">🔮</span>
-                                <h4 class="text-white font-medium mt-2" data-i18n="manual_analysis_symbolism">Simbolismo</h4>
-                                <p class="text-sm text-gray-400" data-i18n="manual_analysis_symbolism_desc">Símbolos e significados ocultos</p>
-                            </div>
-                        </div>
+                    <h3 class="text-lg font-semibold text-purple-300 mb-3 mt-8">3.1 O cabeçalho do livro</h3>
+                    <p class="text-gray-300 mb-4">Depois de explorar, vês o cabeçalho com o título, autor e quatro ações rápidas:</p>
+                    <div class="overflow-x-auto mb-6">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="border-b border-white/10 text-left">
+                                    <th class="py-2 pr-4 text-purple-300 font-semibold">Botão</th>
+                                    <th class="py-2 pr-4 text-purple-300 font-semibold">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-gray-300">
+                                <tr class="border-b border-white/5">
+                                    <td class="py-2 pr-4 font-medium text-white">📖 Obter Livro</td>
+                                    <td class="py-2">Links para ler/comprar: Internet Archive, Open Library, Amazon, Almedina, Bertrand, Fnac.</td>
+                                </tr>
+                                <tr class="border-b border-white/5">
+                                    <td class="py-2 pr-4 font-medium text-white">☆ Favorito</td>
+                                    <td class="py-2">Guarda o livro nos teus favoritos (ver secção 7).</td>
+                                </tr>
+                                <tr class="border-b border-white/5">
+                                    <td class="py-2 pr-4 font-medium text-white">📥 Exportar</td>
+                                    <td class="py-2">Descarrega todas as análises já geradas em <strong>PDF</strong> ou <strong>EPUB</strong>.</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-2 pr-4 font-medium text-white">✕ Limpar</td>
+                                    <td class="py-2">Fecha a exploração atual e volta ao formulário.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <figure class="my-6">
+                        <img src="{{ url_for('static', filename='img/manual/06-explorer-header.png') }}" alt="Explorador com livro carregado" class="rounded-xl border border-white/20 shadow-2xl w-full">
+                        <figcaption class="text-center text-sm text-gray-500 mt-2">Fig. 6 — "Cartas de Amor aos Mortos" explorado: cabeçalho + início das funcionalidades.</figcaption>
+                    </figure>
+
+                    <h3 class="text-lg font-semibold text-purple-300 mb-3 mt-8">3.2 Funcionalidades Interativas (grelha)</h3>
+                    <p class="text-gray-300 mb-4">
+                        Logo a seguir ao cabeçalho tens ~19 cartões de funcionalidades interativas — cada um abre uma
+                        janela ou gera um conteúdo único sobre o livro (detalhadas na secção 5).
+                    </p>
+                    <figure class="my-6">
+                        <img src="{{ url_for('static', filename='img/manual/07-interactive-features.png') }}" alt="Grelha de funcionalidades interativas" class="rounded-xl border border-white/20 shadow-2xl w-full">
+                        <figcaption class="text-center text-sm text-gray-500 mt-2">Fig. 7 — Grelha de funcionalidades interativas.</figcaption>
+                    </figure>
+
+                    <h3 class="text-lg font-semibold text-purple-300 mb-3 mt-8">3.3 Arco Emocional (automático)</h3>
+                    <p class="text-gray-300 mb-4">
+                        A app analisa automaticamente o <strong>arco emocional</strong> do livro: tom geral, amplitude emocional,
+                        picos positivos/negativos e uma linha temporal dos momentos-chave — disponível em gráfico ou timeline.
+                    </p>
+
+                    <h3 class="text-lg font-semibold text-purple-300 mb-3 mt-8">3.4 Grelha de Análises</h3>
+                    <p class="text-gray-300 mb-4">
+                        Por fim, a grelha de análises: 29 cartões, um por tipo de conteúdo (secção 4).
+                        Cada clique gera (e conta como) <strong>uma análise</strong> do teu limite mensal.
+                    </p>
+                    <figure class="my-6">
+                        <img src="{{ url_for('static', filename='img/manual/08-aspects-grid.png') }}" alt="Grelha de tipos de análise" class="rounded-xl border border-white/20 shadow-2xl w-full">
+                        <figcaption class="text-center text-sm text-gray-500 mt-2">Fig. 8 — A grelha com os 29 tipos de análise.</figcaption>
+                    </figure>
+                    <div class="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
+                        <p class="text-sm text-yellow-200">
+                            <strong>💡 Dica:</strong> o seletor de idioma no topo (PT/EN/ES/FR/DE/IT) muda também a língua
+                            em que as análises são geradas — útil para comparar interpretações ou estudar línguas.
+                        </p>
                     </div>
                 </div>
             </section>
 
-            <!-- Section 4: Funcionalidades Interativas -->
+            <!-- ============ 4. TIPOS DE ANÁLISE ============ -->
+            <section id="analises" class="manual-section mb-12">
+                <div class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-8">
+                    <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                        <span>📊</span> 4. Tipos de Análise (29)
+                    </h2>
+                    <p class="text-gray-300 mb-6">
+                        Estes são os 29 cartões de análise disponíveis para qualquer livro. Cada resultado inclui um botão
+                        <strong>"Copiar"</strong> para levares o texto contigo.
+                    </p>
+
+                    <h3 class="text-lg font-semibold text-purple-300 mb-3">4.1 Análises essenciais</h3>
+                    <div class="overflow-x-auto mb-8">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="border-b border-white/10 text-left">
+                                    <th class="py-2 pr-4 text-purple-300 font-semibold">Análise</th>
+                                    <th class="py-2 text-purple-300 font-semibold">O que recebes</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-gray-300">
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">📝 Resumo Completo</td><td class="py-2">Sinopse detalhada: contexto, desenvolvimento, acontecimentos-chave e conclusão (com spoilers assinalados).</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">👥 Personagens</td><td class="py-2">Cada personagem: papel, traços físicos/psicológicos, arco, relações e importância.</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">💡 Temas &amp; Mensagens</td><td class="py-2">Temas centrais, mensagens do autor e como se desenvolvem ao longo da obra.</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">🌍 Mundo &amp; Cenário</td><td class="py-2">Contexto histórico, geográfico e social onde a história decorre.</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">✍️ Estilo Literário</td><td class="py-2">Técnicas narrativas, estrutura, linguagem e voz do autor.</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">💬 Citações Famosas</td><td class="py-2">Frases marcantes com contexto e significado de cada uma.</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">🎓 Questões de Discussão</td><td class="py-2">Perguntas para clubes de leitura, aulas ou reflexão pessoal.</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">📚 Livros Similares</td><td class="py-2">Recomendações de leituras relacionadas, com justificação.</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">🎯 Curiosidades</td><td class="py-2">Factos interessantes sobre a obra, o autor e o contexto de escrita.</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">📅 Cronologia</td><td class="py-2">Linha temporal dos eventos da história, em ordem.</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">🔮 Simbolismo</td><td class="py-2">Símbolos, metáforas e os seus significados.</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">🎬 Adaptações</td><td class="py-2">Filmes, séries, peças de teatro e outras versões da obra.</td></tr>
+                                <tr><td class="py-2 pr-4 text-white font-medium">📑 Resumo por Capítulo</td><td class="py-2">Resumo individual de cada capítulo — ideal para revisão.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <figure class="my-6">
+                        <img src="{{ url_for('static', filename='img/manual/09-aspect-summary.png') }}" alt="Exemplo de Resumo Completo" class="rounded-xl border border-white/20 shadow-2xl w-full">
+                        <figcaption class="text-center text-sm text-gray-500 mt-2">Fig. 9 — Resumo Completo real de "Cartas de Amor aos Mortos".</figcaption>
+                    </figure>
+
+                    <div class="bg-purple-500/10 border border-purple-500/30 rounded-xl p-5 my-6">
+                        <p class="text-purple-300 font-semibold text-sm mb-2">💡 EXEMPLO REAL — Resumo gerado</p>
+                        <p class="text-gray-300 text-sm italic">
+                            ""Cartas de Amor aos Mortos" (Love Letters to the Dead), de Ava Dellaira, é um romance epistolar
+                            comovente e intenso que explora temas como o luto, a culpa, a identidade e a busca pela verdade
+                            após uma perda devastadora. A história centra-se em Laurel, uma adolescente que acabou de
+                            começar o liceu num novo ambiente, depois da trágica e inexplicável morte da sua irmã mais
+                            velha, May…"
+                        </p>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-4 my-6">
+                        <figure>
+                            <img src="{{ url_for('static', filename='img/manual/10-aspect-characters.png') }}" alt="Exemplo de análise de personagens" class="rounded-xl border border-white/20 shadow-2xl w-full">
+                            <figcaption class="text-center text-sm text-gray-500 mt-2">Fig. 10 — Análise de Personagens.</figcaption>
+                        </figure>
+                        <figure>
+                            <img src="{{ url_for('static', filename='img/manual/11-aspect-themes.png') }}" alt="Exemplo de análise de temas" class="rounded-xl border border-white/20 shadow-2xl w-full">
+                            <figcaption class="text-center text-sm text-gray-500 mt-2">Fig. 11 — Temas &amp; Mensagens.</figcaption>
+                        </figure>
+                    </div>
+
+                    <div class="bg-purple-500/10 border border-purple-500/30 rounded-xl p-5 my-6">
+                        <p class="text-purple-300 font-semibold text-sm mb-2">💡 EXEMPLO REAL — Citações Famosas</p>
+                        <p class="text-gray-300 text-sm italic mb-2">
+                            <strong>1.</strong> "Escrevo-vos cartas porque não consigo falar com ninguém que esteja vivo."
+                            <span class="text-gray-400">— Laurel explica porque começou a escrever a Kurt Cobain.</span>
+                        </p>
+                        <p class="text-gray-300 text-sm italic">
+                            <strong>2.</strong> "É estranho como a morte faz com que algumas pessoas pareçam mais vivas para
+                            ti do que quando estavam realmente vivas."
+                        </p>
+                    </div>
+                    <figure class="my-6">
+                        <img src="{{ url_for('static', filename='img/manual/12-aspect-quotes.png') }}" alt="Exemplo de citações famosas" class="rounded-xl border border-white/20 shadow-2xl w-full">
+                        <figcaption class="text-center text-sm text-gray-500 mt-2">Fig. 12 — Citações Famosas com contexto e significado.</figcaption>
+                    </figure>
+
+                    <h3 class="text-lg font-semibold text-purple-300 mb-3 mt-8">4.2 Cultura &amp; Crítica</h3>
+                    <div class="overflow-x-auto mb-8">
+                        <table class="w-full text-sm">
+                            <tbody class="text-gray-300">
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium w-56">🧠 Análise Psicológica</td><td class="py-2">Perfil psicológico profundo dos personagens: motivações, traumas, mecanismos de defesa.</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">📖 Influências Literárias</td><td class="py-2">Obras e autores que inspiraram o livro.</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">🌐 Impacto Cultural</td><td class="py-2">Influência do livro na sociedade, cultura popular e literatura.</td></tr>
+                                <tr><td class="py-2 pr-4 text-white font-medium">⭐ Receção Crítica</td><td class="py-2">Como a crítica e o público receberam a obra: prémios, polémicas, consenso.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3 class="text-lg font-semibold text-purple-300 mb-3 mt-8">4.3 Conteúdos criativos</h3>
+                    <div class="overflow-x-auto mb-6">
+                        <table class="w-full text-sm">
+                            <tbody class="text-gray-300">
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium w-56">🎵 Playlist</td><td class="py-2">12–15 músicas reais que combinam com o livro, com justificação por momento/tema.</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">🎬 Trailer</td><td class="py-2">Texto para um trailer cinematográfico: cenas, frases de impacto, música sugerida, tagline.</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">🎨 Prompt de Capa</td><td class="py-2">Prompt otimizado (em inglês) para DALL-E/Midjourney + estilo e paleta de cores.</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">🎭 Casting</td><td class="py-2">Atores sugeridos por personagem + realizador e compositor, com justificações.</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">📝 Poema Inspirado</td><td class="py-2">Poema original baseado nos temas do livro.</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">🌸 Haiku por Capítulo</td><td class="py-2">Um haiku (5-7-5) por capítulo ou por momento-chave.</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">🍳 Receitas do Livro</td><td class="py-2">Receitas inspiradas em comidas e momentos da história.</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">💌 Carta de Fã</td><td class="py-2">Uma carta emotiva de um fã para o autor.</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">✈️ Guia de Viagem</td><td class="py-2">Roteiro turístico pelos locais do livro (reais ou ficcionais).</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">🎓 Ensaio Modelo</td><td class="py-2">Ensaio académico completo — referência para trabalhos escolares.</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">🗂️ Flashcards</td><td class="py-2">Cartões de estudo pergunta/resposta para memorização.</td></tr>
+                                <tr><td class="py-2 pr-4 text-white font-medium">🧩 Mapa Mental</td><td class="py-2">Estrutura visual em árvore dos conceitos e relações do livro.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-4 my-6">
+                        <figure>
+                            <img src="{{ url_for('static', filename='img/manual/13-aspect-playlist.png') }}" alt="Exemplo de playlist" class="rounded-xl border border-white/20 shadow-2xl w-full">
+                            <figcaption class="text-center text-sm text-gray-500 mt-2">Fig. 13 — Playlist sugerida para o livro.</figcaption>
+                        </figure>
+                        <figure>
+                            <img src="{{ url_for('static', filename='img/manual/14-aspect-trailer.png') }}" alt="Exemplo de trailer" class="rounded-xl border border-white/20 shadow-2xl w-full">
+                            <figcaption class="text-center text-sm text-gray-500 mt-2">Fig. 14 — Trailer cinematográfico.</figcaption>
+                        </figure>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============ 5. FUNCIONALIDADES INTERATIVAS ============ -->
             <section id="interativas" class="manual-section mb-12">
                 <div class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-8">
                     <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-                        <span class="w-10 h-10 bg-purple-600/30 rounded-lg flex items-center justify-center">4</span>
-                        <span data-i18n="manual_s4_title">Funcionalidades Interativas</span>
+                        <span>🎮</span> 5. Funcionalidades Interativas
                     </h2>
-                    <div class="text-gray-300 space-y-6">
-                        <p data-i18n="manual_s4_p1">
-                            Estas são as funcionalidades mais divertidas e únicas do Alma do Livro! Disponíveis nos planos Pro e Premium.
+                    <p class="text-gray-300 mb-6">
+                        Diferente das análises, estas funcionalidades <strong>interagem contigo</strong>: conversam, criam
+                        conteúdo novo sobre o livro ou respondem às tuas ideias. A grelha completa (Fig. 7) inclui:
+                    </p>
+
+                    <h3 class="text-lg font-semibold text-purple-300 mb-3">5.1 🎭 Entrevistar Personagem</h3>
+                    <p class="text-gray-300 mb-4">
+                        Conversa em direto com qualquer personagem do livro. A IA assume a personalidade, o tom de voz
+                        e as memórias da personagem — responde como se fosses mesmo ela.
+                    </p>
+                    <div class="bg-white/5 rounded-xl p-4 border border-white/10 mb-4 text-sm text-gray-300">
+                        <p class="text-white font-medium mb-2">Como usar:</p>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>Clica <strong>"Entrevistar Personagem"</strong>.</li>
+                            <li>Escreve o nome da personagem — ex.: <em>Laurel</em>, <em>May</em>, <em>Sky</em>, <em>Tristan</em>.</li>
+                            <li>Faz perguntas em linguagem natural; o histórico da conversa é mantido dentro da sessão.</li>
+                        </ol>
+                    </div>
+                    <figure class="my-6">
+                        <img src="{{ url_for('static', filename='img/manual/15-interview.png') }}" alt="Entrevista com a personagem Laurel" class="rounded-xl border border-white/20 shadow-2xl w-full">
+                        <figcaption class="text-center text-sm text-gray-500 mt-2">Fig. 15 — Entrevista real com Laurel, protagonista do livro.</figcaption>
+                    </figure>
+                    <div class="bg-purple-500/10 border border-purple-500/30 rounded-xl p-5 my-6">
+                        <p class="text-purple-300 font-semibold text-sm mb-2">💡 EXEMPLO REAL — Laurel responde a "O que sentiste quando a tua irmã May morreu?"</p>
+                        <p class="text-gray-300 text-sm italic">
+                            "A primeira coisa que senti foi um vazio tão grande, tão pesado, que parecia que o mundo
+                            inteiro tinha parado de rodar (…) A May era o meu sol, percebes? Ela era a pessoa que sabia
+                            quem eu era (…) Foi como se o meu coração se tivesse partido em mil pedaços, e eu estivesse
+                            a tentar colá-los todos com fita-cola, mas as pontas continuavam a cortar-me as mãos."
                         </p>
+                    </div>
 
-                        <!-- 4.1 Entrevistas -->
-                        <div id="entrevistas" class="bg-gradient-to-r from-violet-600/20 to-purple-600/20 rounded-xl p-6 border border-violet-500/30">
-                            <h3 class="text-xl font-semibold text-white mb-3 flex items-center gap-2">
-                                <span class="text-2xl">🎭</span>
-                                <span data-i18n="manual_s4_interviews_title">4.1 Entrevistas com Personagens</span>
-                            </h3>
-                            <p class="mb-4" data-i18n="manual_s4_interviews_desc">
-                                Conversa diretamente com qualquer personagem do livro! A IA assume a personalidade do personagem e responde como se fosse ele.
-                            </p>
-                            <div class="bg-black/20 rounded-lg p-4">
-                                <p class="text-sm text-gray-400 mb-2" data-i18n="manual_example">Exemplo de uso:</p>
-                                <p class="text-white italic" data-i18n="manual_s4_interviews_ex1">"Sancho, o que pensas realmente do Dom Quixote?"</p>
-                                <p class="text-purple-300 mt-2 italic" data-i18n="manual_s4_interviews_ex2">"Ah, meu senhor é um homem de grande coração, ainda que às vezes confunda moinhos com gigantes..."</p>
-                            </div>
-                        </div>
+                    <h3 class="text-lg font-semibold text-purple-300 mb-3 mt-8">5.2 ✍️ Chat com Autor</h3>
+                    <p class="text-gray-300 mb-4">
+                        Igual ao anterior, mas com o <strong>autor</strong> do livro — neste exemplo, a Ava Dellaira.
+                        Ideal para perguntar sobre intenções, processo de escrita e escolhas narrativas.
+                    </p>
 
-                        <!-- 4.2 Quiz -->
-                        <div id="quiz" class="bg-gradient-to-r from-amber-600/20 to-orange-600/20 rounded-xl p-6 border border-amber-500/30">
-                            <h3 class="text-xl font-semibold text-white mb-3 flex items-center gap-2">
-                                <span class="text-2xl">🎲</span>
-                                <span data-i18n="manual_s4_quiz_title">4.2 Quiz Interativo</span>
-                            </h3>
-                            <p class="mb-4" data-i18n="manual_s4_quiz_desc">
-                                Testa os teus conhecimentos sobre o livro com perguntas de escolha múltipla geradas pela IA.
-                            </p>
-                            <ul class="list-disc list-inside space-y-1 text-sm">
-                                <li data-i18n-html="manual_s4_quiz_easy"><strong>Fácil:</strong> Perguntas sobre factos básicos</li>
-                                <li data-i18n-html="manual_s4_quiz_medium"><strong>Médio:</strong> Requer boa compreensão da história</li>
-                                <li data-i18n-html="manual_s4_quiz_hard"><strong>Difícil:</strong> Detalhes, simbolismo e análise profunda</li>
-                            </ul>
-                        </div>
+                    <h3 class="text-lg font-semibold text-purple-300 mb-3 mt-8">5.3 🎲 Quiz do Livro</h3>
+                    <p class="text-gray-300 mb-4">
+                        Quiz de 10 perguntas de escolha múltipla gerado sobre o livro, com 3 níveis de dificuldade
+                        (😊 Fácil, 🤔 Médio, 🔥 Difícil). Cada resposta mostra a <strong>explicação</strong> correta — ótimo
+                        para estudar ou testar amigos.
+                    </p>
+                    <div class="grid md:grid-cols-2 gap-4 my-6">
+                        <figure>
+                            <img src="{{ url_for('static', filename='img/manual/16-quiz.png') }}" alt="Quiz do livro" class="rounded-xl border border-white/20 shadow-2xl w-full">
+                            <figcaption class="text-center text-sm text-gray-500 mt-2">Fig. 16 — Pergunta 1/10 do quiz.</figcaption>
+                        </figure>
+                        <figure>
+                            <img src="{{ url_for('static', filename='img/manual/17-quiz-answered.png') }}" alt="Quiz respondido com explicação" class="rounded-xl border border-white/20 shadow-2xl w-full">
+                            <figcaption class="text-center text-sm text-gray-500 mt-2">Fig. 17 — Resposta assinalada + explicação.</figcaption>
+                        </figure>
+                    </div>
 
-                        <!-- 4.3 Continuações -->
-                        <div id="continuacoes" class="bg-gradient-to-r from-emerald-600/20 to-green-600/20 rounded-xl p-6 border border-emerald-500/30">
-                            <h3 class="text-xl font-semibold text-white mb-3 flex items-center gap-2">
-                                <span class="text-2xl">📖</span>
-                                <span data-i18n="manual_s4_cont_title">4.3 Continuações de História</span>
-                            </h3>
-                            <p class="mb-4" data-i18n="manual_s4_cont_desc">
-                                Gera novos conteúdos para o livro mantendo o estilo do autor original.
-                            </p>
-                            <ul class="list-disc list-inside space-y-1 text-sm">
-                                <li data-i18n-html="manual_s4_cont_chapter"><strong>Próximo Capítulo:</strong> Continua a história de onde parou</li>
-                                <li data-i18n-html="manual_s4_cont_epilogue"><strong>Epílogo:</strong> O que aconteceu depois do final</li>
-                                <li data-i18n-html="manual_s4_cont_sequel"><strong>Sequela:</strong> Início de um novo livro na mesma série</li>
-                            </ul>
-                        </div>
+                    <h3 class="text-lg font-semibold text-purple-300 mb-3 mt-8">5.4 Continuações e "E se…?"</h3>
+                    <div class="overflow-x-auto mb-6">
+                        <table class="w-full text-sm">
+                            <tbody class="text-gray-300">
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium w-56">📖 Continuar História</td><td class="py-2">Escreve o próximo capítulo, um epílogo ou o início de uma sequela.</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">🔀 Final Alternativo</td><td class="py-2">Descreve um cenário "E se…?" (ex.: "E se a May não tivesse morrido?") e a IA reescreve o final.</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">⏪ Prequela</td><td class="py-2">Uma história passada <em>antes</em> do livro começar.</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">🔀 Crossover</td><td class="py-2">Mistura dois universos: escolhe outro livro e a IA escreve o encontro.</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">✏️ Reescrever Cena</td><td class="py-2">Reescreve uma cena num estilo diferente (comédia, terror, poema…).</td></tr>
+                                <tr><td class="py-2 pr-4 text-white font-medium">👁️ Perspetiva Alternativa</td><td class="py-2">A mesma história narrada por outra personagem (ex.: ver tudo pelos olhos da May).</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
 
-                        <!-- 4.4 Finais Alternativos -->
-                        <div id="finais" class="bg-gradient-to-r from-rose-600/20 to-pink-600/20 rounded-xl p-6 border border-rose-500/30">
-                            <h3 class="text-xl font-semibold text-white mb-3 flex items-center gap-2">
-                                <span class="text-2xl">🔀</span>
-                                <span data-i18n="manual_s4_alt_title">4.4 Finais Alternativos</span>
-                            </h3>
-                            <p class="mb-4" data-i18n="manual_s4_alt_desc">
-                                Explora cenários "E se...?" e descobre como a história poderia ter sido diferente.
-                            </p>
-                            <div class="bg-black/20 rounded-lg p-4">
-                                <p class="text-sm text-gray-400 mb-2" data-i18n="manual_example">Exemplo:</p>
-                                <p class="text-white italic" data-i18n="manual_s4_alt_ex">"E se Romeu tivesse chegado a tempo de ver Julieta acordar?"</p>
-                            </div>
-                        </div>
+                    <h3 class="text-lg font-semibold text-purple-300 mb-3 mt-8">5.5 Teatro de personagens</h3>
+                    <div class="overflow-x-auto mb-6">
+                        <table class="w-full text-sm">
+                            <tbody class="text-gray-300">
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium w-56">⚔️ Debate</td><td class="py-2">Duas personagens debatem um tema (ex.: Laurel vs. Sky sobre o perdão).</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">⚖️ Julgamento</td><td class="py-2">Uma personagem é "julgada" pelos seus atos, com acusação, defesa e veredicto.</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">✉️ Carta</td><td class="py-2">Uma personagem escreve uma carta a outra.</td></tr>
+                                <tr><td class="py-2 pr-4 text-white font-medium">📔 Diário</td><td class="py-2">Página de diário íntimo de uma personagem — segredos e pensamentos privados.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3 class="text-lg font-semibold text-purple-300 mb-3 mt-8">5.6 Estudo &amp; contexto</h3>
+                    <div class="overflow-x-auto mb-6">
+                        <table class="w-full text-sm">
+                            <tbody class="text-gray-300">
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium w-56">🎬 Cenas Eliminadas</td><td class="py-2">Cenas "extra" que podiam ter ficado no livro.</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">📖 Glossário</td><td class="py-2">Termos e referências do livro explicados (ex.: quem foi Kurt Cobain, Amy Winehouse…).</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">🏛️ Contexto Histórico</td><td class="py-2">A época e o contexto real em que a história se insere.</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">🎓 Guia de Estudo</td><td class="py-2">Guia completo para estudantes: resumo, temas, questões, vocabulário.</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">🗺️ Mapa Geográfico</td><td class="py-2">Os locais do livro identificados e descritos.</td></tr>
+                                <tr><td class="py-2 pr-4 text-white font-medium">💬 Citação do Dia</td><td class="py-2">Uma citação marcante formatada como imagem partilhável.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3 class="text-lg font-semibold text-purple-300 mb-3 mt-8">5.7 Análise visual</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <tbody class="text-gray-300">
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium w-56">📈 Análise de Sentimento</td><td class="py-2">Gráfico do arco emocional do livro (gerado automaticamente).</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">🕸️ Relações de Personagens</td><td class="py-2">Grafo das relações entre personagens (quem ama, odeia, protege quem).</td></tr>
+                                <tr><td class="py-2 pr-4 text-white font-medium">⚖️ Comparação de Estilos</td><td class="py-2">Compara o estilo do autor com outros escritores.</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </section>
 
-            <!-- Section 5: Funcionalidades Extra -->
+            <!-- ============ 6. CHAT ============ -->
+            <section id="chat" class="manual-section mb-12">
+                <div class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-8">
+                    <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                        <span>💬</span> 6. Chat com o Livro
+                    </h2>
+                    <p class="text-gray-300 mb-4">
+                        No final da página do Explorador existe uma área de <strong>chat livre</strong>. É o sítio certo
+                        para qualquer pergunta que não encaixe nas análises fixas:
+                    </p>
+                    <ul class="list-disc list-inside space-y-2 text-gray-300 mb-4">
+                        <li>"Explica-me o final do livro como se eu tivesse 12 anos."</li>
+                        <li>"O que simboliza as cartas para o Kurt Cobain especificamente?"</li>
+                        <li>"Resume o capítulo 5 em 3 frases."</li>
+                        <li>"Que conselho daria a Laurel no início do livro?"</li>
+                    </ul>
+                    <p class="text-gray-400 text-sm">Cada mensagem conta como uma análise do teu limite mensal.</p>
+                </div>
+            </section>
+
+            <!-- ============ 7. BIBLIOTECA ============ -->
+            <section id="biblioteca" class="manual-section mb-12">
+                <div class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-8">
+                    <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                        <span>📚</span> 7. Favoritos, Histórico e Exportar
+                    </h2>
+
+                    <h3 class="text-lg font-semibold text-purple-300 mb-3">7.1 ⭐ Favoritos</h3>
+                    <p class="text-gray-300 mb-4">
+                        Clica na estrela <strong>☆</strong> no cabeçalho do livro para o guardar. Em
+                        <a href="/favorites" class="text-purple-400 underline">/favorites</a> vês os teus livros e
+                        análises favoritas, podes adicionar <strong>notas pessoais</strong> a cada um e remover quando quiseres.
+                    </p>
+                    <figure class="my-6">
+                        <img src="{{ url_for('static', filename='img/manual/18-favorites.png') }}" alt="Página de favoritos" class="rounded-xl border border-white/20 shadow-2xl w-full">
+                        <figcaption class="text-center text-sm text-gray-500 mt-2">Fig. 18 — Favoritos, com "Cartas de Amor aos Mortos" guardado.</figcaption>
+                    </figure>
+
+                    <h3 class="text-lg font-semibold text-purple-300 mb-3 mt-8">7.2 🕐 Histórico</h3>
+                    <p class="text-gray-300 mb-4">
+                        <a href="/history" class="text-purple-400 underline">/history</a> regista automaticamente cada análise
+                        que fazes — livro, tipo de análise, data e prévia do resultado. Perfeito para recuperares algo que
+                        geraste há dias.
+                    </p>
+                    <figure class="my-6">
+                        <img src="{{ url_for('static', filename='img/manual/19-history.png') }}" alt="Histórico de análises" class="rounded-xl border border-white/20 shadow-2xl w-full">
+                        <figcaption class="text-center text-sm text-gray-500 mt-2">Fig. 19 — Histórico de análises do utilizador.</figcaption>
+                    </figure>
+
+                    <h3 class="text-lg font-semibold text-purple-300 mb-3 mt-8">7.3 📥 Exportar</h3>
+                    <p class="text-gray-300 mb-4">
+                        No cabeçalho do livro, o botão <strong>📥</strong> exporta <strong>todas as análises já geradas</strong>
+                        daquela sessão num único ficheiro <strong>PDF</strong> (para ler/imprimir) ou <strong>EPUB</strong>
+                        (para e-readers). Dica: gera primeiro as análises que queres incluir — o ficheiro reflete o que já existe.
+                    </p>
+                </div>
+            </section>
+
+            <!-- ============ 8. FERRAMENTAS EXTRA ============ -->
             <section id="extras" class="manual-section mb-12">
                 <div class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-8">
                     <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-                        <span class="w-10 h-10 bg-purple-600/30 rounded-lg flex items-center justify-center">5</span>
-                        <span data-i18n="manual_s5_title">Funcionalidades Extra</span>
+                        <span>🧰</span> 8. Ferramentas Extra
                     </h2>
-                    <div class="text-gray-300 space-y-4">
-                        <div class="grid md:grid-cols-2 gap-4">
-                            <div class="feature-card bg-white/5 rounded-xl p-4 border border-white/10">
-                                <span class="text-2xl">🎵</span>
-                                <h4 class="text-white font-medium mt-2" data-i18n="manual_extra_playlist">Playlist Sugerida</h4>
-                                <p class="text-sm text-gray-400" data-i18n="manual_extra_playlist_desc">Músicas reais que combinam com a atmosfera do livro</p>
-                            </div>
-                            <div class="feature-card bg-white/5 rounded-xl p-4 border border-white/10">
-                                <span class="text-2xl">🎬</span>
-                                <h4 class="text-white font-medium mt-2" data-i18n="manual_extra_trailer">Trailer Cinematográfico</h4>
-                                <p class="text-sm text-gray-400" data-i18n="manual_extra_trailer_desc">Texto descritivo para um trailer de filme</p>
-                            </div>
-                            <div class="feature-card bg-white/5 rounded-xl p-4 border border-white/10">
-                                <span class="text-2xl">🎭</span>
-                                <h4 class="text-white font-medium mt-2" data-i18n="manual_extra_casting">Casting de Filme</h4>
-                                <p class="text-sm text-gray-400" data-i18n="manual_extra_casting_desc">Sugestões de atores para cada personagem</p>
-                            </div>
-                            <div class="feature-card bg-white/5 rounded-xl p-4 border border-white/10">
-                                <span class="text-2xl">🎨</span>
-                                <h4 class="text-white font-medium mt-2" data-i18n="manual_extra_cover">Prompt para Capa</h4>
-                                <p class="text-sm text-gray-400" data-i18n="manual_extra_cover_desc">Descrições otimizadas para DALL-E/Midjourney</p>
-                            </div>
-                            <div class="feature-card bg-white/5 rounded-xl p-4 border border-white/10">
-                                <span class="text-2xl">📅</span>
-                                <h4 class="text-white font-medium mt-2" data-i18n="manual_extra_timeline">Cronologia</h4>
-                                <p class="text-sm text-gray-400" data-i18n="manual_extra_timeline_desc">Linha temporal dos eventos do livro</p>
-                            </div>
-                            <div class="feature-card bg-white/5 rounded-xl p-4 border border-white/10">
-                                <span class="text-2xl">🎬</span>
-                                <h4 class="text-white font-medium mt-2" data-i18n="manual_extra_adaptations">Adaptações</h4>
-                                <p class="text-sm text-gray-400" data-i18n="manual_extra_adaptations_desc">Filmes e séries baseados no livro</p>
-                            </div>
-                        </div>
+
+                    <h3 class="text-lg font-semibold text-purple-300 mb-3">8.1 ⚖️ Comparar Livros</h3>
+                    <p class="text-gray-300 mb-4">
+                        Em <a href="/compare" class="text-purple-400 underline">/compare</a> escolhes dois livros e a IA
+                        faz uma comparação lado a lado: temas, estilo, personagens, tom e para quem é cada um.
+                    </p>
+                    <figure class="my-6">
+                        <img src="{{ url_for('static', filename='img/manual/22-compare-form.png') }}" alt="Formulário de comparação" class="rounded-xl border border-white/20 shadow-2xl w-full">
+                        <figcaption class="text-center text-sm text-gray-500 mt-2">Fig. 20 — Comparar "Cartas de Amor aos Mortos" vs. "A Culpa é das Estrelas".</figcaption>
+                    </figure>
+                    <figure class="my-6">
+                        <img src="{{ url_for('static', filename='img/manual/23-compare-result.png') }}" alt="Resultado da comparação" class="rounded-xl border border-white/20 shadow-2xl w-full">
+                        <figcaption class="text-center text-sm text-gray-500 mt-2">Fig. 21 — Resultado real da comparação (parcial — a análise completa é extensa).</figcaption>
+                    </figure>
+
+                    <h3 class="text-lg font-semibold text-purple-300 mb-3 mt-8">8.2 ✨ Recomendações</h3>
+                    <p class="text-gray-300 mb-4">
+                        Em <a href="/recommendations" class="text-purple-400 underline">/recommendations</a> indicas livros
+                        ou géneros de que gostas e a IA sugere novas leituras personalizadas, explicando porque combinam
+                        com o teu gosto.
+                    </p>
+                    <figure class="my-6">
+                        <img src="{{ url_for('static', filename='img/manual/21-recommendations.png') }}" alt="Página de recomendações" class="rounded-xl border border-white/20 shadow-2xl w-full">
+                        <figcaption class="text-center text-sm text-gray-500 mt-2">Fig. 22 — Página de recomendações.</figcaption>
+                    </figure>
+
+                    <h3 class="text-lg font-semibold text-purple-300 mb-3 mt-8">8.3 🎯 "Vai Gostar"</h3>
+                    <p class="text-gray-300 mb-4">
+                        Em <a href="/vai-gostar" class="text-purple-400 underline">/vai-gostar</a> a app constrói o teu
+                        <strong>perfil de gosto literário</strong> (com base nos teus favoritos, histórico e avaliações)
+                        e prevê — com justificação — se vais gostar de um livro específico antes de o leres.
+                    </p>
+
+                    <h3 class="text-lg font-semibold text-purple-300 mb-3 mt-8">8.4 Outras páginas</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <tbody class="text-gray-300">
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium w-56"><a href="/my-dashboard" class="text-purple-400 underline">/my-dashboard</a></td><td class="py-2">O teu dashboard pessoal: estatísticas de uso, livros explorados, atividade.</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium"><a href="/marketplace" class="text-purple-400 underline">/marketplace</a></td><td class="py-2">Marketplace de templates de prompts: compra, vende e reutiliza análises criadas pela comunidade.</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium"><a href="/referral" class="text-purple-400 underline">/referral</a></td><td class="py-2">Programa de referidos: partilha o teu código e ganha comissão (20%) em subscrições.</td></tr>
+                                <tr><td class="py-2 pr-4 text-white font-medium"><a href="/faq" class="text-purple-400 underline">/faq</a></td><td class="py-2">Perguntas frequentes e suporte.</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </section>
 
-            <!-- Section 6: Gestão de Conta -->
+            <!-- ============ 9. CONTA ============ -->
             <section id="conta" class="manual-section mb-12">
                 <div class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-8">
                     <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-                        <span class="w-10 h-10 bg-purple-600/30 rounded-lg flex items-center justify-center">6</span>
-                        <span data-i18n="manual_s6_title">Gestão de Conta</span>
+                        <span>👤</span> 9. Conta e Definições
                     </h2>
-                    <div class="text-gray-300 space-y-4">
-                        <p data-i18n="manual_s6_p1">Na tua conta podes:</p>
-                        <ul class="list-disc list-inside space-y-2 ml-4">
-                            <li data-i18n-html="manual_s6_li1"><strong>Ver o teu uso mensal:</strong> Quantas análises já fizeste este mês</li>
-                            <li data-i18n-html="manual_s6_li2"><strong>Histórico de leitura:</strong> Todos os livros que exploraste</li>
-                            <li data-i18n-html="manual_s6_li3"><strong>Favoritos:</strong> Guardar livros e análises favoritas</li>
-                            <li data-i18n-html="manual_s6_li4"><strong>Dashboard:</strong> Estatísticas detalhadas de utilização</li>
-                            <li data-i18n-html="manual_s6_li5"><strong>Gerir subscrição:</strong> Fazer upgrade ou cancelar plano</li>
-                        </ul>
-                        
-                        <div class="bg-purple-600/10 border border-purple-500/30 rounded-xl p-4 mt-4">
-                            <p class="text-purple-300" data-i18n-html="manual_s6_tip">
-                                <strong>💡 Dica:</strong> O contador de uso reinicia no primeiro dia de cada mês!
-                            </p>
-                        </div>
-                    </div>
+                    <p class="text-gray-300 mb-4">
+                        Em <a href="/profile" class="text-purple-400 underline">/profile</a> geres tudo sobre a tua conta:
+                    </p>
+                    <ul class="list-disc list-inside space-y-2 text-gray-300 mb-6">
+                        <li><strong>Plano atual</strong> e botão de upgrade/gestão de subscrição;</li>
+                        <li><strong>Utilização</strong> — análises usadas vs. limite mensal, com barra de progresso;</li>
+                        <li><strong>🔑 Chave de API</strong> — estado, substituir ou remover (ver secção 2.1);</li>
+                        <li><strong>Notificações push</strong> — ativar/desativar e escolher tipos (reinício de limite, novidades, dicas, promoções);</li>
+                        <li><strong>Terminar sessão</strong>.</li>
+                    </ul>
+                    <figure class="my-6">
+                        <img src="{{ url_for('static', filename='img/manual/20-profile.png') }}" alt="Página de perfil" class="rounded-xl border border-white/20 shadow-2xl w-full">
+                        <figcaption class="text-center text-sm text-gray-500 mt-2">Fig. 23 — Perfil: plano Premium, utilização 0/1000 e chave configurada.</figcaption>
+                    </figure>
                 </div>
             </section>
 
-            <!-- Section 7: Planos e Preços -->
+            <!-- ============ 10. PLANOS ============ -->
             <section id="planos" class="manual-section mb-12">
                 <div class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-8">
                     <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-                        <span class="w-10 h-10 bg-purple-600/30 rounded-lg flex items-center justify-center">7</span>
-                        <span data-i18n="manual_s7_title">Planos e Preços</span>
+                        <span>💎</span> 10. Planos e Limites
                     </h2>
-                    <div class="text-gray-300 space-y-6">
-                        <div class="grid md:grid-cols-3 gap-4">
-                            <!-- Free -->
-                            <div class="bg-white/5 rounded-xl p-6 border border-white/10">
-                                <h3 class="text-xl font-bold text-white mb-2" data-i18n="pricing_free">Gratuito</h3>
-                                <p class="text-3xl font-bold text-white mb-4">€0<span class="text-sm text-gray-400">/mês</span></p>
-                                <ul class="space-y-2 text-sm">
-                                    <li class="flex items-center gap-2"><span class="text-green-400">✓</span> 10 análises/mês</li>
-                                    <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Resumos e personagens</li>
-                                    <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Temas e análise</li>
-                                    <li class="flex items-center gap-2 text-gray-500"><span>✗</span> Quiz e entrevistas</li>
-                                </ul>
-                            </div>
-                            
-                            <!-- Pro -->
-                            <div class="bg-gradient-to-b from-purple-600/20 to-pink-600/20 rounded-xl p-6 border-2 border-purple-500/50">
-                                <div class="text-xs bg-purple-600 text-white px-2 py-1 rounded-full inline-block mb-2" data-i18n="pricing_most_popular">Popular</div>
-                                <h3 class="text-xl font-bold text-white mb-2">Pro</h3>
-                                <p class="text-3xl font-bold text-white mb-4">€9.99<span class="text-sm text-gray-400">/mês</span></p>
-                                <ul class="space-y-2 text-sm">
-                                    <li class="flex items-center gap-2"><span class="text-green-400">✓</span> 100 análises/mês</li>
-                                    <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Todas as análises</li>
-                                    <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Quiz e entrevistas</li>
-                                    <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Continuações e finais</li>
-                                </ul>
-                            </div>
-                            
-                            <!-- Premium -->
-                            <div class="bg-white/5 rounded-xl p-6 border border-white/10">
-                                <h3 class="text-xl font-bold text-white mb-2">Premium</h3>
-                                <p class="text-3xl font-bold text-white mb-4">€19.99<span class="text-sm text-gray-400">/mês</span></p>
-                                <ul class="space-y-2 text-sm">
-                                    <li class="flex items-center gap-2"><span class="text-green-400">✓</span> 1000 análises/mês</li>
-                                    <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Tudo do Pro</li>
-                                    <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Exportação PDF</li>
-                                    <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Suporte prioritário</li>
-                                </ul>
-                            </div>
+                    <div class="overflow-x-auto mb-6">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="border-b border-white/10 text-left">
+                                    <th class="py-2 pr-4 text-purple-300 font-semibold"></th>
+                                    <th class="py-2 pr-4 text-purple-300 font-semibold">Gratuito</th>
+                                    <th class="py-2 pr-4 text-purple-300 font-semibold">Pro</th>
+                                    <th class="py-2 text-purple-300 font-semibold">Premium</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-gray-300">
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">Preço/mês</td><td class="py-2 pr-4">0 €</td><td class="py-2 pr-4">9,99 €</td><td class="py-2">19,99 €</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">Preço/ano</td><td class="py-2 pr-4">0 €</td><td class="py-2 pr-4">99,99 €</td><td class="py-2">199,99 €</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">Análises/mês</td><td class="py-2 pr-4">10</td><td class="py-2 pr-4">100</td><td class="py-2">1000</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">Análises guardadas</td><td class="py-2 pr-4">5</td><td class="py-2 pr-4">50</td><td class="py-2">Ilimitado</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">Quiz, Entrevistas, Continuações, Final Alternativo</td><td class="py-2 pr-4">✗</td><td class="py-2 pr-4">✓</td><td class="py-2">✓</td></tr>
+                                <tr class="border-b border-white/5"><td class="py-2 pr-4 text-white font-medium">Exportar PDF/EPUB + Histórico</td><td class="py-2 pr-4">✗</td><td class="py-2 pr-4">✓</td><td class="py-2">✓</td></tr>
+                                <tr><td class="py-2 pr-4 text-white font-medium">Suporte prioritário</td><td class="py-2 pr-4">✗</td><td class="py-2 pr-4">✗</td><td class="py-2">✓</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
+                        <p class="text-sm text-blue-200">
+                            <strong>ℹ️ Nota:</strong> o contador no topo da página ("Uso: X/Y") mostra as tuas análises do mês.
+                            O limite reinicia automaticamente no dia 1 de cada mês. Cada análise, mensagem de chat ou
+                            funcionalidade interativa conta 1 unidade.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============ 11. RESOLUÇÃO DE PROBLEMAS ============ -->
+            <section id="problemas" class="manual-section mb-12">
+                <div class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-8">
+                    <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                        <span>🛠️</span> 11. Resolução de Problemas
+                    </h2>
+                    <div class="space-y-4">
+                        <div class="bg-white/5 rounded-xl p-4 border border-white/10">
+                            <p class="text-white font-medium mb-1">❌ "Esta chave não funcionou"</p>
+                            <p class="text-sm text-gray-400">A chave foi testada e falhou. Verifica se copiaste a chave completa (começa por <code class="kbd">AIza</code>, ~39 caracteres), se não tem espaços a mais, e se a criaste no Google AI Studio — não noutra consola Google.</p>
+                        </div>
+                        <div class="bg-white/5 rounded-xl p-4 border border-white/10">
+                            <p class="text-white font-medium mb-1">❌ "Chave de API do Gemini não configurada"</p>
+                            <p class="text-sm text-gray-400">Estás autenticado mas sem chave definida. Vai a <a href="/setup-api-key" class="text-purple-400 underline">/setup-api-key</a> e configura-a (secção 2.1).</p>
+                        </div>
+                        <div class="bg-white/5 rounded-xl p-4 border border-white/10">
+                            <p class="text-white font-medium mb-1">⏳ Erros de quota / "high demand" / "retry later"</p>
+                            <p class="text-sm text-gray-400">O nível gratuito do Gemini tem limites diários por modelo. Se excederes, espera algumas horas ou cria uma chave num projeto com faturação no Google AI Studio. Picos de procura (503) resolvem-se tentando de novo passados segundos.</p>
+                        </div>
+                        <div class="bg-white/5 rounded-xl p-4 border border-white/10">
+                            <p class="text-white font-medium mb-1">🔢 "Limite atingido" (429)</p>
+                            <p class="text-sm text-gray-400">Chegaste ao limite mensal do teu plano. Espera pelo dia 1 ou faz upgrade em <a href="/subscription/pricing" class="text-purple-400 underline">Planos</a>.</p>
+                        </div>
+                        <div class="bg-white/5 rounded-xl p-4 border border-white/10">
+                            <p class="text-white font-medium mb-1">📖 "Livro não encontrado" / resultado sobre o livro errado</p>
+                            <p class="text-sm text-gray-400">Escreve sempre o <strong>autor</strong> — títulos comuns ("It", "Cloud Atlas") ambíguos sem autor. Também podes usar o título original em inglês para obras estrangeiras.</p>
+                        </div>
+                        <div class="bg-white/5 rounded-xl p-4 border border-white/10">
+                            <p class="text-white font-medium mb-1">🐌 Análise demora muito</p>
+                            <p class="text-sm text-gray-400">É normal: conteúdos extensos (resumo completo, guia de estudo) podem demorar 30–90 s. Se passar de ~3 min, recarrega e tenta de novo.</p>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Section 8: Dicas e Truques -->
+            <!-- ============ 12. DICAS ============ -->
             <section id="dicas" class="manual-section mb-12">
                 <div class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-8">
                     <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-                        <span class="w-10 h-10 bg-purple-600/30 rounded-lg flex items-center justify-center">8</span>
-                        <span data-i18n="manual_s8_title">Dicas e Truques</span>
+                        <span>💡</span> 12. Dicas e Boas Práticas
                     </h2>
-                    <div class="text-gray-300 space-y-4">
-                        <div class="space-y-4">
-                            <div class="bg-gradient-to-r from-purple-600/10 to-pink-600/10 rounded-xl p-4 border border-purple-500/20">
-                                <h4 class="text-white font-medium mb-2" data-i18n="manual_tip1_title">💡 Sê específico com o título</h4>
-                                <p class="text-sm" data-i18n="manual_tip1_desc">Se existem vários livros com o mesmo nome, adiciona o autor para melhores resultados.</p>
-                            </div>
-                            
-                            <div class="bg-gradient-to-r from-purple-600/10 to-pink-600/10 rounded-xl p-4 border border-purple-500/20">
-                                <h4 class="text-white font-medium mb-2" data-i18n="manual_tip2_title">💡 Usa os exemplos rápidos</h4>
-                                <p class="text-sm" data-i18n="manual_tip2_desc">Clica nos botões de exemplo para testar rapidamente com livros populares.</p>
-                            </div>
-                            
-                            <div class="bg-gradient-to-r from-purple-600/10 to-pink-600/10 rounded-xl p-4 border border-purple-500/20">
-                                <h4 class="text-white font-medium mb-2" data-i18n="manual_tip3_title">💡 Guarda nos favoritos</h4>
-                                <p class="text-sm" data-i18n="manual_tip3_desc">Usa o botão ⭐ para guardar livros e análises que queres revisitar.</p>
-                            </div>
-                            
-                            <div class="bg-gradient-to-r from-purple-600/10 to-pink-600/10 rounded-xl p-4 border border-purple-500/20">
-                                <h4 class="text-white font-medium mb-2" data-i18n="manual_tip4_title">💡 Exporta as análises</h4>
-                                <p class="text-sm" data-i18n="manual_tip4_desc">Usa o botão 📥 para exportar todas as análises de um livro em PDF ou EPUB.</p>
-                            </div>
-                            
-                            <div class="bg-gradient-to-r from-purple-600/10 to-pink-600/10 rounded-xl p-4 border border-purple-500/20">
-                                <h4 class="text-white font-medium mb-2" data-i18n="manual_tip5_title">💡 Muda o idioma</h4>
-                                <p class="text-sm" data-i18n="manual_tip5_desc">Usa o seletor de idioma no topo para obter análises em diferentes línguas.</p>
-                            </div>
-                        </div>
-                    </div>
+                    <ul class="space-y-3 text-gray-300">
+                        <li class="flex gap-3"><span>✍️</span><span><strong>Escreve sempre o autor</strong> — melhora muito a precisão das análises.</span></li>
+                        <li class="flex gap-3"><span>🎯</span><span><strong>Sê específico nas funcionalidades "E se…?"</strong> — "E se a May tivesse sobrevivido mas ficado em coma?" dá resultados mais interessantes que "E se fosse diferente?".</span></li>
+                        <li class="flex gap-3"><span>⭐</span><span><strong>Guarda como favorito</strong> antes de gerar muitas análises — assim fica tudo ligado ao livro.</span></li>
+                        <li class="flex gap-3"><span>📥</span><span><strong>Gera primeiro, exporta depois</strong> — o PDF/EPUB inclui apenas o que já foi criado na sessão.</span></li>
+                        <li class="flex gap-3"><span>🌍</span><span><strong>Muda o idioma da análise</strong> — compara a interpretação em PT vs. EN; diferenças subtis revelam nuance.</span></li>
+                        <li class="flex gap-3"><span>🎓</span><span><strong>Para estudar:</strong> usa Guia de Estudo + Flashcards + Quiz + Questões de Discussão — combinação completa de preparação.</span></li>
+                        <li class="flex gap-3"><span>🎬</span><span><strong>Para criadores:</strong> Trailer + Prompt de Capa + Casting + Playlist = kit completo de "adaptação".</span></li>
+                        <li class="flex gap-3"><span>🔑</span><span><strong>Trata a tua chave como uma password</strong> — não a partilhes; se suspeitares que vazou, revoga-a no AI Studio e gera outra.</span></li>
+                    </ul>
                 </div>
             </section>
 
             <!-- Footer -->
-            <div class="text-center py-8 border-t border-white/10">
-                <p class="text-gray-400">Alma do Livro © 2026 - <span data-i18n="manual_footer">Manual de Utilização v1.0</span></p>
-                <p class="text-gray-500 text-sm mt-2" data-i18n-html="manual_footer_faq">Tens dúvidas? Visita a nossa <a href="/faq" class="text-purple-400 hover:text-purple-300">página de FAQ</a></p>
-            </div>
+            <footer class="text-center py-8 border-t border-white/10 mt-8">
+                <p class="text-gray-500 text-sm">
+                    Alma do Livro — Manual de Utilização · Exemplos gerados com
+                    <em>"Cartas de Amor aos Mortos"</em> de Ava Dellaira
+                </p>
+                <p class="text-gray-600 text-xs mt-2">
+                    Precisas de ajuda? <a href="/faq" class="text-purple-400 hover:text-purple-300">FAQ</a> ·
+                    <a href="/privacy" class="text-purple-400 hover:text-purple-300">Privacidade</a> ·
+                    <a href="/terms" class="text-purple-400 hover:text-purple-300">Termos</a>
+                </p>
+            </footer>
         </main>
     </div>
 
     <script src="{{ url_for('static', filename='i18n.js') }}"></script>
+    <script src="{{ url_for('static', filename='theme.js') }}"></script>
+    <script>
+        // Smooth scroll for TOC links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) target.scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+    </script>
 </body>
 </html>

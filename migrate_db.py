@@ -27,6 +27,7 @@ def migrate():
         ("stripe_subscription_id", "VARCHAR(100)"),
         ("subscription_status", "VARCHAR(20) DEFAULT 'none'"),
         ("subscription_end_date", "DATETIME"),
+        ("gemini_api_key", "VARCHAR(200)"),
     ]
     
     for col_name, col_type in user_columns:

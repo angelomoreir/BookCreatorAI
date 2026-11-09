@@ -20,6 +20,29 @@ class User(UserMixin, db.Model):
     is_active = db.Column(db.Boolean, default=True)
     is_verified = db.Column(db.Boolean, default=False)
     is_admin = db.Column(db.Boolean, default=False)
+
+    # User's own Gemini API key (BYOK) - stored encrypted
+    gemini_api_key = db.Column(db.String(200), nullable=True)
+
+    def set_gemini_key(self, api_key):
+        """Store the API key encrypted (None clears it)."""
+        from utils.crypto import encrypt_value
+        self.gemini_api_key = encrypt_value(api_key) if api_key else None
+
+    def get_gemini_key(self):
+        """Return the decrypted API key, or None."""
+        if not self.gemini_api_key:
+            return None
+        from utils.crypto import decrypt_value
+        return decrypt_value(self.gemini_api_key)
+
+    @property
+    def gemini_api_key_masked(self):
+        """Masked version of the key for display (e.g. AIzaSy12••••••••wxyz)."""
+        key = self.get_gemini_key()
+        if not key or len(key) < 12:
+            return '••••'
+        return f"{key[:8]}••••••••{key[-4:]}"
     
     # Subscription/Plan fields
     plan = db.Column(db.String(20), default='free')  # free, pro, premium

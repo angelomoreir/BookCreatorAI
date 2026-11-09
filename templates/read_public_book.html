@@ -41,9 +41,28 @@
         .reader-content {
             font-family: Georgia, 'Times New Roman', serif;
             line-height: 1.9;
-            max-width: 750px;
+            max-width: 42rem;
             margin: 0 auto;
             padding: 2rem;
+            color: var(--text-color);
+        }
+
+        .reader-content p {
+            text-align: justify;
+            text-justify: inter-word;
+            hyphens: auto;
+            margin-bottom: 1.3em;
+            color: var(--text-color);
+        }
+
+        .caps-heading {
+            font-variant: small-caps;
+            letter-spacing: 0.05em;
+            text-align: center;
+            font-weight: 600;
+            color: var(--accent-color);
+            margin: 2em 0 1em;
+            font-size: 1.15em;
         }
         
         .reader-content.font-sans { font-family: 'Inter', system-ui, sans-serif; }
@@ -457,7 +476,7 @@
                 .replace(/_{2,}([^_]+)_{2,}/g, '$1')
                 .replace(/(?<!\w)_([^_\n]{2,}?)_(?!\w)/g, '<em>$1</em>');
 
-            const JUNK = /^(transcriber|editor|illustrated|printed|published|copyright|all rights|e-?book|etext|produced by|this ebook|the project gutenberg)/i;
+            const JUNK = /^(transcriber|editor's note|nota (de|do) (editor|transcri)|illustrated|printed|published|copyright|all rights|e-?book|etext|produced by|this ebook|the project gutenberg|typ\.|tip\.|livraria|editora|imprensa|stereotyped|todos os direitos|obras d)/i;
 
             let html = text
                 .split('\n\n')
@@ -467,6 +486,12 @@
                     if (JUNK.test(para)) return '';
                     if (/^\[?End of (the )?Project Gutenberg/i.test(para)) return '';
                     
+                    // ALL-CAPS lines (title pages, volume headers) -> small-caps heading
+                    const letters = para.replace(/[^\p{L}]/gu, '');
+                    if (letters.length > 8 && para === para.toUpperCase() && para.split('\n').every(l => l === l.toUpperCase())) {
+                        return `<p class="caps-heading">${para}</p>`;
+                    }
+
                     // Check if it's a chapter heading
                     const isChapter = chapters?.some(ch => para.includes(ch.title));
                     if (isChapter || /^(CHAPTER|CAPÍTULO|PART|PARTE|BOOK|LIVRO)\s+/i.test(para)) {

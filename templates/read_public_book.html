@@ -449,11 +449,23 @@
             const container = document.getElementById('readerContent');
             
             // Convert text to HTML with proper formatting
+            // Clean Gutenberg artifacts: illustration markers, boilerplate,
+            // _underscore_ italics -> <em>, stray page-number lines
+            text = text
+                .replace(/\[Illustration[^\]]*\]/gi, '')
+                .replace(/\[.*?(?:image|illustration|plate)[^\]]*\]/gi, '')
+                .replace(/_{2,}([^_]+)_{2,}/g, '$1')
+                .replace(/(?<!\w)_([^_\n]{2,}?)_(?!\w)/g, '<em>$1</em>');
+
+            const JUNK = /^(transcriber|editor|illustrated|printed|published|copyright|all rights|e-?book|etext|produced by|this ebook|the project gutenberg)/i;
+
             let html = text
                 .split('\n\n')
                 .map(para => {
                     para = para.trim();
                     if (!para) return '';
+                    if (JUNK.test(para)) return '';
+                    if (/^\[?End of (the )?Project Gutenberg/i.test(para)) return '';
                     
                     // Check if it's a chapter heading
                     const isChapter = chapters?.some(ch => para.includes(ch.title));

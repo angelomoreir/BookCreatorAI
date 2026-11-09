@@ -859,9 +859,14 @@
             <div class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-6">
                 <div class="flex items-center justify-between mb-4">
                     <h3 id="contentTitle" class="text-xl font-bold text-white flex items-center gap-2"></h3>
-                    <button onclick="copyContent()" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-gray-300 text-sm rounded-lg transition-colors flex items-center gap-1">
-                        <span>📋</span> Copiar
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <button onclick="shareAnalysis()" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-gray-300 text-sm rounded-lg transition-colors flex items-center gap-1">
+                            <span>🔗</span> Partilhar
+                        </button>
+                        <button onclick="copyContent()" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-gray-300 text-sm rounded-lg transition-colors flex items-center gap-1">
+                            <span>📋</span> Copiar
+                        </button>
+                    </div>
                 </div>
                 <div id="contentBody" class="prose-content text-gray-300 leading-relaxed"></div>
             </div>
@@ -1294,6 +1299,7 @@
                 const data = await response.json();
                 
                 if (handleApiResponse(response, data)) {
+                    currentAspect = aspect;
                     document.getElementById('contentTitle').textContent = aspectTitles[aspect];
                     document.getElementById('contentBody').innerHTML = formatContent(data.content);
                     document.getElementById('contentArea').classList.remove('hidden');
@@ -1437,6 +1443,38 @@
             const content = document.getElementById('contentBody').innerText;
             navigator.clipboard.writeText(content);
             alert('Conteúdo copiado!');
+        }
+
+        let currentAspect = null;
+
+        async function shareAnalysis() {
+            if (!currentBook.title || !currentAspect) {
+                alert('Nenhuma análise para partilhar');
+                return;
+            }
+            try {
+                const response = await fetch('/api/share-analysis', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: currentBook.title,
+                        author: currentBook.author,
+                        aspect: currentAspect,
+                        language: getSelectedLanguage()
+                    })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    const url = location.origin + data.url;
+                    await navigator.clipboard.writeText(url);
+                    showToast('🔗 Link de partilha copiado!');
+                } else {
+                    alert(data.error || 'Não foi possível partilhar');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Erro de conexão');
+            }
         }
 
         function clearExploration() {

@@ -350,6 +350,18 @@
         </div>
 
         <!-- Interactive Features (hidden until explored) -->
+        <!-- Free reading banner (public domain books) -->
+        <div id="readAvailabilityBanner" class="hidden mb-6">
+            <a id="readBookLink" href="#" class="flex items-center gap-3 bg-gradient-to-r from-emerald-600/20 to-teal-600/20 border border-emerald-500/40 rounded-2xl p-5 hover:border-emerald-400 transition group">
+                <span class="text-3xl">📖</span>
+                <div class="flex-1">
+                    <p class="text-white font-semibold">Ler o livro completo — grátis</p>
+                    <p class="text-sm text-gray-400">Disponível em domínio público no Project Gutenberg</p>
+                </div>
+                <span class="text-emerald-400 group-hover:translate-x-1 transition-transform">→</span>
+            </a>
+        </div>
+
         <div id="interactiveFeatures" class="hidden mb-8">
             <h3 class="text-lg font-semibold text-white mb-4">🎮 <span data-i18n="exp_interactive">Funcionalidades Interativas</span></h3>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
@@ -1243,8 +1255,7 @@
                     checkIfFavorited();
                     
                     // Check if book is available for reading (public domain)
-                    // NOTA: Funcionalidade temporariamente desativada - Gutenberg tem poucos livros em PT
-                    // checkReadAvailability(title, author);
+                    checkReadAvailability(title, author);
                 } else {
                     alert(data.error || 'Erro ao explorar livro');
                 }
@@ -1447,6 +1458,26 @@
 
         let currentAspect = null;
 
+        async function checkReadAvailability(title, author) {
+            const banner = document.getElementById('readAvailabilityBanner');
+            banner.classList.add('hidden');
+            try {
+                const response = await fetch('/api/book/check-availability', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, author })
+                });
+                const data = await response.json();
+                if (data.success && data.available && data.gutenberg_id) {
+                    document.getElementById('readBookLink').href =
+                        `/read-book?id=${data.gutenberg_id}&title=${encodeURIComponent(title)}&author=${encodeURIComponent(author)}`;
+                    banner.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Availability check error:', error);
+            }
+        }
+
         async function shareAnalysis() {
             if (!currentBook.title || !currentAspect) {
                 alert('Nenhuma análise para partilhar');
@@ -1482,6 +1513,7 @@
             document.getElementById('bookTitle').value = '';
             document.getElementById('bookAuthor').value = '';
             document.getElementById('bookInfoHeader').classList.add('hidden');
+            document.getElementById('readAvailabilityBanner').classList.add('hidden');
             document.getElementById('interactiveFeatures').classList.add('hidden');
             document.getElementById('aspectsGrid').classList.add('hidden');
             document.getElementById('contentArea').classList.add('hidden');

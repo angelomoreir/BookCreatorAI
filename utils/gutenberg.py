@@ -133,6 +133,41 @@ KNOWN_BOOKS = {
     'jane eyre': {'id': 1260, 'author': 'Charlotte Brontë'},
     'the scarlet letter': {'id': 25344, 'author': 'Nathaniel Hawthorne'},
     'a letra escarlate': {'id': 25344, 'author': 'Nathaniel Hawthorne'},
+
+    # Portuguese classics (Gutenberg PT)
+    'dom casmurro': {'id': 55752, 'author': 'Machado de Assis'},
+    'memórias póstumas de brás cubas': {'id': 54829, 'author': 'Machado de Assis'},
+
+    # More English classics
+    'the adventures of tom sawyer': {'id': 74, 'author': 'Mark Twain'},
+    'tom sawyer': {'id': 74, 'author': 'Mark Twain'},
+    'the adventures of huckleberry finn': {'id': 76, 'author': 'Mark Twain'},
+    'huckleberry finn': {'id': 76, 'author': 'Mark Twain'},
+    'emma': {'id': 158, 'author': 'Jane Austen'},
+    'sense and sensibility': {'id': 161, 'author': 'Jane Austen'},
+    'persuasion': {'id': 105, 'author': 'Jane Austen'},
+    'anna karenina': {'id': 1399, 'author': 'Leo Tolstoy'},
+    'the brothers karamazov': {'id': 28054, 'author': 'Fyodor Dostoevsky'},
+    'os irmãos karamázov': {'id': 28054, 'author': 'Fyodor Dostoevsky'},
+    'middlemarch': {'id': 145, 'author': 'George Eliot'},
+    'walden': {'id': 205, 'author': 'Henry David Thoreau'},
+    'heart of darkness': {'id': 219, 'author': 'Joseph Conrad'},
+    'coração das trevas': {'id': 219, 'author': 'Joseph Conrad'},
+    'the time machine': {'id': 35, 'author': 'H.G. Wells'},
+    'a máquina do tempo': {'id': 35, 'author': 'H.G. Wells'},
+    'the war of the worlds': {'id': 36, 'author': 'H.G. Wells'},
+    'a guerra dos mundos': {'id': 36, 'author': 'H.G. Wells'},
+    'great expectations': {'id': 1400, 'author': 'Charles Dickens'},
+    'grandes esperanças': {'id': 1400, 'author': 'Charles Dickens'},
+    'little women': {'id': 514, 'author': 'Louisa May Alcott'},
+    'peter pan': {'id': 16, 'author': 'J.M. Barrie'},
+    'the wizard of oz': {'id': 55, 'author': 'L. Frank Baum'},
+    'o feiticeiro de oz': {'id': 55, 'author': 'L. Frank Baum'},
+    'the jungle book': {'id': 236, 'author': 'Rudyard Kipling'},
+    'o livro da selva': {'id': 236, 'author': 'Rudyard Kipling'},
+    'grimms fairy tales': {'id': 2591, 'author': 'Brothers Grimm'},
+    'contos de grimm': {'id': 2591, 'author': 'Brothers Grimm'},
+    'beowulf': {'id': 16328, 'author': 'Anonymous'},
 }
 
 
@@ -181,15 +216,23 @@ def search_gutenberg(title: str, author: str = None, language: str = 'en') -> li
                 'is_public_domain': True
             }]
         
-        # Search Gutenberg API
+        # Search Gutenberg API (with retry - gutendex is flaky)
         params = {'search': title}
         if language:
             lang_map = {'pt-pt': 'pt', 'pt-br': 'pt', 'en': 'en', 'fr': 'fr', 'de': 'de', 'es': 'es', 'it': 'it'}
             params['languages'] = lang_map.get(language, language[:2])
-        
-        response = requests.get(GUTENBERG_API, params=params, timeout=10)
-        response.raise_for_status()
-        data = response.json()
+
+        data = None
+        for attempt in range(2):
+            try:
+                response = requests.get(GUTENBERG_API, params=params, timeout=15)
+                response.raise_for_status()
+                data = response.json()
+                break
+            except Exception as e:
+                logger.warning(f"Gutenberg API attempt {attempt+1} failed: {e}")
+        if data is None:
+            return []
         
         results = []
         for book in data.get('results', [])[:10]:
@@ -406,8 +449,12 @@ def check_book_availability(title: str, author: str = None) -> dict:
     
     # Check if author is in public domain
     if author and is_public_domain(author):
-        # Search Gutenberg
-        results = search_gutenberg(title, author)
+        # Search Gutenberg (all languages - a PT classic may only exist in PT)
+        results = search_gutenberg(title, author, language=None)
+        # If no results and title has no diacritics issue, also try author-only relaxed match
+        if not results:
+            results = [r for r in search_gutenberg(title, None, language=None)
+                       if not author or author.split()[0].lower() in r.get('author', '').lower()]
         if results:
             return {
                 'available': True,

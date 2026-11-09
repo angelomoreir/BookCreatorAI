@@ -138,6 +138,28 @@ KNOWN_BOOKS = {
     'dom casmurro': {'id': 55752, 'author': 'Machado de Assis'},
     'memórias póstumas de brás cubas': {'id': 54829, 'author': 'Machado de Assis'},
 
+    # Eça de Queirós — verified PT editions on gutenberg.org
+    'os maias': {'id': 40409, 'author': 'Eça de Queirós'},
+    'o primo basílio': {'id': 42942, 'author': 'Eça de Queirós'},
+    'o primo basilio': {'id': 42942, 'author': 'Eça de Queirós'},
+    'a cidade e as serras': {'id': 18220, 'author': 'Eça de Queirós'},
+    'cidade e as serras': {'id': 18220, 'author': 'Eça de Queirós'},
+    'a relíquia': {'id': 17515, 'author': 'Eça de Queirós'},
+    'a reliquia': {'id': 17515, 'author': 'Eça de Queirós'},
+    'o crime do padre amaro': {'id': 31971, 'author': 'Eça de Queirós'},
+    'o mandarim': {'id': 16384, 'author': 'Eça de Queirós'},
+    'a ilustre casa de ramires': {'id': 23145, 'author': 'Eça de Queirós'},
+    'ilustre casa de ramires': {'id': 23145, 'author': 'Eça de Queirós'},
+    'a correspondência de fradique mendes': {'id': 27637, 'author': 'Eça de Queirós'},
+    'cartas de inglaterra': {'id': 25641, 'author': 'Eça de Queirós'},
+    'o mistério da estrada de cintra': {'id': 20574, 'author': 'Eça de Queirós'},
+    'o misterio da estrada de cintra': {'id': 20574, 'author': 'Eça de Queirós'},
+    'as minas de salomão': {'id': 22015, 'author': 'Eça de Queirós'},
+    'as minas de salomao': {'id': 22015, 'author': 'Eça de Queirós'},
+    'prosas bárbaras': {'id': 68986, 'author': 'Eça de Queirós'},
+    'prosas barbaras': {'id': 68986, 'author': 'Eça de Queirós'},
+    'contos': {'id': 31347, 'author': 'Eça de Queirós'},
+
     # More English classics
     'the adventures of tom sawyer': {'id': 74, 'author': 'Mark Twain'},
     'tom sawyer': {'id': 74, 'author': 'Mark Twain'},

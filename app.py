@@ -466,6 +466,11 @@ def privacy():
     """Privacy Policy page"""
     return render_template('privacy.html')
 
+@app.route('/ping')
+def ping():
+    """Lightweight keep-alive endpoint for uptime monitors (avoids render spin-down)."""
+    return jsonify({'ok': True})
+
 @app.route('/manual')
 def manual():
     """User manual page"""

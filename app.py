@@ -7645,7 +7645,7 @@ def admin_user_detail(user_id):
             user.usage_count = data['usage_count']
         db.session.commit()
         return jsonify({'success': True, 'message': 'Utilizador atualizado'})
-    
+
     elif request.method == 'DELETE':
         if user.is_admin:
             return jsonify({'success': False, 'error': 'Não pode eliminar um admin'}), 400
@@ -7679,6 +7679,25 @@ def admin_user_detail(user_id):
             db.session.rollback()
             logger.error(f"Error deleting user {user_id}: {e}")
             return jsonify({'success': False, 'error': f'Erro ao eliminar: {e}'}), 500
+
+@app.route('/share/analysis/<cache_key>')
+def shared_analysis(cache_key):
+    """Public read-only view of a cached analysis (shareable link)."""
+    from models.book import AnalysisCache
+    row = AnalysisCache.query.filter_by(cache_key=cache_key).first_or_404()
+    return render_template('shared_analysis.html', analysis=row)
+
+@app.route('/api/share-analysis', methods=['POST'])
+def share_analysis():
+    """Return a public share URL for an analysis already in cache."""
+    from utils.cache import _ai_cache_key
+    from models.book import AnalysisCache
+    data = request.get_json() or {}
+    key = _ai_cache_key(data.get('title', ''), data.get('author', ''),
+                        data.get('aspect', ''), data.get('language', 'pt-pt'))
+    if AnalysisCache.query.filter_by(cache_key=key).first():
+        return jsonify({'success': True, 'url': f'/share/analysis/{key}'})
+    return jsonify({'success': False, 'error': 'Análise ainda não gerada — corre-a primeiro no Explorador.'}), 404
 
 @app.route('/api/admin/daily-usage')
 @admin_required

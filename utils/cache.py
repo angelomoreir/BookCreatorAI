@@ -108,19 +108,53 @@ def cached(timeout=300, key_prefix=''):
     return decorator
 
 
+def _ai_cache_key(title, author, aspect, language):
+    return f"ai:{aspect}:{generate_cache_key(title.lower(), (author or '').lower(), language)}"
+
+
 def cache_ai_response(title, author, aspect, language, response, timeout=3600):
     """
     Cache an AI response for a book analysis.
-    Uses longer timeout (1 hour default) since book content doesn't change.
+    Persists to the analysis_cache DB table so it is shared across users,
+    gunicorn workers and restarts (in-memory layer stays as fast path).
     """
-    key = f"ai:{aspect}:{generate_cache_key(title.lower(), author.lower() if author else '', language)}"
+    key = _ai_cache_key(title, author, aspect, language)
     cache.set(key, response, timeout)
+    try:
+        from models.book import db, AnalysisCache
+        if not AnalysisCache.query.filter_by(cache_key=key).first():
+            db.session.add(AnalysisCache(
+                cache_key=key, book_title=title, book_author=author or None,
+                aspect=aspect, language=language, content=response,
+            ))
+            db.session.commit()
+    except Exception:
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
 
 
 def get_cached_ai_response(title, author, aspect, language):
-    """Get cached AI response if available"""
-    key = f"ai:{aspect}:{generate_cache_key(title.lower(), author.lower() if author else '', language)}"
-    return cache.get(key)
+    """Get cached AI response if available (memory first, then DB)."""
+    key = _ai_cache_key(title, author, aspect, language)
+    cached = cache.get(key)
+    if cached is not None:
+        return cached
+    try:
+        from models.book import db, AnalysisCache
+        row = AnalysisCache.query.filter_by(cache_key=key).first()
+        if row:
+            row.hits = (row.hits or 0) + 1
+            db.session.commit()
+            cache.set(key, row.content, 86400)  # warm memory for a day
+            return row.content
+    except Exception:
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+    return None
 
 
 def invalidate_book_cache(title, author=None):

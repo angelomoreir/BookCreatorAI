@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ analysis.book_title }} — Análise | Alma do Livro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .glass-card { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+        .prose-content { white-space: pre-wrap; line-height: 1.8; }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-indigo-950 via-purple-900 to-indigo-900 text-white">
+    <div class="max-w-3xl mx-auto px-4 py-10">
+        <a href="/" class="inline-flex items-center gap-2 text-purple-300 hover:text-white mb-8 transition">
+            <i class="fas fa-book-open"></i> Alma do Livro
+        </a>
+
+        <div class="glass-card rounded-2xl p-8">
+            <p class="text-purple-400 text-sm font-semibold uppercase tracking-wide mb-2">
+                <i class="fas fa-sparkles mr-1"></i> {{ analysis.aspect }}
+            </p>
+            <h1 class="text-3xl font-bold mb-1">{{ analysis.book_title }}</h1>
+            {% if analysis.book_author %}
+            <p class="text-gray-400 mb-6">de {{ analysis.book_author }}</p>
+            {% else %}
+            <div class="mb-6"></div>
+            {% endif %}
+
+            <div class="prose-content text-gray-200">{{ analysis.content }}</div>
+        </div>
+
+        <p class="text-center text-gray-500 text-sm mt-8">
+            Análise gerada por IA · <a href="/register" class="text-purple-400 hover:underline">Cria a tua conta grátis</a> para explorares outros livros
+        </p>
+    </div>
+</body>
+</html>

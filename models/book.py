@@ -1300,3 +1300,28 @@ class BlockedIP(db.Model):
             'expires_at': self.expires_at.strftime('%Y-%m-%d %H:%M') if self.expires_at else 'Permanente',
             'is_active': self.is_active()
         }
+
+
+class AnalysisCache(db.Model):
+    """Persistent cache of AI book analyses - shared across all users and
+    surviving restarts (unlike the in-memory SimpleCache)."""
+    __tablename__ = 'analysis_cache'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    cache_key = db.Column(db.String(100), unique=True, nullable=False, index=True)
+    book_title = db.Column(db.String(300), nullable=False)
+    book_author = db.Column(db.String(200), nullable=True)
+    aspect = db.Column(db.String(50), nullable=False)
+    language = db.Column(db.String(10), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    hits = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'book_title': self.book_title,
+            'book_author': self.book_author,
+            'aspect': self.aspect,
+            'language': self.language,
+            'hits': self.hits,
+            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M'),
+        }

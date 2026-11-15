@@ -42,6 +42,15 @@ if database_url:
     if database_url.startswith('postgresql://'):
         database_url = database_url.replace('postgresql://', 'postgresql+psycopg2://', 1)
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+    # Neon/proxies kill idle pooled connections; verify before use and
+    # recycle periodically so stale connections never reach requests.
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        'pool_pre_ping': True,
+        'pool_recycle': 280,
+        'pool_size': 5,
+        'max_overflow': 10,
+        'connect_args': {'connect_timeout': 10},
+    }
 else:
     basedir = os.path.abspath(os.path.dirname(__file__))
     db_path = os.path.join(basedir, 'database', 'books.db')

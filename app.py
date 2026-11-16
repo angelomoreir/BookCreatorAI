@@ -151,6 +151,9 @@ class _GeminiFallbackModel:
         return m
 
     def generate_content(self, *args, **kwargs):
+        # Per-attempt timeout: a hung Gemini call becomes DeadlineExceeded,
+        # which falls back to the next model instead of killing the worker.
+        kwargs.setdefault('request_options', {'timeout': 70})
         last_exc = None
         for name in GEMINI_MODELS:
             try:
